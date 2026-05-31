@@ -18,8 +18,11 @@ Focus on the static UI phase only. Do not start API integration, do not add live
 3. Secondary actions, links, resend controls, upload controls, back buttons, and preview buttons are not dead no-ops.
 4. Buttons that cannot perform real backend work yet use mock feedback that clearly preserves the UI-first workflow.
 5. Form layouts remain keyboard-safe on phones, especially bottom fields. Prefer `resizeToAvoidBottomInset`, `SafeArea`, `SingleChildScrollView`, `scrollPadding`, and constrained mobile-width layouts.
-6. Changes stay modular and reuse shared VWA widgets such as `AppTextField`, `AppButton`, `AppScreen`, and auth layout helpers.
-7. Markdown project docs stay current: `SUMMARY.md`, `PLAN.md`, `PROJECT_CONTEXT.txt`, and relevant README/docs.
+6. Pages dismiss the keyboard when the user taps outside an active form field; prefer the shared `AppScreen` gesture behavior over per-screen duplication.
+7. Mobile number fields reject alphabetic input and validate empty state plus exactly 10 digits.
+8. OTP screens use six editable boxes and validate that all six numeric digits are present before continuing.
+9. Changes stay modular and reuse shared VWA widgets such as `AppTextField`, `AppButton`, `AppScreen`, and auth layout helpers.
+10. Markdown project docs stay current: `SUMMARY.md`, `PLAN.md`, `PROJECT_CONTEXT.txt`, and relevant README/docs.
 
 ## Review Style
 

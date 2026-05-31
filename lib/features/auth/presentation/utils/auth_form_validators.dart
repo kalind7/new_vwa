@@ -27,9 +27,12 @@ class AuthFormValidators {
     if (_isBlank(value)) {
       return 'Phone number is required';
     }
-    final digits = value!.replaceAll(RegExp(r'\D'), '');
-    if (digits.length < 7 || digits.length > 15) {
-      return 'Enter a valid phone number';
+    final trimmed = value!.trim();
+    if (!RegExp(r'^\d+$').hasMatch(trimmed)) {
+      return 'Use numbers only';
+    }
+    if (trimmed.length != 10) {
+      return 'Phone number must be 10 digits';
     }
     return null;
   }
@@ -55,6 +58,17 @@ class AuthFormValidators {
     }
     if (value != password) {
       return 'Passwords do not match';
+    }
+    return null;
+  }
+
+  static String? otp(String? value) {
+    if (_isBlank(value)) {
+      return 'OTP is required';
+    }
+    final trimmed = value!.trim();
+    if (!RegExp(r'^\d{6}$').hasMatch(trimmed)) {
+      return 'Enter the 6-digit OTP';
     }
     return null;
   }

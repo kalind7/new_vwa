@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../config/app_colors.dart';
 import '../../config/app_radius.dart';
@@ -23,6 +24,7 @@ class AppTextField extends StatelessWidget {
     this.textCapitalization = TextCapitalization.none,
     this.enabled = true,
     this.scrollPadding,
+    this.inputFormatters,
   });
 
   final String label;
@@ -41,6 +43,7 @@ class AppTextField extends StatelessWidget {
   final TextCapitalization textCapitalization;
   final bool enabled;
   final EdgeInsets? scrollPadding;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +60,7 @@ class AppTextField extends StatelessWidget {
           textInputAction: textInputAction,
           textCapitalization: textCapitalization,
           enabled: enabled,
+          inputFormatters: inputFormatters,
           onChanged: onChanged,
           onFieldSubmitted: onFieldSubmitted,
           validator: validator,

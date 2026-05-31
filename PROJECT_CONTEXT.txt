@@ -50,7 +50,7 @@ Current Implementation Priority
 - Do not begin API integration until all Figma screens are completed and approved.
 - After UI completion, replace mock data with live Postman API integrations.
 - Do not build the entire UI in one large pass. Work in small milestones and stop after each milestone so the user can run and test.
-- Current checkpoint is Milestone 3 verification: run the app on the connected Android phone and visually test all auth navigation paths.
+- Current checkpoint is the `authentication-fixes` branch before Milestone 4: verify the splash/auth layout and add-vehicle fixes, then run the app on the connected Android phone and visually test all auth navigation paths.
 - Next implementation phase after user approval is Milestone 4: static main app shell with home/wash/settings navbar.
 
 Figma Status
@@ -65,7 +65,7 @@ Figma Status
 Current UI Milestone Plan
 - Milestone 1: Design system and app shell.
 - Milestone 2: Splash and onboarding flow.
-- Milestone 3: Auth static screens implemented; awaiting runtime/user review.
+- Milestone 3: Auth static screens implemented; pre-Phase-4 finalization pass complete on `authentication-fixes` pending verification/user review.
 - Milestone 4: Main app shell with home/wash/settings navbar.
 - Milestone 5: Map and wash detail static screens.
 - User will run/test after each milestone before the next one starts.
@@ -85,8 +85,11 @@ How User Runs App
   flutter run -d linux
 
 Latest Query Update
-- User asked to begin Milestone 3 and keep markdown docs updated with progress.
-- Implemented static auth screens and reusable auth widgets from the Figma auth patterns.
-- Replaced login/sign-up placeholders with route-backed static auth flow.
-- Verification passed: `dart format`, `flutter analyze`, and `flutter test`.
-- Remaining check: run `flutter run -d OJUSLVIVT4BE75JZ` for Android runtime/UI smoke testing; do not build APK/IPA.
+- User asked to create branch `authentication-fixes` before Phase 4 and fix splash/auth UI issues.
+- Increased static splash duration by one second so the logo is easier to see during UI review.
+- Updated shared auth layout so the white content container fills the remaining screen height on larger devices instead of sitting only around the middle form content.
+- Updated add-vehicle UI to support multiple vehicle number fields with plus and minus controls.
+- Added shared scaffold tap-to-dismiss keyboard behavior so users can leave fields without completing forms.
+- Tightened phone fields to digits-only input and exactly 10-digit validation.
+- Added reusable six-square OTP input with validation on email and phone OTP screens.
+- Remaining check: run format/analyze/tests and then `flutter run -d OJUSLVIVT4BE75JZ` for Android runtime/UI smoke testing; do not build APK/IPA.

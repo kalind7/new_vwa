@@ -7,7 +7,7 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const VwaApp());
-    await tester.pump(const Duration(milliseconds: 1500));
+    await tester.pump(const Duration(milliseconds: 2500));
     await tester.pumpAndSettle();
 
     expect(find.text('Find nearby washing station'), findsOneWidget);

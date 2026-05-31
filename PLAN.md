@@ -224,7 +224,7 @@ Review checkpoint: you test the startup flow and onboarding navigation.
 
 Build all auth-related screens without APIs.
 
-- Status: Implemented with static validation and keyboard-safe form behavior; Android runtime smoke check in progress.
+- Status: Pre-Phase-4 auth finalization pass complete on branch `authentication-fixes`; verification and Android runtime smoke check pending.
 - Added static Figma-inspired auth layout with dark header, rounded white content sheet, tab switcher, form inputs, OTP boxes, password rules, and setup-profile vehicle screen.
 - Replaced placeholder auth routes with real static routes:
   - Login.
@@ -239,6 +239,12 @@ Build all auth-related screens without APIs.
 - Added static form validation for login, sign up, forgot password/send OTP, reset password, and add vehicle number.
 - Connected current buttons, links, resend controls, upload picture, and preview controls to validation, navigation, or mock feedback.
 - Updated auth and profile setup layouts to stay scrollable and visible when the keyboard is open.
+- Increased static splash visibility by one second for the current UI review phase.
+- Extended auth white content panels so login, verification, forgot/reset password, and related auth screens fill the remaining device height instead of floating in the middle on larger phones.
+- Updated add-vehicle UI to support multiple vehicle number fields with plus and minus controls.
+- Added scaffold tap-to-dismiss keyboard behavior through `AppScreen`.
+- Tightened mobile number entry to digits-only, exactly 10 digits, with empty-state validation.
+- Replaced static OTP display with validated six-square OTP input on email and phone verification screens.
 - Added project subagent `.cursor/agents/vwa-ui-form-guardian.md` for future auth/UI validation, button, and keyboard safety reviews.
 - Verification passed so far: `dart format`, `flutter analyze`, and `flutter test`.
 - Remaining Milestone 3 verification: finish `flutter run -d OJUSLVIVT4BE75JZ --no-resident` for Android runtime/UI smoke testing if the device run completes.
