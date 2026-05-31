@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "544772728837",
+    "project_id": "vehicle-washing-application",
+    "storage_bucket": "vehicle-washing-application.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:544772728837:android:9dedbae23c26ca8fa2d46c",
+        "android_client_info": {
+          "package_name": "com.kauwatech.vwa"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVU9mQTW8qNN94WAENqLYJHchzI-lwyA4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

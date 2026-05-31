@@ -1,0 +1,92 @@
+Vehicle Washing App (VWA) - Project Context
+
+Purpose
+- Flutter mobile app for vehicle washing service booking.
+- Users should search washing stations, view station details, book services, pay through Nepali wallets, receive notifications, and navigate through Google Maps.
+
+Standing User Instructions
+- Target Android and iOS only.
+- Do not run the app from the assistant side.
+- Do not build APK/IPA files from the assistant side.
+- The user will run the app manually.
+- After every feature integration, use static verification such as flutter analyze and focused tests when possible.
+- Update this file after every user query so the project context remains current.
+- Latest override: after completing Milestone 3, the user explicitly asked the assistant to run the app to check for runtime errors or UI mismatches.
+
+Current Technical Decisions
+- State management: Provider.
+- API client: Dio.
+- Auth storage: flutter_secure_storage.
+- Local cache: Hive.
+- Notifications: Firebase Core, Firebase Messaging, Flutter Local Notifications.
+- Maps: Google Maps and Geolocator.
+- Payments: Khalti and eSewa planned.
+- Package/bundle ID: com.kauwatech.vwa.
+
+Firebase
+- Firebase project: vehicle-washing-application.
+- Android Firebase app ID: 1:544772728837:android:9dedbae23c26ca8fa2d46c.
+- iOS Firebase app ID: 1:544772728837:ios:0466e254df1c2697a2d46c.
+- Native config files are present:
+  - android/app/google-services.json
+  - ios/Runner/GoogleService-Info.plist
+- Flutter options file is present:
+  - lib/firebase_options.dart
+
+Current Project Status
+- Flutter app is created under /home/kalind7/visual_studio_projects/new_vwa/VWA.
+- README.md has been updated with project-specific setup details.
+- Root PLAN.md has been created with the UI-first workflow.
+- SUMMARY.md has been created as a handoff document for another AI model.
+- docs/PROJECT_PLAN.md contains the implementation plan.
+- Milestone 2 splash/onboarding flow is complete and ready for user testing.
+- Pre-Milestone-3 responsive foundation pass is complete.
+- Milestone 3 auth static screens have been implemented with static/mock UI and real route wiring.
+- Cursor/VS Code launch config exists at .vscode/launch.json.
+
+Current Implementation Priority
+- First build a static, pixel-perfect UI/UX replica from the Figma design.
+- UI code must be modularized into feature screens, reusable widgets, shared theme/style files, and mock data.
+- Do not begin API integration until all Figma screens are completed and approved.
+- After UI completion, replace mock data with live Postman API integrations.
+- Do not build the entire UI in one large pass. Work in small milestones and stop after each milestone so the user can run and test.
+- Current checkpoint is Milestone 3 verification: run the app on the connected Android phone and visually test all auth navigation paths.
+- Next implementation phase after user approval is Milestone 4: static main app shell with home/wash/settings navbar.
+
+Figma Status
+- User wants to use the recent Figma project named Bike-wash.
+- Available Figma MCP tools are get_figma_data and download_figma_images.
+- Figma file key is 16x5FR5xF6mJQ550ZNbMmU.
+- Starting node is 7:3.
+- Figma data has been fetched successfully.
+- Use Figma fonts and colors exactly where possible. Observed fonts include Poppins, Inter, SF Pro Text, Montserrat, Roboto, Public Sans, Protest Strike, and Mulish.
+- Observed color tokens include white, black, gray scale, Secondary/500 #1A1C1E, Secondary/400 #6C7278, Indigo/600 #444CE7, Error/500 #F04438, and input border #EDF1F3.
+
+Current UI Milestone Plan
+- Milestone 1: Design system and app shell.
+- Milestone 2: Splash and onboarding flow.
+- Milestone 3: Auth static screens implemented; awaiting runtime/user review.
+- Milestone 4: Main app shell with home/wash/settings navbar.
+- Milestone 5: Map and wash detail static screens.
+- User will run/test after each milestone before the next one starts.
+
+Responsive Layout Rules
+- Figma design width is 430 and should be treated as the mobile content baseline.
+- Wide devices should center/constrain mobile content instead of stretching it.
+- Small devices should use tighter padding and scaled image heights.
+- Auth screens in Milestone 3 should use scrollable form layouts to avoid overflow.
+
+How User Runs App
+- Preferred connected mobile device:
+  M2006C3LI / OJUSLVIVT4BE75JZ / Android 10 API 29.
+- Command:
+  flutter run -d OJUSLVIVT4BE75JZ
+- Do not use:
+  flutter run -d linux
+
+Latest Query Update
+- User asked to begin Milestone 3 and keep markdown docs updated with progress.
+- Implemented static auth screens and reusable auth widgets from the Figma auth patterns.
+- Replaced login/sign-up placeholders with route-backed static auth flow.
+- Verification passed: `dart format`, `flutter analyze`, and `flutter test`.
+- Remaining check: run `flutter run -d OJUSLVIVT4BE75JZ` for Android runtime/UI smoke testing; do not build APK/IPA.
