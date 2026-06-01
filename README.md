@@ -18,7 +18,7 @@ Current package/bundle identifier:
 - Dio for API integration
 - Firebase Core and Firebase Messaging for notifications
 - Flutter Local Notifications for foreground notifications
-- Google Maps and Geolocator for maps/location features
+- Google Maps dependency plus Flutter Map/OpenStreetMap, Geolocator, and Geocoding for current static maps/location features
 - Flutter Secure Storage for auth tokens
 - Hive for local caching
 - Khalti and eSewa integrations planned for payments
@@ -28,11 +28,12 @@ Current package/bundle identifier:
 - Flutter project created as `vwa`.
 - Android and iOS platforms are configured.
 - Firebase apps are registered and configured for `com.kauwatech.vwa`.
-- Provider foundation is in place.
+- Provider foundation is in place, and the current Phase 4 main shell uses feature providers for tab, Home/location, and map/search state.
 - API client and secure token storage skeletons are available.
 - Static design system, splash/onboarding, and auth screens are implemented.
 - Auth screens are static/mock only: login, sign up, forgot password, verify email, verify OTP, reset password, and add vehicle number.
 - Current pre-Phase-4 branch: `authentication-fixes`, covering splash timing, auth panel height consistency, multi-vehicle number entry, keyboard dismissal, 10-digit phone validation, and six-box OTP verification.
+- Current Phase 4 branch: `phase-4-main-shell`, adding the static Home/My wash/Profile shell with Droplet-style Home UI, automatic in-Home location permission, geocoded area/city text, compact station tabs, filter icon, overflow-safe station cards, Provider-backed state, repository-backed mock station data, and marker-based map/detail routes.
 - Project plan is documented in `docs/PROJECT_PLAN.md`.
 
 ## Running Locally

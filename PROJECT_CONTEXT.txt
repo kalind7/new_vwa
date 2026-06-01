@@ -19,7 +19,7 @@ Current Technical Decisions
 - Auth storage: flutter_secure_storage.
 - Local cache: Hive.
 - Notifications: Firebase Core, Firebase Messaging, Flutter Local Notifications.
-- Maps: Google Maps and Geolocator.
+- Maps: Google Maps dependency is present; the current static map UI uses Flutter Map/OpenStreetMap with Geolocator and Geocoding.
 - Payments: Khalti and eSewa planned.
 - Package/bundle ID: com.kauwatech.vwa.
 
@@ -50,8 +50,8 @@ Current Implementation Priority
 - Do not begin API integration until all Figma screens are completed and approved.
 - After UI completion, replace mock data with live Postman API integrations.
 - Do not build the entire UI in one large pass. Work in small milestones and stop after each milestone so the user can run and test.
-- Current checkpoint is the `authentication-fixes` branch before Milestone 4: verify the splash/auth layout and add-vehicle fixes, then run the app on the connected Android phone and visually test all auth navigation paths.
-- Next implementation phase after user approval is Milestone 4: static main app shell with home/wash/settings navbar.
+- Current checkpoint is the `phase-4-main-shell` branch: verify the auth-to-main flow, automatic Home location permission prompt, geocoded area/city label, attached Droplet/Home page replication, compact station tabs/filter icon, marker-based map search flow, station-detail placeholder, Provider-backed Phase 4 state, and My wash/Profile shell before continuing deeper static flows.
+- Next implementation phase after user approval is Milestone 5: map/station detail/payment-flow static screens.
 
 Figma Status
 - User wants to use the recent Figma project named Bike-wash.
@@ -66,7 +66,7 @@ Current UI Milestone Plan
 - Milestone 1: Design system and app shell.
 - Milestone 2: Splash and onboarding flow.
 - Milestone 3: Auth static screens implemented; pre-Phase-4 finalization pass complete on `authentication-fixes` pending verification/user review.
-- Milestone 4: Main app shell with home/wash/settings navbar.
+- Milestone 4: Main app shell with Home/My wash/Profile navbar implemented; Provider/location/map/Home UI fixes verified and awaiting device review.
 - Milestone 5: Map and wash detail static screens.
 - User will run/test after each milestone before the next one starts.
 
@@ -85,11 +85,19 @@ How User Runs App
   flutter run -d linux
 
 Latest Query Update
-- User asked to create branch `authentication-fixes` before Phase 4 and fix splash/auth UI issues.
-- Increased static splash duration by one second so the logo is easier to see during UI review.
-- Updated shared auth layout so the white content container fills the remaining screen height on larger devices instead of sitting only around the middle form content.
-- Updated add-vehicle UI to support multiple vehicle number fields with plus and minus controls.
-- Added shared scaffold tap-to-dismiss keyboard behavior so users can leave fields without completing forms.
-- Tightened phone fields to digits-only input and exactly 10-digit validation.
-- Added reusable six-square OTP input with validation on email and phone OTP screens.
-- Remaining check: run format/analyze/tests and then `flutter run -d OJUSLVIVT4BE75JZ` for Android runtime/UI smoke testing; do not build APK/IPA.
+- User approved the corrected Droplet-style Home direction but requested final Phase 4 fixes before the next phase.
+- Removed the separate location gate between auth and Home. Login/sign-up/add-vehicle flows now enter Home directly, and Home automatically triggers the native location permission prompt.
+- Home resolves the displayed location from the device with `geolocator` and `geocoding` into area/city text. It no longer hardcodes `Thamel, Kathmandu` and no longer shows raw latitude/longitude as the fallback UI.
+- If location permission is denied once, Home requests it again automatically. If permanently denied, Home shows an app-settings prompt.
+- Replaced the oversized `Nearby Stations` title with compact Home station tabs: `Nearby Station` and `Less distance`.
+- Added the missing Home filter/tune icon with mock-only feedback.
+- Fixed station-card render overflow by wrapping the rating/distance/price/slots metadata instead of forcing it into one row.
+- Replaced the drawn static map/search placeholder with a Flutter Map/OpenStreetMap page that shows station markers. Search results appear while typing; selecting a station moves the map and opens a bottom sheet that routes to station detail.
+- Added `flutter_map`, `latlong2`, and `geocoding` dependencies.
+- Moved Phase 4 main state from local `setState` into Provider where it matters for app flow/API readiness:
+  - `MainShellProvider` controls bottom-tab selection.
+  - `HomeProvider` controls location resolution, station loading, and Home station tabs.
+  - `StationSearchProvider` controls map search query, result visibility, and selected station.
+- Added `WashStationRepository` / `MockWashStationRepository` so the static station UI consumes a repository boundary that can later be replaced by API data.
+- Verification passed after the Provider/location/map/Home UI fixes: `dart format`, `flutter analyze`, and `flutter test`.
+- Remaining check: user should run `flutter run -d OJUSLVIVT4BE75JZ` for Android runtime/UI review; do not build APK/IPA.

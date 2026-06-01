@@ -56,7 +56,7 @@
 - Secure token storage: `flutter_secure_storage`.
 - Local cache: Hive.
 - Notifications: Firebase Core, Firebase Messaging, Flutter Local Notifications.
-- Maps: Google Maps and Geolocator.
+- Maps: Google Maps dependency is present; current static map UI uses Flutter Map/OpenStreetMap with Geolocator and Geocoding.
 - Payments planned: Khalti and eSewa.
 - Fonts package: `google_fonts`.
 
@@ -154,15 +154,18 @@ Verification passed:
 - API integration has not started.
 - Milestone 3 implementation has received a pre-Milestone-4 auth finalization pass on branch `authentication-fixes`.
 - Latest fixes increase static splash visibility, make auth white content panels fill the remaining screen height on larger phones, allow multiple vehicle numbers with plus/minus controls, dismiss keyboards on scaffold taps, enforce exactly 10-digit phone numbers, and add validated six-box OTP entry.
+- Milestone 4 main app shell has started on branch `phase-4-main-shell`.
+- Static logged-in shell now includes Home, My wash, and Profile tabs. Home was reworked from the attached Droplet page: blue-to-white header, Figma station imagery, red `Brand/500 #FF5656` active nav state, automatic in-Home location permission request, geocoded area/city location label, compact `Nearby Station`/`Less distance` tabs, filter icon, marker-based map search route, and station-to-detail route.
+- Phase 4 main state is now Provider-backed through `MainShellProvider`, `HomeProvider`, and `StationSearchProvider`. Station data is read through `WashStationRepository` / `MockWashStationRepository` so later API integration can replace the mock source without rewriting the UI.
 
 ## Next Required Work
 
-Finish Milestone 3 verification:
+Finish Milestone 4 verification:
 
-- Complete verification for the `authentication-fixes` branch.
-- Run the app on the connected Android phone to check runtime errors/UI mismatches, because the user explicitly allowed this after Milestone 3.
-- Have the user review all auth navigation paths and form visuals.
-- If approved, start Milestone 4: static main app shell with home/wash/settings navbar.
+- Complete device review for the `phase-4-main-shell` branch.
+- Run the app on the connected Android phone to check runtime errors/UI mismatches.
+- Have the user review the auth-to-main flow, automatic Home location prompt, resolved area/city location label, compact Home station tabs/filter icon, Home list UI, marker-based map/search flow, station detail placeholder, and My wash/Profile tabs.
+- If approved, continue Milestone 5 map/station detail/payment-flow static screens.
 - Do not integrate APIs yet.
 - Do not build APK/IPA.
 

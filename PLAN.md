@@ -256,11 +256,24 @@ Review checkpoint: you test all auth navigation paths and form visuals.
 
 Build the static logged-in area.
 
-- Home page.
-- Bottom navbar with three tabs.
-- Home tab with location info and search button.
-- Wash tab with bike wash status.
-- Settings/Profile tab.
+- Status: Reworked on branch `phase-4-main-shell` from the attached Droplet/Home Figma page; Provider/location/map/Home UI fixes verified with analyzer/tests and pending device review.
+- Added Figma-aligned static logged-in shell with bottom navbar labels/icons:
+  - Home.
+  - My wash.
+  - Profile.
+- Home tab now uses the attached Droplet page as the base: blue-to-white header, user avatar/greeting, search and notification icons, red `Brand/500 #FF5656` active nav state, automatic in-Home location permission request, geocoded area/city location label, compact `Nearby Station`/`Less distance` station tabs, filter icon, and vertical nearby station cards with Figma station imagery.
+- Station-card metadata wraps across lines to avoid render overflow around the slots chip.
+- Search icon opens a marker-based Flutter Map/OpenStreetMap page. Search results appear while typing; selecting a result recenters the map and opens a bottom station sheet that routes to detail.
+- Station cards open a static station detail page to preserve the future API-backed flow shape.
+- Phase 4 state is Provider-backed for API readiness:
+  - `MainShellProvider` controls bottom-tab selection.
+  - `HomeProvider` controls location resolution, station loading, and Home station tabs.
+  - `StationSearchProvider` controls map search query, results visibility, and selected station.
+  - `WashStationRepository` / `MockWashStationRepository` isolates the current mock station source from the UI.
+- My wash tab includes booked/completed summary cards and static wash booking cards with mock cancel feedback.
+- Profile tab includes avatar/add affordance, user identity, profile setting, payments history, reviews, and logout rows.
+- Login and completed add-vehicle flows now route into the static main shell.
+- No API integration has started.
 
 Review checkpoint: you test navbar switching and static screen layout.
 

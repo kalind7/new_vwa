@@ -48,7 +48,9 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
-    Navigator.of(context).pushNamed(AppRoutes.addVehicle);
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(AppRoutes.mainShell, (route) => false);
   }
 
   @override

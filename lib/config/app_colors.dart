@@ -37,5 +37,8 @@ class AppColors {
   static const Color mutedText = Color(0xFF7D7D91);
   static const Color tabText = Color(0xFF232447);
   static const Color logoAccent = Color(0xFFFF5656);
+  static const Color brand500 = Color(0xFFFF5656);
   static const Color lightText = Color(0xFFEEEEEE);
+  static const Color homeGradientStart = Color(0xFF0B7CFF);
+  static const Color homeGradientEnd = Color(0xFFDDEBFF);
 }

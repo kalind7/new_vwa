@@ -77,4 +77,5 @@
 - Milestone 2 splash/onboarding flow completed.
 - Milestone 3 static auth screens implemented with no API integration.
 - Current branch `authentication-fixes` adjusts splash duration, auth white panel height on larger phones, add-vehicle multiple number entry, tap-to-dismiss keyboards, 10-digit phone validation, and six-box OTP entry before Milestone 4.
+- Current branch `phase-4-main-shell` adds the static logged-in Home/My wash/Profile shell, reworks Home from the attached Droplet page, requests location automatically inside Home, resolves the displayed location into area/city text, adds compact station tabs and a filter icon, fixes station-card overflow, moves Phase 4 main state into Provider, introduces a station repository boundary for later API data, and routes search/station cards to marker-based map/detail placeholders.
 - Latest verification passed: `dart format`, `flutter analyze`, and `flutter test`.

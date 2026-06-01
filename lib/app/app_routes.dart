@@ -8,6 +8,10 @@ import '../features/auth/presentation/screens/reset_password_screen.dart';
 import '../features/auth/presentation/screens/sign_up_screen.dart';
 import '../features/auth/presentation/screens/verify_email_screen.dart';
 import '../features/foundation/presentation/screens/foundation_preview_screen.dart';
+import '../features/main/presentation/screens/main_shell_screen.dart';
+import '../features/main/presentation/screens/station_detail_screen.dart';
+import '../features/main/presentation/screens/station_search_map_screen.dart';
+import '../features/main/data/main_shell_mock_data.dart';
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../features/onboarding/presentation/screens/splash_screen.dart';
 
@@ -23,6 +27,9 @@ class AppRoutes {
   static const String verifyOtp = '/verify-otp';
   static const String resetPassword = '/reset-password';
   static const String addVehicle = '/add-vehicle';
+  static const String mainShell = '/main';
+  static const String stationSearchMap = '/station-search-map';
+  static const String stationDetail = '/station-detail';
   static const String foundation = '/foundation';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -36,6 +43,14 @@ class AppRoutes {
       verifyOtp => (_) => const OtpVerificationScreen(),
       resetPassword => (_) => const ResetPasswordScreen(),
       addVehicle => (_) => const AddVehicleScreen(),
+      mainShell => (_) => const MainShellScreen(),
+      stationSearchMap => (_) => const StationSearchMapScreen(),
+      stationDetail => (_) {
+        final station = settings.arguments is WashStationMock
+            ? settings.arguments as WashStationMock
+            : nearbyStations.first;
+        return StationDetailScreen(station: station);
+      },
       foundation => (_) => const FoundationPreviewScreen(),
       _ => (_) => const SplashScreen(),
     };

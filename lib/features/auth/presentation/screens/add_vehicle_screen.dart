@@ -71,7 +71,7 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
     );
     Navigator.of(
       context,
-    ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+    ).pushNamedAndRemoveUntil(AppRoutes.mainShell, (route) => false);
   }
 
   @override
