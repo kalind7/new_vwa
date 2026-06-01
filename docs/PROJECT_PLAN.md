@@ -76,4 +76,5 @@
 - Milestone 1 design system and app shell completed.
 - Milestone 2 splash/onboarding flow completed.
 - Milestone 3 static auth screens implemented with no API integration.
+- Current branch `authentication-fixes` adjusts splash duration, auth white panel height on larger phones, add-vehicle multiple number entry, tap-to-dismiss keyboards, 10-digit phone validation, and six-box OTP entry before Milestone 4.
 - Latest verification passed: `dart format`, `flutter analyze`, and `flutter test`.

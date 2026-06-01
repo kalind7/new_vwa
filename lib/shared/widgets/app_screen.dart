@@ -42,10 +42,14 @@ class AppScreen extends StatelessWidget {
       );
     }
 
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
-      body: extendBodyBehindSafeArea ? body : SafeArea(child: body),
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: Scaffold(
+        backgroundColor: backgroundColor,
+        resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+        body: extendBodyBehindSafeArea ? body : SafeArea(child: body),
+      ),
     );
   }
 }

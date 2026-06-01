@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../app/app_routes.dart';
 import '../../../../config/app_spacing.dart';
@@ -111,9 +112,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 AppTextField(
                   controller: _phoneController,
                   label: 'Phone Number',
-                  hintText: '(454) 726-0592',
+                  hintText: '9801234567',
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.next,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(10),
+                  ],
                   validator: AuthFormValidators.phone,
                 ),
                 AppTextField(

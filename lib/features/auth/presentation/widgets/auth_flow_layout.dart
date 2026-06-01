@@ -35,6 +35,8 @@ class AuthFlowLayout extends StatelessWidget {
           final isCompact = constraints.maxHeight < 700;
           final headerHeight = isCompact ? 188.0 : 236.0;
 
+          final contentMinHeight = constraints.maxHeight - headerHeight;
+
           return SingleChildScrollView(
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: EdgeInsets.only(
@@ -81,29 +83,32 @@ class AuthFlowLayout extends StatelessWidget {
                       ),
                     ),
                   ),
-                  DecoratedBox(
-                    decoration: const BoxDecoration(
-                      color: AppColors.white,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(AppRadius.xl),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: contentMinHeight),
+                    child: DecoratedBox(
+                      decoration: const BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(AppRadius.xl),
+                        ),
                       ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.xxl,
-                        AppSpacing.xxl,
-                        AppSpacing.xxl,
-                        AppSpacing.xxxl,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          child,
-                          if (bottom != null) ...[
-                            const SizedBox(height: AppSpacing.xxl),
-                            bottom!,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.xxl,
+                          AppSpacing.xxl,
+                          AppSpacing.xxl,
+                          AppSpacing.xxxl,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            child,
+                            if (bottom != null) ...[
+                              const SizedBox(height: AppSpacing.xxl),
+                              bottom!,
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   ),

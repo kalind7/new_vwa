@@ -152,12 +152,14 @@ Verification passed:
   - Add vehicle number
   - Back-to-login transitions
 - API integration has not started.
-- Milestone 3 implementation is complete pending Android runtime/user visual review.
+- Milestone 3 implementation has received a pre-Milestone-4 auth finalization pass on branch `authentication-fixes`.
+- Latest fixes increase static splash visibility, make auth white content panels fill the remaining screen height on larger phones, allow multiple vehicle numbers with plus/minus controls, dismiss keyboards on scaffold taps, enforce exactly 10-digit phone numbers, and add validated six-box OTP entry.
 
 ## Next Required Work
 
 Finish Milestone 3 verification:
 
+- Complete verification for the `authentication-fixes` branch.
 - Run the app on the connected Android phone to check runtime errors/UI mismatches, because the user explicitly allowed this after Milestone 3.
 - Have the user review all auth navigation paths and form visuals.
 - If approved, start Milestone 4: static main app shell with home/wash/settings navbar.

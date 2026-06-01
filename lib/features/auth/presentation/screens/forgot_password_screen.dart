@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../app/app_routes.dart';
 import '../../../../shared/widgets/app_button.dart';
@@ -56,9 +57,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             AppTextField(
               controller: _phoneController,
               label: 'Phone no',
-              hintText: 'Enter your number',
+              hintText: '9801234567',
               keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.done,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
+              ],
               validator: AuthFormValidators.phone,
               onFieldSubmitted: (_) => _submit(),
             ),

@@ -32,6 +32,7 @@ Current package/bundle identifier:
 - API client and secure token storage skeletons are available.
 - Static design system, splash/onboarding, and auth screens are implemented.
 - Auth screens are static/mock only: login, sign up, forgot password, verify email, verify OTP, reset password, and add vehicle number.
+- Current pre-Phase-4 branch: `authentication-fixes`, covering splash timing, auth panel height consistency, multi-vehicle number entry, keyboard dismissal, 10-digit phone validation, and six-box OTP verification.
 - Project plan is documented in `docs/PROJECT_PLAN.md`.
 
 ## Running Locally
