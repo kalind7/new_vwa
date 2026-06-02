@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../features/auth/presentation/models/add_vehicle_route_args.dart';
 import '../features/auth/presentation/screens/add_vehicle_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
@@ -74,7 +75,13 @@ class AppRoutes {
       verifyEmail => (_) => const VerifyEmailScreen(),
       verifyOtp => (_) => const OtpVerificationScreen(),
       resetPassword => (_) => const ResetPasswordScreen(),
-      addVehicle => (_) => const AddVehicleScreen(),
+      addVehicle => (_) {
+        final args = settings.arguments;
+        final fromProfile = args is AddVehicleRouteArgs
+            ? args.fromProfile
+            : args == true;
+        return AddVehicleScreen(fromProfile: fromProfile);
+      },
       mainShell => (_) {
         final initialIndex = settings.arguments is int
             ? settings.arguments as int

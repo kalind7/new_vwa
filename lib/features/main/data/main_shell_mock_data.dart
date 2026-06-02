@@ -11,6 +11,8 @@ class StationProductMock {
   final String? price;
 }
 
+/// Presentation model for station cards/detail. When `USE_MOCK_DATA=false`, instances
+/// are built only from [ServiceStation] API JSON via [ServiceStationMapper].
 class WashStationMock {
   const WashStationMock({
     required this.id,
@@ -86,73 +88,6 @@ class WashStationMock {
       services: services ?? this.services,
       products: products ?? this.products,
       operatingHours: operatingHours ?? this.operatingHours,
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'location': location,
-    'rating': rating,
-    'distance': distance,
-    'price': price,
-    'slots': slots,
-    'slotsColor': slotsColor.toARGB32(),
-    'latitude': latitude,
-    'longitude': longitude,
-    'reviewCount': reviewCount,
-    'availableSlotsCount': availableSlotsCount,
-    'services': services,
-    'products': products
-        .map(
-          (product) => {
-            'id': product.id,
-            'name': product.name,
-            'price': product.price,
-          },
-        )
-        .toList(),
-    'operatingHours': operatingHours,
-  };
-
-  factory WashStationMock.fromJson(Map<String, dynamic> json) {
-    final productsRaw = json['products'];
-    final products = productsRaw is List
-        ? productsRaw
-              .whereType<Map<String, dynamic>>()
-              .map(
-                (item) => StationProductMock(
-                  id: item['id'] is int
-                      ? item['id'] as int
-                      : int.tryParse('${item['id']}') ?? 0,
-                  name: '${item['name'] ?? ''}',
-                  price: item['price']?.toString(),
-                ),
-              )
-              .toList()
-        : const <StationProductMock>[];
-
-    return WashStationMock(
-      id: '${json['id'] ?? ''}',
-      name: '${json['name'] ?? ''}',
-      location: '${json['location'] ?? ''}',
-      rating: '${json['rating'] ?? '0.0'}',
-      distance: '${json['distance'] ?? 'Nearby'}',
-      price: '${json['price'] ?? 'Price on request'}',
-      slots: '${json['slots'] ?? '5 slots available'}',
-      slotsColor: Color(
-        json['slotsColor'] as int? ?? AppColors.success50.toARGB32(),
-      ),
-      latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
-      longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
-      reviewCount: json['reviewCount'] as int? ?? 0,
-      availableSlotsCount: json['availableSlotsCount'] as int? ?? 5,
-      services:
-          (json['services'] as List?)?.map((e) => '$e').toList() ?? const [],
-      products: products,
-      operatingHours:
-          (json['operatingHours'] as List?)?.map((e) => '$e').toList() ??
-          const [],
     );
   }
 }

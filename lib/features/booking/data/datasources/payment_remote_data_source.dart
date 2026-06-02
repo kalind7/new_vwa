@@ -17,7 +17,7 @@ class PaymentRemoteDataSource {
   }) async {
     try {
       final response = await _apiClient.dio.post<Map<String, dynamic>>(
-        ApiPaths.validatePromoCode,
+        ApiPaths.validateBookingPromo,
         data: {'code': code, 'amount': amount},
         options: Options(
           contentType: Headers.jsonContentType,

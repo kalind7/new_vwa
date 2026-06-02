@@ -10,7 +10,8 @@ import '../../features/booking/data/datasources/rating_remote_data_source.dart';
 import '../../features/booking/data/repositories/booking_repository_impl.dart';
 import '../../features/booking/domain/repositories/booking_repository.dart';
 import '../../features/main/data/api_wash_station_repository.dart';
-import '../../features/main/data/saved_stations_storage.dart';
+import '../../features/main/data/saved_station_ids_storage.dart';
+import '../../features/main/data/saved_stations_repository.dart';
 import '../../features/main/data/wash_station_repository.dart';
 import '../../features/profile/data/datasources/profile_remote_data_source.dart';
 import '../../features/profile/data/datasources/vehicle_remote_data_source.dart';
@@ -31,7 +32,7 @@ class AppDependencies {
     required this.paymentRemoteDataSource,
     required this.ratingRemoteDataSource,
     required this.notificationRemoteDataSource,
-    required this.savedStationsStorage,
+    required this.savedStationsRepository,
   });
 
   final LocalStorageService localStorage;
@@ -43,7 +44,7 @@ class AppDependencies {
   final PaymentRemoteDataSource paymentRemoteDataSource;
   final RatingRemoteDataSource ratingRemoteDataSource;
   final NotificationRemoteDataSource notificationRemoteDataSource;
-  final SavedStationsStorage savedStationsStorage;
+  final SavedStationsRepository savedStationsRepository;
 
   static AppDependencies? instance;
 
@@ -61,6 +62,10 @@ class AppDependencies {
     final paymentRemote = PaymentRemoteDataSource(apiClient);
     final ratingRemote = RatingRemoteDataSource(apiClient);
     final notificationRemote = NotificationRemoteDataSource(apiClient);
+    final washStationRepository = AppConfig.useMockData
+        ? const MockWashStationRepository()
+        : ApiWashStationRepository(apiClient);
+    final savedIdsStorage = SavedStationIdsStorage(prefs);
 
     final dependencies = AppDependencies._(
       localStorage: localStorage,
@@ -73,14 +78,15 @@ class AppDependencies {
         profileRemoteDataSource: profileRemote,
         vehicleRemoteDataSource: vehicleRemote,
       ),
-      washStationRepository: AppConfig.useMockData
-          ? const MockWashStationRepository()
-          : ApiWashStationRepository(apiClient),
+      washStationRepository: washStationRepository,
       bookingRepository: BookingRepositoryImpl(remote: bookingRemote),
       paymentRemoteDataSource: paymentRemote,
       ratingRemoteDataSource: ratingRemote,
       notificationRemoteDataSource: notificationRemote,
-      savedStationsStorage: SavedStationsStorage(prefs),
+      savedStationsRepository: SavedStationsRepository(
+        storage: savedIdsStorage,
+        stationRepository: washStationRepository,
+      ),
     );
     instance = dependencies;
     return dependencies;
@@ -99,6 +105,8 @@ class AppDependencies {
     final paymentRemote = PaymentRemoteDataSource(apiClient);
     final ratingRemote = RatingRemoteDataSource(apiClient);
     final notificationRemote = NotificationRemoteDataSource(apiClient);
+    const washStationRepository = MockWashStationRepository();
+    final savedIdsStorage = SavedStationIdsStorage(prefs);
 
     final dependencies = AppDependencies._(
       localStorage: localStorage,
@@ -111,12 +119,15 @@ class AppDependencies {
         profileRemoteDataSource: profileRemote,
         vehicleRemoteDataSource: vehicleRemote,
       ),
-      washStationRepository: const MockWashStationRepository(),
+      washStationRepository: washStationRepository,
       bookingRepository: BookingRepositoryImpl(remote: bookingRemote),
       paymentRemoteDataSource: paymentRemote,
       ratingRemoteDataSource: ratingRemote,
       notificationRemoteDataSource: notificationRemote,
-      savedStationsStorage: SavedStationsStorage(prefs),
+      savedStationsRepository: SavedStationsRepository(
+        storage: savedIdsStorage,
+        stationRepository: washStationRepository,
+      ),
     );
     instance = dependencies;
     return dependencies;

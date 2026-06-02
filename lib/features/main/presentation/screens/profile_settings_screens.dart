@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../app/app_routes.dart';
+import '../../../auth/presentation/models/add_vehicle_route_args.dart';
 import '../../../../config/app_colors.dart';
 import '../../../../config/app_radius.dart';
 import '../../../../config/app_spacing.dart';
@@ -295,7 +296,12 @@ class _MyVehicleScreenState extends State<MyVehicleScreen> {
   }
 
   void _addVehicle() {
-    Navigator.of(context).pushNamed(AppRoutes.addVehicle).then((_) {
+    Navigator.of(context)
+        .pushNamed(
+          AppRoutes.addVehicle,
+          arguments: const AddVehicleRouteArgs(fromProfile: true),
+        )
+        .then((_) {
       if (mounted) {
         _loadVehicles();
         context.read<UserProfileProvider>().loadProfile();
@@ -486,8 +492,24 @@ class _VehicleCard extends StatelessWidget {
   }
 }
 
-class SavedStationsScreen extends StatelessWidget {
+class SavedStationsScreen extends StatefulWidget {
   const SavedStationsScreen({super.key});
+
+  @override
+  State<SavedStationsScreen> createState() => _SavedStationsScreenState();
+}
+
+class _SavedStationsScreenState extends State<SavedStationsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      context.read<SavedStationsProvider>().loadSavedStations();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

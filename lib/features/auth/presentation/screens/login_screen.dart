@@ -11,6 +11,7 @@ import '../../../../config/app_text_styles.dart';
 import '../../../../core/di/app_dependencies.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../../profile/presentation/providers/user_profile_provider.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_confirmation_dialog.dart';
 import '../../../../shared/widgets/app_loading_overlay.dart';
@@ -128,6 +129,12 @@ class _LoginScreenState extends State<LoginScreen> {
           await NotificationService(
             notificationRemote: notificationRemote,
           ).syncTokenWithBackend();
+        }
+        if (!mounted) {
+          return;
+        }
+        if (mounted) {
+          await context.read<UserProfileProvider>().loadProfile();
         }
         if (!mounted) {
           return;

@@ -38,7 +38,7 @@ class RatingRemoteDataSource {
   Future<Either<Failure, List<Map<String, dynamic>>>> fetchUserRatings() async {
     try {
       final response = await _apiClient.dio.get<Map<String, dynamic>>(
-        ApiPaths.userRatings,
+        ApiPaths.myRatings,
         options: Options(headers: const {'Accept': 'application/json'}),
       );
 

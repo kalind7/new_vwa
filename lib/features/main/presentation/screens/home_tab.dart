@@ -31,7 +31,10 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   late final HomeProvider _provider;
+  UserProfileProvider? _profileProvider;
   bool _providerInitialized = false;
+  bool _savedLocationSynced = false;
+  bool _locationBootstrapStarted = false;
 
   @override
   void initState() {
@@ -49,12 +52,82 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
     _provider = HomeProvider(
       stationRepository: context.read<WashStationRepository>(),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onHomeTabReady());
+  }
+
+  void _onHomeTabReady() {
+    if (!mounted) {
+      return;
+    }
+
+    _attachProfileListener();
+    _bootstrapLocation();
+    _syncSavedLocationFromProfile();
+  }
+
+  void _attachProfileListener() {
+    _profileProvider?.removeListener(_onProfileUpdated);
+    _profileProvider = context.read<UserProfileProvider>();
+    _profileProvider!.addListener(_onProfileUpdated);
+  }
+
+  void _onProfileUpdated() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _syncSavedLocationFromProfile();
+    });
+  }
+
+  void _bootstrapLocation() {
+    if (_locationBootstrapStarted) {
+      return;
+    }
+
+    final saved = _profileProvider?.profile?.primaryLocation;
+    if (saved != null && saved.latitude != 0 && saved.longitude != 0) {
+      _locationBootstrapStarted = true;
+      _savedLocationSynced = true;
+      _provider.applySavedLocation(
+        latitude: saved.latitude,
+        longitude: saved.longitude,
+        address: saved.address,
+      );
+      _provider.loadStations();
+      return;
+    }
+
+    _locationBootstrapStarted = true;
     _provider.resolveCurrentLocation(retryAfterDeny: true);
+  }
+
+  void _syncSavedLocationFromProfile() {
+    if (_savedLocationSynced || !_providerInitialized) {
+      return;
+    }
+
+    final saved = _profileProvider?.profile?.primaryLocation;
+    if (saved == null || (saved.latitude == 0 && saved.longitude == 0)) {
+      return;
+    }
+
+    _savedLocationSynced = true;
+    if (!_locationBootstrapStarted) {
+      _locationBootstrapStarted = true;
+    }
+    _provider.applySavedLocation(
+      latitude: saved.latitude,
+      longitude: saved.longitude,
+      address: saved.address,
+    );
+    _provider.loadStations();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _profileProvider?.removeListener(_onProfileUpdated);
     if (_providerInitialized) {
       _provider.dispose();
     }
@@ -223,26 +296,63 @@ class _StationListBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (provider.isLoadingStations) {
-      return const StationListShimmer(itemCount: 4);
-    }
+    return RefreshIndicator(
+      color: AppColors.brand500,
+      onRefresh: provider.refreshForCurrentTab,
+      child: _StationListScrollable(provider: provider),
+    );
+  }
+}
 
+class _StationListScrollable extends StatelessWidget {
+  const _StationListScrollable({required this.provider});
+
+  final HomeProvider provider;
+
+  static const _shimmerCount = 4;
+
+  @override
+  Widget build(BuildContext context) {
+    final isLoading = provider.isLoadingStations;
     final stations = provider.visibleStations;
-    if (stations.isEmpty) {
-      return Center(
-        child: Text(
-          provider.emptyStateMessage,
-          style: AppTextStyles.textSmRegular.copyWith(color: AppColors.gray500),
-          textAlign: TextAlign.center,
-        ),
+
+    if (!isLoading && stations.isEmpty) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(top: AppSpacing.xxxl),
+            children: [
+              SizedBox(
+                height: constraints.maxHeight - AppSpacing.xxxl,
+                child: Center(
+                  child: Text(
+                    provider.emptyStateMessage,
+                    style: AppTextStyles.textSmRegular.copyWith(
+                      color: AppColors.gray500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       );
     }
 
+    final itemCount = isLoading ? _shimmerCount : stations.length;
+
     return ListView.separated(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.zero,
-      itemCount: stations.length,
+      itemCount: itemCount,
       separatorBuilder: (_, _) => const SizedBox(height: 17),
       itemBuilder: (context, index) {
+        if (isLoading) {
+          return const StationCardShimmer();
+        }
+
         final station = stations[index];
         return StationCard(
           station: station,

@@ -88,7 +88,7 @@ class VehicleRemoteDataSource {
         ApiPaths.vehicleDetails(vehicleId),
         data: {'vehicle_number': vehicleNumber, 'vehicle_type': vehicleType},
         options: Options(
-          contentType: Headers.formUrlEncodedContentType,
+          contentType: Headers.jsonContentType,
           headers: const {'Accept': 'application/json'},
         ),
       );
@@ -130,7 +130,10 @@ class VehicleRemoteDataSource {
       await _apiClient.dio.post<Map<String, dynamic>>(
         ApiPaths.vehicles,
         data: {'vehicle_number': vehicleNumber, 'vehicle_type': vehicleType},
-        options: Options(contentType: Headers.formUrlEncodedContentType),
+        options: Options(
+          contentType: Headers.jsonContentType,
+          headers: const {'Accept': 'application/json'},
+        ),
       );
       return right(null);
     } on DioException catch (error) {

@@ -1,4 +1,6 @@
 /// Relative API paths. [AppConfig.apiBaseUrl] already includes `/api/v1/`.
+///
+/// Aligned with Postman collection: Service Station Booking API (2026-04).
 class ApiPaths {
   const ApiPaths._();
 
@@ -10,38 +12,48 @@ class ApiPaths {
   static const String authVerifyOtp = 'auth/verify-otp';
   static const String authForgotPassword = 'auth/forgot-password';
   static const String authResetPassword = 'auth/reset-password';
-
-  // Profile & vehicles (Postman: GET auth/me, POST/GET vehicles)
   static const String authMe = 'auth/me';
+
+  // Vehicles
   static const String vehicles = 'vehicles';
   static String vehicleDetails(String id) => 'vehicles/$id';
   static String setDefaultVehicle(String id) => 'vehicles/$id/set-default';
 
-  // Stations
+  // Service stations
   static const String serviceStations = 'service-stations';
   static String serviceStationDetails(String id) => 'service-stations/$id';
   static const String nearestStations = 'service-stations/nearest';
-
-  /// Postman: GET `suggest-nearest` (auth required, uses saved user location).
   static const String suggestStationNearest = 'suggest-nearest';
-
-  // Location
-  static const String userLocations = 'locations';
-  static const String saveLocation = 'locations';
-
-  // Bookings
-  static const String bookings = 'bookings';
-  static String bookingDetails(String id) => 'bookings/$id';
-  static String cancelBooking(String id) => 'bookings/$id/cancel';
-
-  // Payments & reviews
-  static const String validatePromoCode = 'promo-codes/validate';
-  static const String initiatePayment = 'payments/initiate';
-  static const String submitRating = 'ratings';
-  static const String userRatings = 'user/ratings';
   static String stationRatings(String stationId) =>
       'service-stations/$stationId/ratings';
 
-  // Notifications (confirm path with Laravel backend if needed)
+  // Locations
+  static const String locations = 'locations';
+
+  // Bookings
+  static const String bookings = 'bookings';
+  static const String validateBookingPromo = 'bookings/validate-promo';
+  static String bookingDetails(String id) => 'bookings/$id';
+  static String cancelBooking(String id) => 'bookings/$id/cancel';
+
+  // Payments
+  static const String initiatePayment = 'payments/initiate';
+
+  // Ratings
+  static const String submitRating = 'ratings';
+  static const String myRatings = 'ratings/my-ratings';
+
+  // Rewards
+  static const String rewardsBalance = 'rewards/balance';
+  static const String rewardsTransactions = 'rewards/transactions';
+  static const String rewardsRedeem = 'rewards/redeem';
+
+  // Admin (station staff)
+  static const String adminCheckRole = 'admin/check-role';
+  static const String adminBookings = 'admin/bookings';
+  static String adminBookingStatus(String id) => 'admin/bookings/$id/status';
+  static const String adminQueue = 'admin/queue';
+
+  // Notifications — confirm with backend if path differs
   static const String fcmToken = 'fcm-token';
 }

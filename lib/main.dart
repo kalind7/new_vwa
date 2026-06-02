@@ -13,8 +13,11 @@ import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/booking/data/datasources/payment_remote_data_source.dart';
 import 'features/booking/data/datasources/rating_remote_data_source.dart';
 import 'features/booking/domain/repositories/booking_repository.dart';
+import 'features/booking/presentation/providers/wash_bookings_provider.dart';
 import 'features/main/data/wash_station_repository.dart';
+import 'features/main/presentation/providers/saved_stations_provider.dart';
 import 'features/profile/domain/repositories/user_repository.dart';
+import 'features/profile/presentation/providers/user_profile_provider.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -52,6 +55,19 @@ Future<void> main() async {
         ),
         Provider<RatingRemoteDataSource>.value(
           value: dependencies.ratingRemoteDataSource,
+        ),
+        ChangeNotifierProvider(
+          create: (context) =>
+              WashBookingsProvider(context.read<BookingRepository>()),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => SavedStationsProvider(
+            dependencies.savedStationsRepository,
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) =>
+              UserProfileProvider(context.read<UserRepository>()),
         ),
         ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
       ],

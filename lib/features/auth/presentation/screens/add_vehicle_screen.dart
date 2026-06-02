@@ -10,13 +10,17 @@ import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_loading_overlay.dart';
 import '../../../../shared/widgets/app_screen.dart';
+import '../../../../shared/widgets/app_screen_header.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../profile/domain/repositories/user_repository.dart';
 import '../utils/auth_form_validators.dart';
 
 class AddVehicleScreen extends StatefulWidget {
-  const AddVehicleScreen({super.key});
+  const AddVehicleScreen({super.key, this.fromProfile = false});
+
+  /// When opened from Profile → My vehicle, hides profile-photo onboarding UI.
+  final bool fromProfile;
 
   @override
   State<AddVehicleScreen> createState() => _AddVehicleScreenState();
@@ -53,14 +57,6 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
     final controller = _vehicleNumberControllers.removeAt(index);
     controller.dispose();
     setState(() {});
-  }
-
-  void _showUploadUnavailableMessage() {
-    FocusScope.of(context).unfocus();
-    AppToast.showNeutral(
-      context,
-      'Profile photo upload is not available on the server yet.',
-    );
   }
 
   List<String> _collectVehicleNumbers() {
@@ -117,7 +113,7 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
         context,
         'Mock saved ${plates.length} vehicle number(s).',
       );
-      _goToMainShell();
+      _finishSuccess();
       return;
     }
 
@@ -140,12 +136,17 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
               ? 'Vehicle added successfully.'
               : '${plates.length} vehicles added successfully.',
         );
-        _goToMainShell();
+        _finishSuccess();
       },
     );
   }
 
-  void _goToMainShell() {
+  void _finishSuccess() {
+    if (widget.fromProfile) {
+      Navigator.of(context).pop(true);
+      return;
+    }
+
     Navigator.of(
       context,
     ).pushNamedAndRemoveUntil(AppRoutes.mainShell, (route) => false);
@@ -153,115 +154,125 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final form = _VehicleForm(
+      formKey: _formKey,
+      controllers: _vehicleNumberControllers,
+      fromProfile: widget.fromProfile,
+      onAddField: _addVehicleField,
+      onRemoveField: _removeVehicleField,
+      onSubmit: _submit,
+    );
+
+    if (widget.fromProfile) {
+      return Stack(
+        children: [
+          Scaffold(
+            backgroundColor: AppColors.white,
+            appBar: buildAppScreenHeader(context, title: 'Add vehicle'),
+            body: form,
+          ),
+          if (_isSubmitting) const AppLoadingOverlay(),
+        ],
+      );
+    }
+
     return Stack(
       children: [
         AppScreen(
           backgroundColor: AppColors.white,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.viewInsetsOf(context).bottom,
-                ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.xxl,
-                    ),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'Setup your profile',
-                            style: AppTextStyles.titleLarge.copyWith(
-                              color: AppColors.gray800,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            'Upload your picture and vehicle numbers',
-                            style: AppTextStyles.textSmRegular.copyWith(
-                              color: AppColors.gray500,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.xxxl),
-                          Center(
-                            child: Column(
-                              children: [
-                                DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    color: AppColors.gray100,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: AppColors.white,
-                                      width: 4,
-                                    ),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Color(0x1F101828),
-                                        blurRadius: 16,
-                                        offset: Offset(0, 8),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const SizedBox(
-                                    width: 96,
-                                    height: 96,
-                                    child: Icon(
-                                      Icons.person_outline_rounded,
-                                      color: AppColors.gray500,
-                                      size: 42,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                TextButton(
-                                  onPressed: _showUploadUnavailableMessage,
-                                  child: Text(
-                                    'Upload picture',
-                                    style: AppTextStyles.textMdMedium.copyWith(
-                                      color: AppColors.indigo600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.xxxl),
-                          for (
-                            var index = 0;
-                            index < _vehicleNumberControllers.length;
-                            index++
-                          ) ...[
-                            _VehicleNumberField(
-                              controller: _vehicleNumberControllers[index],
-                              index: index,
-                              canRemove: _vehicleNumberControllers.length > 1,
-                              onAdd: _addVehicleField,
-                              onRemove: () => _removeVehicleField(index),
-                              onSubmit: _submit,
-                            ),
-                            if (index < _vehicleNumberControllers.length - 1)
-                              const SizedBox(height: AppSpacing.lg),
-                          ],
-                          const SizedBox(height: AppSpacing.xxxl),
-                          AppButton(label: 'Done', onPressed: _submit),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
+          child: form,
         ),
         if (_isSubmitting) const AppLoadingOverlay(),
       ],
+    );
+  }
+}
+
+class _VehicleForm extends StatelessWidget {
+  const _VehicleForm({
+    required this.formKey,
+    required this.controllers,
+    required this.fromProfile,
+    required this.onAddField,
+    required this.onRemoveField,
+    required this.onSubmit,
+  });
+
+  final GlobalKey<FormState> formKey;
+  final List<TextEditingController> controllers;
+  final bool fromProfile;
+  final VoidCallback onAddField;
+  final void Function(int index) onRemoveField;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: EdgeInsets.only(
+            left: AppSpacing.lg,
+            right: AppSpacing.lg,
+            top: fromProfile ? AppSpacing.lg : AppSpacing.xxl,
+            bottom: MediaQuery.viewInsetsOf(context).bottom + AppSpacing.xxl,
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: fromProfile ? 0 : constraints.maxHeight,
+            ),
+            child: Form(
+              key: formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (!fromProfile) ...[
+                    Text(
+                      'Setup your profile',
+                      style: AppTextStyles.titleLarge.copyWith(
+                        color: AppColors.gray800,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Add your vehicle numbers to get started',
+                      style: AppTextStyles.textSmRegular.copyWith(
+                        color: AppColors.gray500,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxxl),
+                  ] else ...[
+                    Text(
+                      'Enter your bike plate number',
+                      style: AppTextStyles.textSmRegular.copyWith(
+                        color: AppColors.gray500,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+                  ],
+                  for (var index = 0; index < controllers.length; index++) ...[
+                    _VehicleNumberField(
+                      controller: controllers[index],
+                      index: index,
+                      canRemove: controllers.length > 1,
+                      onAdd: onAddField,
+                      onRemove: () => onRemoveField(index),
+                      onSubmit: onSubmit,
+                    ),
+                    if (index < controllers.length - 1)
+                      const SizedBox(height: AppSpacing.lg),
+                  ],
+                  const SizedBox(height: AppSpacing.xxxl),
+                  AppButton(
+                    label: fromProfile ? 'Save vehicle' : 'Done',
+                    onPressed: onSubmit,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

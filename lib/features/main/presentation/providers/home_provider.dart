@@ -52,6 +52,33 @@ class HomeProvider extends ChangeNotifier {
     };
   }
 
+  /// Applies a server-saved user location (from profile/login) before fetching stations.
+  void applySavedLocation({
+    required double latitude,
+    required double longitude,
+    required String address,
+  }) {
+    if (latitude == 0 && longitude == 0) {
+      return;
+    }
+
+    _latitude = latitude;
+    _longitude = longitude;
+    _setLocationState(
+      label: address.isEmpty ? 'Saved location' : address,
+      isResolving: false,
+    );
+  }
+
+  Future<void> refreshForCurrentTab() async {
+    if (_selectedStationTab == HomeStationTab.all) {
+      await loadStations();
+      return;
+    }
+
+    await resolveCurrentLocation();
+  }
+
   Future<void> loadStations() async {
     _isLoadingStations = true;
     _notifyListeners();

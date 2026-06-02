@@ -99,7 +99,7 @@ class ApiWashStationRepository implements WashStationRepository {
   }) async {
     try {
       await _apiClient.dio.post<Map<String, dynamic>>(
-        ApiPaths.saveLocation,
+        ApiPaths.locations,
         data: {
           'latitude': latitude,
           'longitude': longitude,
@@ -119,8 +119,12 @@ class ApiWashStationRepository implements WashStationRepository {
     }
 
     try {
-      final data = await _getJson(ApiPaths.serviceStationDetails(stationId));
-      if (data == null) {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        ApiPaths.serviceStationDetails(stationId),
+        options: _softErrorOptions,
+      );
+      final data = response.data;
+      if (data == null || response.statusCode != 200) {
         return null;
       }
       return ServiceStationMapper.fromDetailResponse(data);

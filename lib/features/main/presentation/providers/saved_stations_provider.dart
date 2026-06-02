@@ -1,41 +1,44 @@
 import 'package:flutter/foundation.dart';
 
 import '../../data/main_shell_mock_data.dart';
-import '../../data/saved_stations_storage.dart';
+import '../../data/saved_stations_repository.dart';
 
 class SavedStationsProvider extends ChangeNotifier {
-  SavedStationsProvider(this._storage) {
+  SavedStationsProvider(this._repository) {
     loadSavedStations();
   }
 
-  final SavedStationsStorage _storage;
+  final SavedStationsRepository _repository;
 
   List<WashStationMock> _stations = const [];
   bool _isLoading = false;
+  String? _errorMessage;
 
   List<WashStationMock> get stations => _stations;
   bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
 
   Future<void> loadSavedStations() async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
-    _stations = await _storage.loadStations();
+    final result = await _repository.fetchSavedStations();
+
+    result.fold((failure) {
+      _errorMessage = failure.message;
+      _stations = const [];
+    }, (stations) => _stations = stations);
 
     _isLoading = false;
     notifyListeners();
   }
 
-  Future<bool> isSaved(String stationId) => _storage.isSaved(stationId);
+  Future<bool> isSaved(String stationId) => _repository.isSaved(stationId);
 
   Future<bool> toggleStation(WashStationMock station) async {
-    _stations = await _storage.toggleStation(station);
-    notifyListeners();
-    return _stations.any((item) => item.id == station.id);
-  }
-
-  Future<void> removeStation(String stationId) async {
-    _stations = await _storage.removeStation(stationId);
-    notifyListeners();
+    final isSaved = await _repository.toggleSaved(station);
+    await loadSavedStations();
+    return isSaved;
   }
 }

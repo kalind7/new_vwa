@@ -20,6 +20,7 @@ class UserProfileProvider extends ChangeNotifier {
 
   String get displayName => _profile?.displayName ?? 'User';
   String? get avatarUrl => _profile?.avatarUrl;
+  UserSavedLocation? get primaryLocation => _profile?.primaryLocation;
 
   Future<void> loadProfile() async {
     if (_isLoading) {
