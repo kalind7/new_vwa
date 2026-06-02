@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../config/app_colors.dart';
 import '../../config/app_radius.dart';
 import '../../config/app_text_styles.dart';
+import 'app_svg_icon.dart';
 
 class AppLogoMark extends StatelessWidget {
   const AppLogoMark({super.key, this.showText = true});
@@ -21,8 +22,8 @@ class AppLogoMark extends StatelessWidget {
             color: AppColors.indigo600,
             borderRadius: BorderRadius.circular(AppRadius.lg),
           ),
-          child: const Icon(
-            Icons.water_drop_rounded,
+          child: const AppSvgIcon(
+            AppSvgIconName.wash,
             color: AppColors.white,
             size: 22,
           ),

@@ -19,7 +19,7 @@ Current Technical Decisions
 - Auth storage: flutter_secure_storage.
 - Local cache: Hive.
 - Notifications: Firebase Core, Firebase Messaging, Flutter Local Notifications.
-- Maps: Google Maps and Geolocator.
+- Maps: Google Maps dependency is present; the current static map UI uses Flutter Map/OpenStreetMap with Geolocator and Geocoding.
 - Payments: Khalti and eSewa planned.
 - Package/bundle ID: com.kauwatech.vwa.
 
@@ -50,8 +50,8 @@ Current Implementation Priority
 - Do not begin API integration until all Figma screens are completed and approved.
 - After UI completion, replace mock data with live Postman API integrations.
 - Do not build the entire UI in one large pass. Work in small milestones and stop after each milestone so the user can run and test.
-- Current checkpoint is the `authentication-fixes` branch before Milestone 4: verify the splash/auth layout and add-vehicle fixes, then run the app on the connected Android phone and visually test all auth navigation paths.
-- Next implementation phase after user approval is Milestone 4: static main app shell with home/wash/settings navbar.
+- Current checkpoint is the `phase-5-static-flow` branch: implement and review the static booking/payment/wash-detail flow, reusable dialogs/bottom sheets, SVG icon consistency, Provider-backed state, and route management before API integration.
+- Next implementation phase after user approval remains API integration only after the static UI flow is approved.
 
 Figma Status
 - User wants to use the recent Figma project named Bike-wash.
@@ -66,8 +66,8 @@ Current UI Milestone Plan
 - Milestone 1: Design system and app shell.
 - Milestone 2: Splash and onboarding flow.
 - Milestone 3: Auth static screens implemented; pre-Phase-4 finalization pass complete on `authentication-fixes` pending verification/user review.
-- Milestone 4: Main app shell with home/wash/settings navbar.
-- Milestone 5: Map and wash detail static screens.
+- Milestone 4: Main app shell with Home/My wash/Profile navbar implemented; Provider/location/map/Home UI fixes verified.
+- Milestone 5: Static booking/payment/wash-detail flow started on `phase-5-static-flow`.
 - User will run/test after each milestone before the next one starts.
 
 Responsive Layout Rules
@@ -85,11 +85,12 @@ How User Runs App
   flutter run -d linux
 
 Latest Query Update
-- User asked to create branch `authentication-fixes` before Phase 4 and fix splash/auth UI issues.
-- Increased static splash duration by one second so the logo is easier to see during UI review.
-- Updated shared auth layout so the white content container fills the remaining screen height on larger devices instead of sitting only around the middle form content.
-- Updated add-vehicle UI to support multiple vehicle number fields with plus and minus controls.
-- Added shared scaffold tap-to-dismiss keyboard behavior so users can leave fields without completing forms.
-- Tightened phone fields to digits-only input and exactly 10-digit validation.
-- Added reusable six-square OTP input with validation on email and phone OTP screens.
-- Remaining check: run format/analyze/tests and then `flutter run -d OJUSLVIVT4BE75JZ` for Android runtime/UI smoke testing; do not build APK/IPA.
+- User provided Figma screenshots for missing post-booking screens (checkout, billing method, payment confirmed, booking success, booking info, leave review, feedback thanks) and requested full static UI completion except maps.
+- Implemented all missing screens, wired navigation from station booking flow and My Wash detail checkout, fixed header back button placement (~24px below status bar), and disabled map route with toast via `navigateToStationSearchMap` / `buildDisabledMapRoute`.
+- New routes: `bookingSuccess`, `bookingInfo`, `leaveReview`, `feedbackThanks`.
+- New shared widgets: `AppSuccessIcon`, `AppFlowCloseHeader`, updated `AppScreenHeader` / `buildAppScreenHeader`.
+- Flow 1 (Book a slot): Station detail → Select vehicle popup → Confirm popup → Slot booked successfully → Close returns to station detail; Go to my wash opens My Wash tab.
+- Flow 2 (My Wash checkout): My Wash list → Check out on booked item → Checkout → Billing Method → Payment Confirmed → optional Leave a review (validated) → Feedback thanks → Done returns to My Wash tab.
+- Verification passed: `dart analyze` (no issues), `flutter test` (passed).
+- Remaining: Android device review; re-enable map screen; API integration after static UI approval.
+- Do not build APK/IPA. Do not integrate APIs yet.

@@ -256,11 +256,24 @@ Review checkpoint: you test all auth navigation paths and form visuals.
 
 Build the static logged-in area.
 
-- Home page.
-- Bottom navbar with three tabs.
-- Home tab with location info and search button.
-- Wash tab with bike wash status.
-- Settings/Profile tab.
+- Status: Reworked on branch `phase-4-main-shell` from the attached Droplet/Home Figma page; Provider/location/map/Home UI fixes verified with analyzer/tests and pending device review.
+- Added Figma-aligned static logged-in shell with bottom navbar labels/icons:
+  - Home.
+  - My wash.
+  - Profile.
+- Home tab now uses the attached Droplet page as the base: blue-to-white header, user avatar/greeting, search and notification icons, red `Brand/500 #FF5656` active nav state, automatic in-Home location permission request, geocoded area/city location label, compact `Nearby Station`/`Less distance` station tabs, filter icon, and vertical nearby station cards with Figma station imagery.
+- Station-card metadata wraps across lines to avoid render overflow around the slots chip.
+- Search icon opens a marker-based Flutter Map/OpenStreetMap page. Search results appear while typing; selecting a result recenters the map and opens a bottom station sheet that routes to detail.
+- Station cards open a static station detail page to preserve the future API-backed flow shape.
+- Phase 4 state is Provider-backed for API readiness:
+  - `MainShellProvider` controls bottom-tab selection.
+  - `HomeProvider` controls location resolution, station loading, and Home station tabs.
+  - `StationSearchProvider` controls map search query, results visibility, and selected station.
+  - `WashStationRepository` / `MockWashStationRepository` isolates the current mock station source from the UI.
+- My wash tab includes booked/completed summary cards and static wash booking cards with mock cancel feedback.
+- Profile tab includes avatar/add affordance, user identity, profile setting, payments history, reviews, and logout rows.
+- Login and completed add-vehicle flows now route into the static main shell.
+- No API integration has started.
 
 Review checkpoint: you test navbar switching and static screen layout.
 
@@ -268,9 +281,38 @@ Review checkpoint: you test navbar switching and static screen layout.
 
 Build the remaining static screens needed before API integration.
 
-- Map page reached from home search button.
-- Wash summary/status detail.
-- Wash detail screens.
-- Profile/settings sub-pages visible in Figma.
+- Status: In progress on branch `phase-5-static-flow`. Post-booking checkout/payment/review static UI largely complete; map route disabled pending API phase.
+- Continue using static/mock data only; no API integration.
+- Maintain responsive layouts with the Figma mobile width baseline and safe scrolling on compact devices.
+- Keep state management Provider-backed and route-driven for API readiness.
+- Use shared SVG icon rendering for new visible app icons instead of adding more ad hoc Material icons.
+- Added reusable modal components for consistent dialogs and bottom sheets:
+  - `AppConfirmationDialog` / `showAppConfirmationDialog`.
+  - `AppActionBottomSheet` / `showAppActionBottomSheet`.
+  - `AppFlowModal` / `showAppFlowModal` for Yes/No booking/payment confirmations.
+- Added project popup reviewer agent `.cursor/agents/vwa-popup-flow-guardian.md`.
+- Added exit confirmation dialogs on Login and the Main Shell with centered VWA logo mark and exactly `Yes` / `No` actions.
+- Added logout confirmation dialog in Profile before routing back to Login.
+- Rebuilt station detail page from Figma with hero, summary card, services/operating hours, and `Book a slot` / `Get Direction` actions.
+- Added Figma-aligned profile/settings sub-screens: Edit Profile, My Vehicle, Saved, About, Terms, Privacy, Payment History, Reviews.
+- Added booking flow static routes:
+  - Service selection.
+  - Slot selection.
+  - Checkout (booking summary with promo code section).
+  - Billing Method (Khalti, eSewa, Cash on Delivery).
+  - Payment Confirmed (success with Go to home / Leave a review).
+  - Booking success (simple) and booking info (with summary card).
+  - Leave a review and feedback thanks.
+  - Wash detail from My Wash cards with Check out → checkout flow.
+- Shared header/back placement updated: `AppScreenHeader` places back button ~24px below status bar; `buildAppScreenHeader` used across detail/booking screens.
+- Map search route disabled for static phase: Home search shows toast via `navigateToStationSearchMap`; route stub pops immediately.
+- Verification passed: `dart analyze` and `flutter test`.
+
+### Remaining Before API Integration
+
+- Device review of full booking → payment → review flow and My Wash checkout on Android.
+- Re-enable and wire live map screen when API/location integration begins.
+- Final Figma pixel pass on any screens flagged during device review.
+- API integration (auth, stations, booking, payments, notifications) after static UI approval.
 
 Review checkpoint: full static UI flow is reviewed against Figma before API work begins.

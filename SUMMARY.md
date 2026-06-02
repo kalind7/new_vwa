@@ -56,7 +56,7 @@
 - Secure token storage: `flutter_secure_storage`.
 - Local cache: Hive.
 - Notifications: Firebase Core, Firebase Messaging, Flutter Local Notifications.
-- Maps: Google Maps and Geolocator.
+- Maps: Google Maps dependency is present; current static map UI uses Flutter Map/OpenStreetMap with Geolocator and Geocoding.
 - Payments planned: Khalti and eSewa.
 - Fonts package: `google_fonts`.
 
@@ -154,23 +154,28 @@ Verification passed:
 - API integration has not started.
 - Milestone 3 implementation has received a pre-Milestone-4 auth finalization pass on branch `authentication-fixes`.
 - Latest fixes increase static splash visibility, make auth white content panels fill the remaining screen height on larger phones, allow multiple vehicle numbers with plus/minus controls, dismiss keyboards on scaffold taps, enforce exactly 10-digit phone numbers, and add validated six-box OTP entry.
+- Milestone 4 main app shell has started on branch `phase-4-main-shell`.
+- Static logged-in shell now includes Home, My wash, and Profile tabs. Home was reworked from the attached Droplet page: blue-to-white header, Figma station imagery, red `Brand/500 #FF5656` active nav state, automatic in-Home location permission request, geocoded area/city location label, compact `Nearby Station`/`Less distance` tabs, filter icon, marker-based map search route, and station-to-detail route.
+- Phase 4 main state is now Provider-backed through `MainShellProvider`, `HomeProvider`, and `StationSearchProvider`. Station data is read through `WashStationRepository` / `MockWashStationRepository` so later API integration can replace the mock source without rewriting the UI.
+- Milestone 5 has advanced on branch `phase-5-static-flow` with Figma-aligned station detail, profile/settings sub-pages, full post-booking static flow (checkout, billing, payment confirmed, booking success/info, leave review, feedback thanks), My Wash detail with checkout wiring, and shared popup/header components.
+- Map search route is disabled during static UI phase; Home search shows a toast instead of opening the map screen.
+- `AppScreenHeader` back button placement fixed to ~24px below the status bar across detail and booking screens.
 
 ## Next Required Work
 
-Finish Milestone 3 verification:
+Finish Milestone 5 device review:
 
-- Complete verification for the `authentication-fixes` branch.
-- Run the app on the connected Android phone to check runtime errors/UI mismatches, because the user explicitly allowed this after Milestone 3.
-- Have the user review all auth navigation paths and form visuals.
-- If approved, start Milestone 4: static main app shell with home/wash/settings navbar.
+- Run the app on the connected Android phone to check the full flow: station detail → book → service → slot → checkout → billing → payment confirmed → leave review → feedback thanks.
+- Test My Wash detail → Check out → same checkout flow.
+- Confirm header back button placement and success/confirmation screen layouts against Figma screenshots.
+- Re-enable map screen and integrate live APIs only after static UI approval.
 - Do not integrate APIs yet.
 - Do not build APK/IPA.
 
-Milestone 3 verification completed so far:
+Latest verification (post-booking flow pass):
 
-- `dart format`
-- `flutter analyze`
-- `flutter test`
+- `dart analyze` — no issues.
+- `flutter test` — passed.
 
 ## Important Files
 

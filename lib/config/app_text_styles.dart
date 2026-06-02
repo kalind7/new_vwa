@@ -33,6 +33,34 @@ class AppTextStyles {
     color: AppColors.gray800,
   );
 
+  static TextStyle get textLgSemiBold => GoogleFonts.inter(
+    fontSize: 18,
+    height: 28 / 18,
+    fontWeight: FontWeight.w600,
+    color: AppColors.gray800,
+  );
+
+  static TextStyle get textLgMedium => GoogleFonts.poppins(
+    fontSize: 18,
+    height: 28 / 18,
+    fontWeight: FontWeight.w500,
+    color: AppColors.gray950,
+  );
+
+  static TextStyle get displayXsSemiBold => GoogleFonts.inter(
+    fontSize: 24,
+    height: 32 / 24,
+    fontWeight: FontWeight.w600,
+    color: AppColors.gray900,
+  );
+
+  static TextStyle get flowModalMessage => GoogleFonts.poppins(
+    fontSize: 24,
+    height: 1.2,
+    fontWeight: FontWeight.w500,
+    color: AppColors.gray900,
+  );
+
   static TextStyle get textMdSemiBold => GoogleFonts.inter(
     fontSize: 16,
     height: 1.5,

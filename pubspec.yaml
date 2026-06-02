@@ -54,6 +54,10 @@ dependencies:
   freezed_annotation: ^3.1.0
   google_fonts: ^8.1.0
   flutter_local_notifications: ^18.0.1
+  flutter_map: ^8.3.0
+  latlong2: ^0.9.1
+  geocoding: ^4.0.0
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -84,6 +88,7 @@ flutter:
   assets:
     - assets/env/.env
     - assets/images/onboarding/
+    - assets/images/main/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
