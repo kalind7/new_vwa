@@ -36,6 +36,13 @@ class MyWashTab extends StatelessWidget {
     }
   }
 
+  void _openCheckout(BuildContext context, WashBookingMock booking) {
+    Navigator.of(context).pushNamed(
+      AppRoutes.bookingSummary,
+      arguments: bookingDraftFromWashBooking(booking),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -79,15 +86,8 @@ class MyWashTab extends StatelessWidget {
                         booking: booking,
                         onCancel: () => _confirmCancel(context, booking),
                         onCheckOut: booking.canCancel
-                            ? () => Navigator.of(context).pushNamed(
-                                AppRoutes.bookingSummary,
-                                arguments: bookingDraftFromWashBooking(booking),
-                              )
+                            ? () => _openCheckout(context, booking)
                             : null,
-                        onTap: () => Navigator.of(context).pushNamed(
-                          AppRoutes.washDetail,
-                          arguments: booking,
-                        ),
                       ),
                       const SizedBox(height: AppSpacing.lg),
                     ],

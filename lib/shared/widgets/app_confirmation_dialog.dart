@@ -17,6 +17,7 @@ Future<bool> showAppConfirmationDialog({
 }) async {
   final result = await showDialog<bool>(
     context: context,
+    barrierDismissible: true,
     builder: (context) {
       return AppConfirmationDialog(
         title: title,

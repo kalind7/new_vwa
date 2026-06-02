@@ -13,13 +13,11 @@ class WashBookingCard extends StatelessWidget {
     required this.booking,
     required this.onCancel,
     this.onCheckOut,
-    this.onTap,
   });
 
   final WashBookingMock booking;
   final VoidCallback onCancel;
   final VoidCallback? onCheckOut;
-  final VoidCallback? onTap;
 
   bool get _isBooked => booking.canCancel && booking.status != 'Completed';
 
@@ -27,78 +25,86 @@ class WashBookingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isComplete = booking.status == 'Completed';
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.md),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: AppColors.gray50,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: AppColors.gray200),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x140D121C),
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Station: ${booking.station}',
-                      style: AppTextStyles.textMdMedium.copyWith(
-                        color: AppColors.gray900,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.gray50,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.gray200),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x140D121C),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap: _isBooked ? onCheckOut : null,
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Station: ${booking.station}',
+                            style: AppTextStyles.textMdMedium.copyWith(
+                              color: AppColors.gray900,
+                            ),
+                          ),
+                        ),
+                        _StatusBadge(status: booking.status),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      'Location: ${booking.location}',
+                      style: AppTextStyles.textSmRegular.copyWith(
+                        color: AppColors.gray600,
                       ),
                     ),
-                  ),
-                  _StatusBadge(status: booking.status),
-                ],
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Vehicle number: ${booking.vehicle}',
+                      style: AppTextStyles.textSmRegular.copyWith(
+                        color: AppColors.gray600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (_isBooked) ...[
+              const SizedBox(height: AppSpacing.lg),
+              AppButton(
+                label: 'Check out',
+                onPressed: onCheckOut,
               ),
               const SizedBox(height: AppSpacing.md),
+              AppButton(
+                label: 'Cancel booking',
+                variant: AppButtonVariant.secondary,
+                onPressed: onCancel,
+              ),
+            ] else if (isComplete) ...[
+              const SizedBox(height: AppSpacing.lg),
               Text(
-                'Location: ${booking.location}',
-                style: AppTextStyles.textSmRegular.copyWith(
-                  color: AppColors.gray600,
+                'Bike wash has been completed',
+                style: AppTextStyles.textSmMedium.copyWith(
+                  color: AppColors.success600,
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'Vehicle number: ${booking.vehicle}',
-                style: AppTextStyles.textSmRegular.copyWith(
-                  color: AppColors.gray600,
-                ),
-              ),
-              if (_isBooked) ...[
-                const SizedBox(height: AppSpacing.lg),
-                AppButton(
-                  label: 'Check out',
-                  onPressed: onCheckOut,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                AppButton(
-                  label: 'Cancel booking',
-                  variant: AppButtonVariant.secondary,
-                  onPressed: onCancel,
-                ),
-              ] else if (isComplete) ...[
-                const SizedBox(height: AppSpacing.lg),
-                Text(
-                  'Bike wash has been completed',
-                  style: AppTextStyles.textSmMedium.copyWith(
-                    color: AppColors.success600,
-                  ),
-                ),
-              ],
             ],
-          ),
+          ],
         ),
       ),
     );

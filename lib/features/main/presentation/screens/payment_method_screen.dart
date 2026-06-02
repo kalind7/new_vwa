@@ -82,7 +82,7 @@ class _PriceSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final price = draft.service.price.replaceFirst('Nrs ', '');
+    final price = checkoutTotalLabel(draft).replaceFirst('Rs ', '');
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -115,7 +115,7 @@ class _PriceSummaryCard extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  draft.service.price.replaceFirst('Nrs ', 'Rs '),
+                  checkoutTotalLabel(draft),
                   style: AppTextStyles.textMdSemiBold.copyWith(
                     color: AppColors.gray900,
                   ),

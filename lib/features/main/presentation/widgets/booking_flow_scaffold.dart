@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../../../config/app_breakpoints.dart';
 import '../../../../config/app_colors.dart';
 import '../../../../config/app_spacing.dart';
-import '../../../../shared/widgets/app_screen_header.dart';
+import '../../../../config/app_text_styles.dart';
+import '../../../../shared/widgets/app_svg_icon.dart';
 
+/// Simple scaffold for booking flow screens (payment method, slot selection, etc.).
 class BookingFlowScaffold extends StatelessWidget {
   const BookingFlowScaffold({
     super.key,
@@ -21,43 +22,72 @@ class BookingFlowScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final horizontalPadding = AppBreakpoints.horizontalPadding(screenWidth);
-
     return Scaffold(
       backgroundColor: backgroundColor,
-      appBar: buildAppScreenHeader(context, title: title),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: AppBreakpoints.maxMobileContentWidth,
+      appBar: AppBar(
+        backgroundColor: AppColors.gray100,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          title,
+          style: AppTextStyles.textLgSemiBold.copyWith(
+            color: AppColors.gray800,
           ),
-          child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
-              horizontalPadding,
-              AppSpacing.xxl,
-              horizontalPadding,
-              AppSpacing.xxl,
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: AppSpacing.sm),
+          child: Center(
+            child: Material(
+              color: AppColors.gray800,
+              shape: const CircleBorder(),
+              child: InkWell(
+                onTap: () => Navigator.of(context).maybePop(),
+                customBorder: const CircleBorder(),
+                child: const SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Center(
+                    child: AppSvgIcon(
+                      AppSvgIconName.arrowLeft,
+                      color: AppColors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
             ),
-            child: child,
           ),
         ),
       ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: child,
+      ),
       bottomNavigationBar: bottomBar == null
           ? null
-          : SafeArea(
-              minimum: EdgeInsets.fromLTRB(
-                horizontalPadding,
-                AppSpacing.sm,
-                horizontalPadding,
-                AppSpacing.lg,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: AppBreakpoints.maxMobileContentWidth,
+          : ColoredBox(
+              color: AppColors.white,
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.md,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
                   ),
-                  child: bottomBar,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (bottomBar != null) ...[
+                        const Divider(height: 1, color: AppColors.gray200),
+                        const SizedBox(height: AppSpacing.lg),
+                        bottomBar!,
+                      ],
+                    ],
+                  ),
                 ),
               ),
             ),

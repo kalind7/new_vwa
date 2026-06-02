@@ -154,6 +154,9 @@ class AppRoutes {
       _ => (_) => const SplashScreen(),
     };
 
-    return MaterialPageRoute<void>(builder: builder, settings: settings);
+    return MaterialPageRoute<void>(
+      builder: builder,
+      settings: settings,
+    );
   }
 }

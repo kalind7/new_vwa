@@ -8,7 +8,7 @@ import '../../config/app_text_styles.dart';
 class AppTextField extends StatelessWidget {
   const AppTextField({
     super.key,
-    required this.label,
+    this.label,
     this.controller,
     this.hintText,
     this.initialValue,
@@ -27,7 +27,7 @@ class AppTextField extends StatelessWidget {
     this.inputFormatters,
   });
 
-  final String label;
+  final String? label;
   final TextEditingController? controller;
   final String? hintText;
   final String? initialValue;
@@ -50,8 +50,10 @@ class AppTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.textXsMedium),
-        const SizedBox(height: 2),
+        if (label != null && label!.isNotEmpty) ...[
+          Text(label!, style: AppTextStyles.textXsMedium),
+          const SizedBox(height: 2),
+        ],
         TextFormField(
           controller: controller,
           initialValue: controller == null ? initialValue : null,

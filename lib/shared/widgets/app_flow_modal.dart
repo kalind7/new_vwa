@@ -15,6 +15,7 @@ Future<bool> showAppFlowModal({
 }) async {
   final result = await showDialog<bool>(
     context: context,
+    barrierDismissible: true,
     barrierColor: AppColors.gray900.withValues(alpha: 0.7),
     builder: (context) {
       return AppFlowModal(

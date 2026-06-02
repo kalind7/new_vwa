@@ -22,6 +22,8 @@ Future<T?> showAppActionBottomSheet<T>({
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,
+    isDismissible: true,
+    enableDrag: true,
     backgroundColor: Colors.transparent,
     builder: (context) {
       return AppActionBottomSheet(

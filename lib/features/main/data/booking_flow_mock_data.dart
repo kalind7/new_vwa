@@ -63,6 +63,7 @@ class BookingDraft {
     required this.slot,
     this.vehicle,
     this.paymentMethod,
+    this.checkoutTotal,
     this.isSuccess = true,
   });
 
@@ -71,6 +72,7 @@ class BookingDraft {
   final WashSlotMock slot;
   final VehicleMock? vehicle;
   final PaymentMethodMock? paymentMethod;
+  final String? checkoutTotal;
   final bool isSuccess;
 
   BookingDraft copyWith({
@@ -79,6 +81,7 @@ class BookingDraft {
     WashSlotMock? slot,
     VehicleMock? vehicle,
     PaymentMethodMock? paymentMethod,
+    String? checkoutTotal,
     bool? isSuccess,
   }) {
     return BookingDraft(
@@ -87,9 +90,28 @@ class BookingDraft {
       slot: slot ?? this.slot,
       vehicle: vehicle ?? this.vehicle,
       paymentMethod: paymentMethod ?? this.paymentMethod,
+      checkoutTotal: checkoutTotal ?? this.checkoutTotal,
       isSuccess: isSuccess ?? this.isSuccess,
     );
   }
+}
+
+String checkoutDurationLabel(String duration) {
+  if (duration.contains('minute')) {
+    return duration;
+  }
+  final digits = duration.replaceAll(RegExp(r'[^0-9]'), '');
+  if (digits.isEmpty) {
+    return duration;
+  }
+  return '$digits minute';
+}
+
+String checkoutTotalLabel(BookingDraft draft) {
+  if (draft.checkoutTotal != null) {
+    return draft.checkoutTotal!;
+  }
+  return draft.service.price.replaceFirst('Nrs ', 'Rs ');
 }
 
 BookingDraft bookingDraftForStation({
@@ -119,6 +141,7 @@ BookingDraft bookingDraftFromWashBooking(WashBookingMock booking) {
     service: service,
     slot: washSlots.first,
     vehicle: VehicleMock(id: 'wash-${booking.vehicle}', plate: booking.vehicle),
+    checkoutTotal: booking.price,
   );
 }
 
@@ -134,7 +157,7 @@ const washServices = [
     id: 'exterior',
     title: 'Exterior Wash',
     subtitle: 'Foam wash, rinse, and dry for daily bike care.',
-    duration: '25 min',
+    duration: '30 minute',
     price: 'Nrs 100',
   ),
   WashServiceMock(

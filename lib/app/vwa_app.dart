@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_routes.dart';
 import '../config/app_theme.dart';
+import '../shared/utils/keyboard_utils.dart';
 
 class VwaApp extends StatelessWidget {
   const VwaApp({super.key});
@@ -14,6 +15,12 @@ class VwaApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       initialRoute: AppRoutes.splash,
       onGenerateRoute: AppRoutes.onGenerateRoute,
+      builder: (context, child) {
+        if (child == null) {
+          return const SizedBox.shrink();
+        }
+        return DismissKeyboardOnTap(child: child);
+      },
     );
   }
 }

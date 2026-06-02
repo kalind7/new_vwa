@@ -14,6 +14,8 @@ Future<VehicleMock?> showSelectVehicleBottomSheet({
   return showModalBottomSheet<VehicleMock>(
     context: context,
     isScrollControlled: true,
+    isDismissible: true,
+    enableDrag: true,
     backgroundColor: Colors.transparent,
     builder: (context) {
       return _SelectVehicleBottomSheet(initialVehicle: selectedVehicle);
