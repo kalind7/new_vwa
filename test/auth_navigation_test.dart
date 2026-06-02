@@ -12,8 +12,10 @@ import 'package:vwa/features/auth/domain/repositories/auth_repository.dart';
 import 'package:vwa/features/auth/presentation/screens/add_vehicle_screen.dart';
 import 'package:vwa/features/auth/presentation/screens/login_screen.dart';
 import 'package:vwa/features/auth/presentation/screens/sign_up_screen.dart';
+import 'package:vwa/features/booking/domain/repositories/booking_repository.dart';
 import 'package:vwa/features/main/data/wash_station_repository.dart';
 import 'package:vwa/features/main/presentation/screens/main_shell_screen.dart';
+import 'package:vwa/features/profile/domain/repositories/user_repository.dart';
 
 class _MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -42,6 +44,10 @@ void main() {
           Provider<AuthRepository>.value(value: authRepository),
           Provider<WashStationRepository>.value(
             value: const MockWashStationRepository(),
+          ),
+          Provider<UserRepository>.value(value: dependencies.userRepository),
+          Provider<BookingRepository>.value(
+            value: dependencies.bookingRepository,
           ),
         ],
         child: MaterialApp(

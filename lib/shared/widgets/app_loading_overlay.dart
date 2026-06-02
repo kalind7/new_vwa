@@ -13,9 +13,7 @@ class AppLoadingOverlay extends StatelessWidget {
     return AbsorbPointer(
       child: ColoredBox(
         color: AppColors.white.withValues(alpha: 0.72),
-        child: Center(
-          child: AppLogoProgressIndicator(size: size),
-        ),
+        child: Center(child: AppLogoProgressIndicator(size: size)),
       ),
     );
   }

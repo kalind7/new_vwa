@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../app/app_routes.dart';
 import '../../../../config/app_colors.dart';
 import '../../../../config/app_config.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
 import '../../../../core/di/app_dependencies.dart';
@@ -120,6 +121,14 @@ class _LoginScreenState extends State<LoginScreen> {
           login: login,
           password: password,
         );
+        if (AppConfig.enableFirebaseNotifications && mounted) {
+          final notificationRemote = context
+              .read<AppDependencies>()
+              .notificationRemoteDataSource;
+          await NotificationService(
+            notificationRemote: notificationRemote,
+          ).syncTokenWithBackend();
+        }
         if (!mounted) {
           return;
         }

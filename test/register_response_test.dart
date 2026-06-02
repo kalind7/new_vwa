@@ -5,7 +5,10 @@ void main() {
   group('RegisterResponse.fromJson', () {
     test('reads access_token from data wrapper', () {
       final response = RegisterResponse.fromJson({
-        'data': {'access_token': 'reg-token', 'user': {'id': 2}},
+        'data': {
+          'access_token': 'reg-token',
+          'user': {'id': 2},
+        },
       });
 
       expect(response.accessToken, 'reg-token');

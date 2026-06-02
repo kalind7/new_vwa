@@ -5,7 +5,10 @@ void main() {
   group('LoginResponse.fromJson', () {
     test('reads access_token from data wrapper', () {
       final response = LoginResponse.fromJson({
-        'data': {'access_token': 'abc123', 'user': {'id': 1}},
+        'data': {
+          'access_token': 'abc123',
+          'user': {'id': 1},
+        },
       });
 
       expect(response.accessToken, 'abc123');
@@ -13,9 +16,7 @@ void main() {
     });
 
     test('reads token from root payload', () {
-      final response = LoginResponse.fromJson({
-        'token': 'xyz',
-      });
+      final response = LoginResponse.fromJson({'token': 'xyz'});
 
       expect(response.accessToken, 'xyz');
     });

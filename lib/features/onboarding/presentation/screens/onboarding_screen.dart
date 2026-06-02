@@ -87,10 +87,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       onPressed: _openSignUp,
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    AppButton(
-                      label: 'Login',
-                      onPressed: _openLogin,
-                    ),
+                    AppButton(label: 'Login', onPressed: _openLogin),
                   ],
                 ),
               ),

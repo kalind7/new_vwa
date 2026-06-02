@@ -25,10 +25,7 @@ class FeedbackThanksScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      '❤️',
-                      style: TextStyle(fontSize: 72),
-                    ),
+                    const Text('❤️', style: TextStyle(fontSize: 72)),
                     const SizedBox(height: AppSpacing.xxl),
                     Text(
                       'Thanks for your feedback!',
@@ -63,11 +60,12 @@ class FeedbackThanksScreen extends StatelessWidget {
                 ),
                 child: AppButton(
                   label: 'Done',
-                  onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
-                    AppRoutes.mainShell,
-                    (route) => false,
-                    arguments: 1,
-                  ),
+                  onPressed: () =>
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        AppRoutes.mainShell,
+                        (route) => false,
+                        arguments: 1,
+                      ),
                 ),
               ),
             ],

@@ -23,6 +23,7 @@ enum AppSvgIconName {
   wallet,
   close,
   gift,
+  logOut,
 }
 
 class AppSvgIcon extends StatelessWidget {
@@ -104,6 +105,9 @@ String _svgFor(AppSvgIconName name) {
     AppSvgIconName.close => _svg('<path d="m6 6 12 12M18 6 6 18"/>'),
     AppSvgIconName.gift => _svg(
       '<path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8M12 22V12M12 12H7.5a2.5 2.5 0 0 1 0-5C9 7 12 12 12 12ZM12 12h4.5a2.5 2.5 0 0 0 0-5C15 7 12 12 12 12ZM4.5 12h15M12 7V4"/>',
+    ),
+    AppSvgIconName.logOut => _svg(
+      '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
     ),
   };
 }

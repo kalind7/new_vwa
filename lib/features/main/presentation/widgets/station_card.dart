@@ -8,11 +8,14 @@ import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_svg_icon.dart';
 import '../../data/main_shell_mock_data.dart';
 
+/// Dev Handoff station list item (152px image + horizontal metadata row).
 class StationCard extends StatelessWidget {
   const StationCard({super.key, required this.station, required this.onTap});
 
   final WashStationMock station;
   final VoidCallback onTap;
+
+  static const _imageHeight = 152.0;
 
   @override
   Widget build(BuildContext context) {
@@ -20,20 +23,20 @@ class StationCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.xl),
+              borderRadius: BorderRadius.circular(AppRadius.md),
               child: Image.asset(
                 AppAssets.stationBikeWash,
                 width: double.infinity,
-                height: 166,
+                height: _imageHeight,
                 fit: BoxFit.cover,
               ),
             ),
-            const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               station.name,
               maxLines: 2,
@@ -65,52 +68,75 @@ class StationCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            Wrap(
-              spacing: AppSpacing.md,
-              runSpacing: AppSpacing.sm,
-              crossAxisAlignment: WrapCrossAlignment.center,
+            Row(
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const AppSvgIcon(
-                      AppSvgIconName.star,
-                      color: Color(0xFFFEC84B),
-                      size: 20,
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text(
-                      station.rating,
-                      style: AppTextStyles.textSmRegular.copyWith(
-                        color: AppColors.gray900,
+                _MetaItem(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const AppSvgIcon(
+                        AppSvgIconName.star,
+                        color: Color(0xFFFEC84B),
+                        size: 18,
                       ),
-                    ),
-                  ],
-                ),
-                Text(
-                  station.distance,
-                  style: AppTextStyles.textSmRegular.copyWith(
-                    color: AppColors.gray900,
+                      const SizedBox(width: AppSpacing.xs),
+                      Text(
+                        station.rating,
+                        style: AppTextStyles.textSmRegular.copyWith(
+                          color: AppColors.gray900,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const _GreenDot(),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text(
-                      station.price,
-                      style: AppTextStyles.textSmRegular.copyWith(
-                        color: AppColors.gray900,
-                      ),
+                _MetaItem(
+                  child: Text(
+                    station.distance,
+                    style: AppTextStyles.textSmRegular.copyWith(
+                      color: AppColors.gray900,
                     ),
-                  ],
+                  ),
                 ),
-                _SlotsPill(station: station),
+                _MetaItem(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const _GreenDot(),
+                      const SizedBox(width: AppSpacing.xs),
+                      Flexible(
+                        child: Text(
+                          station.price,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.textSmRegular.copyWith(
+                            color: AppColors.gray900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Flexible(child: _SlotsPill(station: station)),
               ],
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MetaItem extends StatelessWidget {
+  const _MetaItem({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.only(right: AppSpacing.xs),
+        child: child,
       ),
     );
   }
@@ -153,6 +179,8 @@ class _SlotsPill extends StatelessWidget {
         ),
         child: Text(
           station.slots,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: AppTextStyles.textXsMedium.copyWith(
             color: isHighAvailability
                 ? const Color(0xFF027A48)

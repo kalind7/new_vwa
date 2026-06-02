@@ -1,5 +1,7 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:fpdart/fpdart.dart';
 
+import '../../../../config/app_config.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -72,6 +74,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, void>> logout() async {
+    final useLiveLogout = dotenv.isInitialized && !AppConfig.useMockData;
+    if (useLiveLogout) {
+      await _remoteDataSource.logout();
+    }
     await _localStorage.clearTokens();
     return right(null);
   }

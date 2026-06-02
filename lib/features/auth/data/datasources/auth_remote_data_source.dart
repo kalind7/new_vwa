@@ -21,9 +21,7 @@ class AuthRemoteDataSource {
       final response = await _apiClient.dio.post<Map<String, dynamic>>(
         ApiPaths.authLogin,
         data: {'login': login, 'password': password},
-        options: Options(
-          contentType: Headers.formUrlEncodedContentType,
-        ),
+        options: Options(contentType: Headers.formUrlEncodedContentType),
       );
 
       final data = response.data;
@@ -37,9 +35,7 @@ class AuthRemoteDataSource {
     } on DioException catch (error) {
       return left(mapDioException(error));
     } on FormatException {
-      return left(
-        const UnknownFailure('Invalid login response from server.'),
-      );
+      return left(const UnknownFailure('Invalid login response from server.'));
     }
   }
 
@@ -60,9 +56,7 @@ class AuthRemoteDataSource {
           'password': password,
           'password_confirmation': passwordConfirmation,
         },
-        options: Options(
-          contentType: Headers.formUrlEncodedContentType,
-        ),
+        options: Options(contentType: Headers.formUrlEncodedContentType),
       );
 
       final data = response.data;
@@ -79,6 +73,15 @@ class AuthRemoteDataSource {
       return left(
         const UnknownFailure('Invalid register response from server.'),
       );
+    }
+  }
+
+  Future<Either<Failure, void>> logout() async {
+    try {
+      await _apiClient.dio.post<Map<String, dynamic>>(ApiPaths.authLogout);
+      return right(null);
+    } on DioException catch (error) {
+      return left(mapDioException(error));
     }
   }
 }

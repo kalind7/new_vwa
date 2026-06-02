@@ -171,7 +171,7 @@ After each feature or group of screens:
 
 ## Current Decision
 
-Static UI milestones (1–5) are largely complete and reviewed on device. **API integration has started** on branch `Api-integration` (from `phase-5-static-flow`). Continue in small batches: auth and home stations are done; next batches TBD (OTP, profile/vehicles, station detail, booking, payments). Map screen remains disabled with toast until map/location API work begins.
+Static UI milestones (1–5) and Dev Handoff UI (A–E) are complete on branch `Api-integration`. **API integration is ACTIVE** — batches 1–2 (auth + home stations + profile read + add vehicle) must not regress. **In progress:** batches 3–11 (station detail, vehicles, bookings, payments, reviews, profile edit, FCM). OTP/send-otp/forgot-password deferred until backend SMTP is ready.
 
 ## Figma Access Status
 
@@ -309,26 +309,46 @@ Build the remaining static screens needed before API integration.
 - Map search route disabled for static phase: Home search shows toast via `navigateToStationSearchMap`; route stub pops immediately.
 - Verification passed: `dart analyze` and `flutter test`.
 
-### Phase 2: API Integration (Started — `Api-integration`)
+### Phase 2: API Integration (Paused — `Api-integration`)
 
-**Batch 1 — Auth (done)**
+**Batch 1 — Auth (done, frozen)**
 
 - Login + register with fpdart `Either`, `AppToast`, token via `LocalStorageService` (`shared_preferences`).
 - `USE_MOCK_DATA` in `assets/env/.env`.
 - Remember Me, onboarding-once, logout token-only, splash resolver, loading overlay.
 
-**Batch 2 — Home stations (done)**
+**Batch 2 — Home stations (done, frozen)**
 
 - `ApiWashStationRepository`, `ServiceStationMapper`, `api_paths.dart` (stations, nearest, suggest-nearest, locations).
 - Soft HTTP errors (validateStatus < 500).
 
-**Next batches (TBD)**
+**Batches 3–11 (API active)**
 
-- OTP, logout API, profile/vehicles, station detail, booking, payments, FCM.
-- Re-enable map when location/map API work begins.
+- 3: `GET service-stations/{id}` + station `id` on list models.
+- 4: `GET vehicles` — picker + My Vehicle.
+- 5–6: bookings create/list/detail/cancel — My wash + wash detail.
+- 7: promo validate + payment initiate.
+- 8: ratings submit + list.
+- 9: profile update (`PUT auth/me` when confirmed).
+- 10: `POST auth/logout` (optional).
+- 11: FCM token register + background handlers (coordinate Laravel route).
+
+**Deferred (SMTP / later)**
+
+- send-otp, verify-otp, live forgot-password (SMTP not ready), profile photo upload.
+
+### Dev Handoff UI track (complete)
+
+Figma: `Bike-wash` file key `16x5FR5xF6mJQ550ZNbMmU`, canvas **Dev Handoff** `7:4`.
+
+1. Droplet/Home — map-first layout, 2 filter chips (Nearby / Highest slot with less distance), section title, station cards.
+2. Search flow — re-enable map route; `StationSearchMapScreen` aligned to handoff.
+3. Shared `AppHandoffBottomSheet` — select vehicle, filters.
+4. Station detail + booking confirmation copy per handoff.
+5. **My Wash + Profile (Milestone E)** — wash history tab header/cards, wash detail screen, profile handoff (brand/25 hero, menu cards, Wash History → My wash tab, logout).
 
 **Testing discipline**
 
-- 33 passing tests; add unit/widget tests one feature at a time going forward.
+- 33+ passing tests; `flutter analyze` after each milestone.
 
-Review checkpoint: device test auth + home tabs on `OJUSLVIVT4BE75JZ`; confirm Less distance after location POST.
+Review checkpoint: device test Home → search → station → mock book slot on `OJUSLVIVT4BE75JZ`; auth + station APIs still work with `USE_MOCK_DATA=false`.

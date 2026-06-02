@@ -25,10 +25,7 @@ class AppException implements Exception {
     }
 
     if (statusCode == 401) {
-      return const AppException(
-        'Invalid email or password.',
-        statusCode: 401,
-      );
+      return const AppException('Invalid email or password.', statusCode: 401);
     }
 
     if (statusCode == 422) {

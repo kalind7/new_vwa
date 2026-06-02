@@ -109,118 +109,127 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-            AuthTabSwitcher(
-              selectedIndex: 1,
-              onChanged: (index) {
-                if (index == 0) {
-                  Navigator.of(context).pushReplacementNamed(AppRoutes.login);
-                }
-              },
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-            AuthFormSection(
-              children: [
-                Row(
+                AuthTabSwitcher(
+                  selectedIndex: 1,
+                  onChanged: (index) {
+                    if (index == 0) {
+                      Navigator.of(
+                        context,
+                      ).pushReplacementNamed(AppRoutes.login);
+                    }
+                  },
+                ),
+                const SizedBox(height: AppSpacing.xxl),
+                AuthFormSection(
                   children: [
-                    Expanded(
-                      child: AppTextField(
-                        controller: _firstNameController,
-                        label: 'First Name',
-                        hintText: 'Louis',
-                        textInputAction: TextInputAction.next,
-                        textCapitalization: TextCapitalization.words,
-                        validator: (value) => AuthFormValidators.requiredName(
-                          value,
-                          'First name',
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppTextField(
+                            controller: _firstNameController,
+                            label: 'First Name',
+                            hintText: 'Louis',
+                            textInputAction: TextInputAction.next,
+                            textCapitalization: TextCapitalization.words,
+                            validator: (value) =>
+                                AuthFormValidators.requiredName(
+                                  value,
+                                  'First name',
+                                ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: AppTextField(
+                            controller: _lastNameController,
+                            label: 'Last Name',
+                            hintText: 'Becket',
+                            textInputAction: TextInputAction.next,
+                            textCapitalization: TextCapitalization.words,
+                            validator: (value) =>
+                                AuthFormValidators.requiredName(
+                                  value,
+                                  'Last name',
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    AppTextField(
+                      controller: _emailController,
+                      label: 'Email',
+                      hintText: 'Louisbecket@gmail.com',
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      validator: AuthFormValidators.email,
+                    ),
+                    AppTextField(
+                      controller: _phoneController,
+                      label: 'Phone Number',
+                      hintText: '9801234567',
+                      keyboardType: TextInputType.phone,
+                      textInputAction: TextInputAction.next,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10),
+                      ],
+                      validator: AuthFormValidators.phone,
+                    ),
+                    AppTextField(
+                      controller: _passwordController,
+                      label: 'Set Password',
+                      hintText: '*******',
+                      obscureText: _obscurePassword,
+                      textInputAction: TextInputAction.done,
+                      validator: AuthFormValidators.password,
+                      onChanged: (_) => setState(() {}),
+                      onFieldSubmitted: (_) => _submit(),
+                      suffixIcon: IconButton(
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
                         ),
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: AppTextField(
-                        controller: _lastNameController,
-                        label: 'Last Name',
-                        hintText: 'Becket',
-                        textInputAction: TextInputAction.next,
-                        textCapitalization: TextCapitalization.words,
-                        validator: (value) =>
-                            AuthFormValidators.requiredName(value, 'Last name'),
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AuthPasswordRule(
+                          label: 'Must be at least 8 characters',
+                          isMet: AuthFormValidators.hasMinPasswordLength(
+                            password,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        AuthPasswordRule(
+                          label: 'Must contain one special character',
+                          isMet: AuthFormValidators.hasPasswordSpecialCharacter(
+                            password,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                AppTextField(
-                  controller: _emailController,
-                  label: 'Email',
-                  hintText: 'Louisbecket@gmail.com',
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  validator: AuthFormValidators.email,
+                const SizedBox(height: AppSpacing.xxl),
+                AppButton(
+                  label: 'Register',
+                  onPressed: _isSubmitting ? null : _submit,
                 ),
-                AppTextField(
-                  controller: _phoneController,
-                  label: 'Phone Number',
-                  hintText: '9801234567',
-                  keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.next,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(10),
-                  ],
-                  validator: AuthFormValidators.phone,
+                const SizedBox(height: AppSpacing.lg),
+                AuthLinkRow(
+                  text: 'Already have an account?',
+                  actionText: 'Login',
+                  onPressed: _isSubmitting
+                      ? () {}
+                      : () => Navigator.of(
+                          context,
+                        ).pushReplacementNamed(AppRoutes.login),
                 ),
-                AppTextField(
-                  controller: _passwordController,
-                  label: 'Set Password',
-                  hintText: '*******',
-                  obscureText: _obscurePassword,
-                  textInputAction: TextInputAction.done,
-                  validator: AuthFormValidators.password,
-                  onChanged: (_) => setState(() {}),
-                  onFieldSubmitted: (_) => _submit(),
-                  suffixIcon: IconButton(
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                    ),
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AuthPasswordRule(
-                      label: 'Must be at least 8 characters',
-                      isMet: AuthFormValidators.hasMinPasswordLength(password),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    AuthPasswordRule(
-                      label: 'Must contain one special character',
-                      isMet: AuthFormValidators.hasPasswordSpecialCharacter(
-                        password,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-            AppButton(
-              label: 'Register',
-              onPressed: _isSubmitting ? null : _submit,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            AuthLinkRow(
-              text: 'Already have an account?',
-              actionText: 'Login',
-              onPressed: _isSubmitting
-                  ? () {}
-                  : () => Navigator.of(
-                      context,
-                    ).pushReplacementNamed(AppRoutes.login),
-            ),
               ],
             ),
           ),

@@ -98,11 +98,7 @@ class _HistoryItem extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
-                      Container(
-                        width: 1,
-                        height: 12,
-                        color: AppColors.gray300,
-                      ),
+                      Container(width: 1, height: 12, color: AppColors.gray300),
                       const SizedBox(width: AppSpacing.sm),
                       Text(
                         time,

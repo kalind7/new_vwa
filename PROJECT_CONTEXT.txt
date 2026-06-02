@@ -19,7 +19,7 @@ Current Technical Decisions
 - USE_MOCK_DATA toggle in assets/env/.env for mock vs live auth.
 - Local cache: Hive (legacy/planned; auth prefs are in LocalStorageService).
 - Notifications: Firebase Core, Firebase Messaging, Flutter Local Notifications.
-- Maps: Google Maps dependency present; map search route DISABLED — Home search shows toast via navigateToStationSearchMap.
+- Maps: flutter_map on Droplet home + Search flow screen; Home search opens StationSearchMapScreen.
 - Payments: Khalti and eSewa planned (static UI done).
 - Feedback: bot_toast via AppToast (green success, red error, gray400 neutral, bottom).
 - Loading: AppLoadingOverlay + AppLogoProgressIndicator (center screen, not button spinners).
@@ -34,69 +34,82 @@ Firebase
   - ios/Runner/GoogleService-Info.plist
 - Flutter options file is present:
   - lib/firebase_options.dart
+- Backend (Laravel) uses same Firebase project for push; app registers FCM token after login when ENABLE_FIREBASE_NOTIFICATIONS=true.
 
 Current Project Status
 - Flutter app under /home/kalind7/visual_studio_projects/new_vwa/VWA.
-- Milestones 1–5 static UI largely complete.
-- API integration STARTED on branch Api-integration (from phase-5-static-flow).
-- 33 passing tests (storage, splash resolver, auth navigation, station mapper, token persistence).
+- Milestones 1–5 static UI + Dev Handoff UI (A–E) complete.
+- API integration ACTIVE on branch Api-integration.
+- Batches 1–2 done: auth login/register, home station tabs, GET auth/me, POST vehicles.
+- Batches 3–11 in progress: station detail, vehicles list, bookings, payments, reviews, profile edit, FCM.
+- 41+ passing tests.
 - User tests live on Android device OJUSLVIVT4BE75JZ.
 
 Current Implementation Priority
-- Continue API integration in small batches on Api-integration.
-- Batch 1 DONE: auth (login, register, token, remember-me, splash resolver, toasts, loading overlay).
-- Batch 2 DONE: home station list (All / Nearby / Less distance tabs, ApiWashStationRepository).
-- Next batches TBD: OTP, logout API, profile/vehicles, station detail, booking, payments, FCM.
-- Map screen: still disabled with toast until map/location API phase.
-- Add unit/widget tests one feature at a time as APIs land.
+- Batch 3+: station id + GET detail, bookings CRUD, GET vehicles, promo/payment, ratings, profile PUT, FCM token.
+- Dev Handoff UI flows frozen (no route changes).
+- OTP/send-otp/forgot-password deferred (SMTP not ready).
+- Profile photo upload skipped (no endpoint).
 
 App Entry And Auth Routing (Api-integration)
-- SplashScreen: no fixed delay; SplashNavigationResolver checks token + has_seen_onboarding.
+- SplashScreen: SplashNavigationResolver checks token + has_seen_onboarding.
 - Valid token -> mainShell (dashboard).
-- No token + first launch -> OnboardingScreen (sets has_seen_onboarding when completed).
+- No token + first launch -> OnboardingScreen.
 - No token + seen onboarding -> LoginScreen.
 - Login success -> mainShell.
-- Register success -> addVehicle (OTP flow skipped for now).
-- Remember Me: saves email+password in LocalStorageService when checked; prefilled on return; NOT cleared on logout.
-- Logout: AuthRepository.logout() clears token only; onboarding + remember-me persist; restart goes to login not onboarding.
+- Register success -> addVehicle (OTP skipped).
+- Remember Me: saves email+password; NOT cleared on logout.
+- Logout: clears token; optional POST auth/logout when live.
+- Add vehicle: POST vehicles per plate (form-urlencoded).
+- Main shell: UserProfileProvider loads GET auth/me.
 
-Home Station API (Api-integration)
-- Tabs: All | Nearby | Less distance (single row, filter, no overflow).
+Home Station API (done)
 - All: GET service-stations.
-- Nearby: GET service-stations/nearest (lat, lng, radius).
-- Less distance: GET suggest-nearest (NOT service-stations/suggest-nearest — 404).
-- suggest-nearest requires auth + POST locations with user coordinates before fetch.
-- Response data.suggested_stations[] via ServiceStationMapper.
-- HomeProvider.loadStations() uses try/finally so loading always clears.
+- Nearby: GET service-stations/nearest.
+- Less distance: GET suggest-nearest (auth + POST locations first).
+- Station cards include API id for detail/booking.
+
+Profile & Vehicles API
+- GET auth/me, POST vehicles (one plate per request).
+- GET vehicles for picker and My Vehicle screen.
+- PUT auth/me for profile edit (when backend accepts).
+
+Bookings API (in progress)
+- POST bookings (JSON: service_station_id, vehicle_id, booking_date, booking_time, products[], payment_method, promo_code).
+- GET bookings, GET bookings/{id}, POST bookings/{id}/cancel.
+- My wash tab and wash detail use live data when USE_MOCK_DATA=false.
+
+Payments & Reviews
+- POST promo-codes/validate on checkout Apply.
+- POST payments/initiate on payment method screen.
+- POST ratings, GET user/ratings, GET service-stations/{id}/ratings.
+
+FCM
+- ENABLE_FIREBASE_NOTIFICATIONS in assets/env/.env.
+- NotificationService: foreground, background handler, token refresh.
+- POST fcm-token (or backend-confirmed path) after login with Bearer token.
 
 Figma Status
-- Figma project Bike-wash, file key 16x5FR5xF6mJQ550ZNbMmU, node 7:3.
-- Use Figma fonts and colors. Observed: Poppins, Inter, Secondary/500 #1A1C1E, Brand/500 #FF5656, Error/500 #F04438, etc.
-
-Current UI Milestone Plan
-- Milestone 1: Complete.
-- Milestone 2: Complete (splash routing updated for API phase).
-- Milestone 3: Complete static UI; API auth wired on Api-integration.
-- Milestone 4: Complete UI; home stations API wired on Api-integration.
-- Milestone 5: Static booking/payment/review complete; map still disabled.
+- Bike-wash file key 16x5FR5xF6mJQ550ZNbMmU, Dev Handoff node 7:4.
 
 Key Files
-- lib/core/storage/local_storage_service.dart
-- lib/features/onboarding/domain/splash_navigation_resolver.dart
-- lib/shared/widgets/app_toast.dart, app_loading_overlay.dart, app_logo_progress_indicator.dart
-- lib/features/main/data/api_wash_station_repository.dart
-- lib/features/main/data/models/service_station_mapper.dart
 - lib/core/network/api_paths.dart
 - lib/core/di/app_dependencies.dart
-- test/ (33 tests)
-- .cursor/agents/vwa-auth-flow-coordinator.md, vwa-api-integration.md
+- lib/features/main/data/api_wash_station_repository.dart
+- lib/features/booking/ (bookings API)
+- lib/features/profile/
+- lib/core/services/notification_service.dart
+- .cursor/agents/vwa-api-integration.md, vwa-platform-permissions.md
 
 How User Runs App
-- Device: M2006C3LI / OJUSLVIVT4BE75JZ / Android 10 API 29.
+- Device: OJUSLVIVT4BE75JZ
 - Command: flutter run -d OJUSLVIVT4BE75JZ
-- Do not use: flutter run -d linux
+- Live API: USE_MOCK_DATA=false in assets/env/.env
+
+Platform Permissions & Connectivity
+- HTTP cleartext for bike.yarsanptech.com (Android network_security_config, iOS ATS).
+- ConnectivityProvider + NoInternetScreen global gate.
+- POST_NOTIFICATIONS for FCM.
 
 Latest Query Update
-- Documented full Api-integration session: auth finalization (onboarding-once, LocalStorageService, splash resolver, remember-me, logout behavior, loading/toasts) and home stations API (three tabs, endpoints, suggest-nearest + POST locations, mapper, repository).
-- Updated SUMMARY.md, PLAN.md, chat_summary.md, PROJECT_CONTEXT.txt, docs/PROJECT_PLAN.md.
-- No commit per user instruction.
+- Resume API integration plan approved: batches 3–11, OTP deferred, FCM active with Laravel Firebase backend.

@@ -48,10 +48,7 @@ class AppScreenHeader extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: true,
       leadingWidth: AppSpacing.lg + _buttonSize,
       leading: Padding(
-        padding: const EdgeInsets.only(
-          left: AppSpacing.lg,
-          top: _topInset,
-        ),
+        padding: const EdgeInsets.only(left: AppSpacing.lg, top: _topInset),
         child: Align(
           alignment: Alignment.topLeft,
           child: _HeaderIconButton(
@@ -66,10 +63,7 @@ class AppScreenHeader extends StatelessWidget implements PreferredSizeWidget {
               right: AppSpacing.lg,
               top: _topInset,
             ),
-            child: Align(
-              alignment: Alignment.topRight,
-              child: trailing,
-            ),
+            child: Align(alignment: Alignment.topRight, child: trailing),
           )
         else
           SizedBox(width: AppSpacing.lg + _buttonSize),
@@ -116,10 +110,6 @@ PreferredSizeWidget buildAppScreenHeader(
 }) {
   return PreferredSize(
     preferredSize: Size.fromHeight(AppScreenHeader.totalHeight(context)),
-    child: AppScreenHeader(
-      title: title,
-      onBack: onBack,
-      trailing: trailing,
-    ),
+    child: AppScreenHeader(title: title, onBack: onBack, trailing: trailing),
   );
 }

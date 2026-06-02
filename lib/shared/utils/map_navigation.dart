@@ -1,26 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/app_routes.dart';
-import '../widgets/app_toast.dart';
 
-/// Map screen is disabled during static UI phase — show a toast instead.
+/// Opens the Dev Handoff Search flow map screen.
 void navigateToStationSearchMap(BuildContext context) {
-  AppToast.showNeutral(context, 'Map view is coming soon.');
-}
-
-/// Route builder placeholder while [StationSearchMapScreen] is disabled.
-Widget buildDisabledMapRoute(BuildContext context) {
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (!context.mounted) {
-      return;
-    }
-    navigateToStationSearchMap(context);
-    Navigator.of(context).maybePop();
-  });
-  return const Scaffold(
-    body: SizedBox.shrink(),
-  );
+  Navigator.of(context).pushNamed(AppRoutes.stationSearchMap);
 }
 
 /// Guard for any direct route name usage.
 bool isMapRoute(String? routeName) => routeName == AppRoutes.stationSearchMap;
+
+/// Opens the station location in Google Maps (external app or browser).
+Future<bool> openGoogleMapsForStation({
+  required double latitude,
+  required double longitude,
+  String? label,
+}) async {
+  if (latitude == 0 && longitude == 0) {
+    return false;
+  }
+
+  final query = label == null || label.trim().isEmpty
+      ? '$latitude,$longitude'
+      : '$latitude,$longitude (${Uri.encodeComponent(label.trim())})';
+
+  final googleMapsUri = Uri.parse(
+    'https://www.google.com/maps/search/?api=1&query=$query',
+  );
+
+  if (await canLaunchUrl(googleMapsUri)) {
+    return launchUrl(googleMapsUri, mode: LaunchMode.externalApplication);
+  }
+
+  final geoUri = Uri.parse('geo:$latitude,$longitude?q=$query');
+  if (await canLaunchUrl(geoUri)) {
+    return launchUrl(geoUri, mode: LaunchMode.externalApplication);
+  }
+
+  return false;
+}

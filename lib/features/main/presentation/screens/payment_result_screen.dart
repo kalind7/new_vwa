@@ -57,18 +57,19 @@ class PaymentResultScreen extends StatelessWidget {
                   children: [
                     AppButton(
                       label: 'Go to home',
-                      onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
-                        AppRoutes.mainShell,
-                        (route) => false,
-                      ),
+                      onPressed: () =>
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                            AppRoutes.mainShell,
+                            (route) => false,
+                          ),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     AppButton(
                       label: 'Leave a review',
                       variant: AppButtonVariant.secondary,
-                      onPressed: () => Navigator.of(context).pushNamed(
-                        AppRoutes.leaveReview,
-                      ),
+                      onPressed: () => Navigator.of(
+                        context,
+                      ).pushNamed(AppRoutes.leaveReview),
                     ),
                   ],
                 ),

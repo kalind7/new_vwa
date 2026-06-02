@@ -34,15 +34,17 @@ void main() {
       expect(destination, SplashDestination.onboarding);
     });
 
-    test('routes to login when onboarding was completed and token is missing',
-        () async {
-      when(() => storage.readAccessToken()).thenAnswer((_) async => null);
-      when(() => storage.hasSeenOnboarding()).thenAnswer((_) async => true);
+    test(
+      'routes to login when onboarding was completed and token is missing',
+      () async {
+        when(() => storage.readAccessToken()).thenAnswer((_) async => null);
+        when(() => storage.hasSeenOnboarding()).thenAnswer((_) async => true);
 
-      final destination = await resolver.resolve();
+        final destination = await resolver.resolve();
 
-      expect(destination, SplashDestination.login);
-    });
+        expect(destination, SplashDestination.login);
+      },
+    );
   });
 
   group('SplashNavigationResolver integration', () {

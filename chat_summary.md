@@ -8,7 +8,7 @@
 - Preferred Android test device: `M2006C3LI`, device ID `OJUSLVIVT4BE75JZ`.
 - Run command: `flutter run -d OJUSLVIVT4BE75JZ`.
 - Do not build APK/IPA unless explicitly requested.
-- Static Figma UI phases largely complete; API integration in progress on `Api-integration`.
+- Static Figma UI + Dev Handoff UI complete; API integration **active** on `Api-integration` (batches 3–11: station detail, bookings, vehicles, payments, reviews, profile, FCM). OTP deferred (SMTP).
 
 ## Figma Context
 
@@ -128,9 +128,8 @@
 - API auth + home stations integrated; docs updated this session.
 - Do not commit unless the user explicitly asks.
 
-## Next Best Step
+## Next Best Step (Dev Handoff UI — active)
 
-- Device review: splash routing (token / onboarding / login), remember-me, login → main shell, register → add vehicle, logout → login on restart.
-- Home: test All / Nearby / Less distance tabs; confirm Less distance after location POST succeeds.
-- Confirm next API batch with user (OTP, profile/vehicles, station detail, booking, etc.).
-- Re-enable map when map/location API work begins.
+- API integration paused; OTP deferred (no SMTP).
+- Implement Dev Handoff (`7:4`): Droplet map-first home, 2 filter chips, handoff bottom sheets, Search flow map, station detail/modal polish.
+- Device review: Home → search → station → mock book; verify live auth + Nearby / Less distance APIs unchanged.

@@ -34,9 +34,7 @@ void main() {
           password: any(named: 'password'),
         ),
       ).thenAnswer(
-        (_) async => right(
-          const LoginResponse(accessToken: 'login-token-123'),
-        ),
+        (_) async => right(const LoginResponse(accessToken: 'login-token-123')),
       );
 
       final result = await repository.login(
@@ -58,9 +56,8 @@ void main() {
           passwordConfirmation: any(named: 'passwordConfirmation'),
         ),
       ).thenAnswer(
-        (_) async => right(
-          const RegisterResponse(accessToken: 'register-token-456'),
-        ),
+        (_) async =>
+            right(const RegisterResponse(accessToken: 'register-token-456')),
       );
 
       final result = await repository.register(
@@ -75,10 +72,12 @@ void main() {
       expect(await localStorage.readAccessToken(), 'register-token-456');
     });
     test('logout clears access token only', () async {
-      when(() => remoteDataSource.login(
-            login: any(named: 'login'),
-            password: any(named: 'password'),
-          )).thenAnswer(
+      when(
+        () => remoteDataSource.login(
+          login: any(named: 'login'),
+          password: any(named: 'password'),
+        ),
+      ).thenAnswer(
         (_) async => right(const LoginResponse(accessToken: 'login-token')),
       );
 

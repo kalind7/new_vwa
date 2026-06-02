@@ -8,18 +8,14 @@ import '../storage/local_storage_service.dart';
 typedef UnauthorizedCallback = Future<void> Function();
 
 class ApiClient {
-  ApiClient(
-    this._localStorage, {
-    UnauthorizedCallback? onUnauthorized,
-  }) : _onUnauthorized = onUnauthorized {
+  ApiClient(this._localStorage, {UnauthorizedCallback? onUnauthorized})
+    : _onUnauthorized = onUnauthorized {
     _dio = Dio(
       BaseOptions(
         baseUrl: AppConfig.apiBaseUrl,
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
-        headers: const {
-          'Accept': 'application/json',
-        },
+        headers: const {'Accept': 'application/json'},
       ),
     );
 

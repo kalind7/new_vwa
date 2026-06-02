@@ -2,6 +2,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 
 import 'app_routes.dart';
+import 'connectivity_gate.dart';
 import '../config/app_theme.dart';
 import '../shared/utils/keyboard_utils.dart';
 
@@ -19,7 +20,7 @@ class VwaApp extends StatelessWidget {
       builder: (context, child) {
         final wrappedChild = child == null
             ? const SizedBox.shrink()
-            : DismissKeyboardOnTap(child: child);
+            : DismissKeyboardOnTap(child: ConnectivityGate(child: child));
         return BotToastInit()(context, wrappedChild);
       },
       navigatorObservers: [BotToastNavigatorObserver()],

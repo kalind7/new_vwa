@@ -58,7 +58,7 @@
 - `USE_MOCK_DATA` toggle in `assets/env/.env` switches auth between mock and live API.
 - Local cache: Hive (planned/legacy; auth prefs are not in secure storage alone).
 - Notifications: Firebase Core, Firebase Messaging, Flutter Local Notifications.
-- Maps: Google Maps dependency is present; map search route is disabled during static/API early phase — Home search shows a toast instead.
+- Maps: `flutter_map` on Droplet home and Search flow; `google_maps_flutter` dependency present for future use.
 - Payments planned: Khalti and eSewa.
 - Fonts package: `google_fonts`.
 - Feedback: `bot_toast` via `AppToast` (success green, error red, neutral gray400, bottom aligned).
@@ -145,7 +145,7 @@ Verification passed:
 ## Current State
 
 - **Branch:** `Api-integration` (from `phase-5-static-flow`).
-- **Phase:** Static UI largely complete; API integration in progress (auth + home stations done).
+- **Phase:** Dev Handoff UI alignment (API integration paused). Auth + home station APIs remain wired.
 - **Current app entry routing:**
   - `SplashScreen` → instant token/onboarding check (no artificial delay)
   - Valid token → `mainShell` (dashboard)
@@ -158,7 +158,7 @@ Verification passed:
 - **Logout:** `AuthRepository.logout()` clears access token only; onboarding flag and remember-me persist; app restart → login (not onboarding).
 - Static auth route flow remains wired (login, sign up, forgot/reset, verify screens, add vehicle).
 - Milestone 4 main shell: Home, My wash, Profile; Provider-backed `MainShellProvider`, `HomeProvider`, `StationSearchProvider`.
-- Milestone 5 static booking/payment/review flows complete on prior branch; map search still disabled with toast.
+- Milestone 5 static booking/payment/review flows complete; Dev Handoff Droplet home + Search map UI aligned.
 - **API batch 1 (auth):** Login + register with fpdart `Either`, `AppToast`, token persistence via `LocalStorageService`.
 - **API batch 2 (home stations):** `ApiWashStationRepository` with three tabs — All | Nearby | Less distance — and per-tab empty states.
 - **Tests:** 33 passing (local storage, splash resolver, auth navigation, service station mapper, auth token persistence, and related unit/widget coverage).
@@ -181,23 +181,41 @@ Verification passed:
 - Response `data.suggested_stations[]` parsed by `ServiceStationMapper`.
 - `HomeProvider.loadStations()` uses try/finally so loading always clears.
 
-### Not started / next
+### Profile & vehicles (batch 2 — Api-integration)
 
-- OTP send/verify, forgot-password API, vehicles/profile APIs.
-- Station detail, booking, payments, notifications.
-- Re-enable map screen when location/API map work begins.
+- **GET `auth/me`** — `UserProfileProvider` on main shell; home header + profile tab show live name/avatar.
+- **POST `vehicles`** — one `vehicle_number` + `vehicle_type=bike` per plate (sequential calls for multiple plates). Form-urlencoded, not JSON body.
+- Nepali plate validation (`Ba Pa 2446` style) before API; max 20 chars per API rule.
+- Profile photo upload **skipped** (no Postman upload endpoint).
+- Home avatar tap → `MainShellProvider.setTab(2)` (Profile).
+
+### API active (batches 3–11 in progress)
+
+- **3:** Station `id` + `GET service-stations/{id}`.
+- **4:** `GET vehicles` for picker + My Vehicle.
+- **5–6:** Bookings create/list/detail/cancel → My wash + wash detail.
+- **7:** Promo validate + payment initiate.
+- **8:** Ratings submit + list.
+- **9:** Profile edit (`PUT auth/me`).
+- **11:** FCM token + push handlers (Laravel Firebase backend).
+
+### API deferred
+
+- OTP send/verify, live forgot-password (SMTP not ready), profile photo upload.
+
+## Dev Handoff UI (Milestones A–E) — complete
+
+- Droplet home, search map, handoff sheets, wash history/detail/checkout flow, profile handoff UI.
 
 ## Next Required Work
 
-- Continue API integration in small batches (confirm next endpoint group with user).
-- Device review on `OJUSLVIVT4BE75JZ` for auth flows, remember-me, splash routing, and home station tabs (including Less distance after location POST).
-- Add widget/unit tests one feature at a time as new APIs land.
-- Re-enable map screen when API/location integration is ready.
+- Device smoke with `USE_MOCK_DATA=false`: home → station detail → book → my wash → checkout → payment; profile edit; test push after FCM register.
+- Confirm Laravel FCM token endpoint path with backend if register fails.
 - Do not build APK/IPA unless requested.
 
 Latest verification:
 
-- `flutter test` — 33 tests passing.
+- `flutter test` — run after each batch.
 - Do not commit unless user asks.
 
 ## Important Files
@@ -210,7 +228,8 @@ Latest verification:
 - `lib/app/vwa_app.dart`: app shell.
 - `lib/config/`: design tokens, theme, assets, responsive breakpoints.
 - `lib/core/storage/local_storage_service.dart`: token, onboarding, remember-me prefs.
-- `lib/core/network/api_paths.dart`: API paths including `suggest-nearest`, `locations`.
+- `lib/core/network/api_paths.dart`: API paths including `auth/me`, `vehicles`, `suggest-nearest`, `locations`.
+- `lib/features/profile/`: UserRepository, profile/vehicle datasources, UserProfileProvider.
 - `lib/core/di/app_dependencies.dart`: DI wiring for API repos and storage.
 - `lib/features/onboarding/domain/splash_navigation_resolver.dart`: splash routing logic.
 - `lib/features/onboarding/`: splash/onboarding implementation.

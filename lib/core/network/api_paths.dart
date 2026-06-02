@@ -11,14 +11,17 @@ class ApiPaths {
   static const String authForgotPassword = 'auth/forgot-password';
   static const String authResetPassword = 'auth/reset-password';
 
-  // Profile & vehicles
-  static const String userProfile = 'user/profile';
-  static const String userVehicles = 'user/vehicles';
+  // Profile & vehicles (Postman: GET auth/me, POST/GET vehicles)
+  static const String authMe = 'auth/me';
+  static const String vehicles = 'vehicles';
+  static String vehicleDetails(String id) => 'vehicles/$id';
+  static String setDefaultVehicle(String id) => 'vehicles/$id/set-default';
 
   // Stations
   static const String serviceStations = 'service-stations';
   static String serviceStationDetails(String id) => 'service-stations/$id';
   static const String nearestStations = 'service-stations/nearest';
+
   /// Postman: GET `suggest-nearest` (auth required, uses saved user location).
   static const String suggestStationNearest = 'suggest-nearest';
 
@@ -38,4 +41,7 @@ class ApiPaths {
   static const String userRatings = 'user/ratings';
   static String stationRatings(String stationId) =>
       'service-stations/$stationId/ratings';
+
+  // Notifications (confirm path with Laravel backend if needed)
+  static const String fcmToken = 'fcm-token';
 }

@@ -1,7 +1,3 @@
-// Map screen is disabled during the static UI phase.
-// Navigation to AppRoutes.stationSearchMap shows a toast via map_navigation.dart.
-// This file is kept for future API/map integration.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -27,20 +23,25 @@ class StationSearchMapScreen extends StatefulWidget {
 class _StationSearchMapScreenState extends State<StationSearchMapScreen> {
   final MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
-  late final StationSearchProvider _provider;
+  StationSearchProvider? _provider;
+  bool _providerInitialized = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_providerInitialized) {
+      return;
+    }
+    _providerInitialized = true;
     _provider = StationSearchProvider(
-      stationRepository: const MockWashStationRepository(),
+      stationRepository: context.read<WashStationRepository>(),
     )..loadStations();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _provider.dispose();
+    _provider?.dispose();
     super.dispose();
   }
 
@@ -48,7 +49,7 @@ class _StationSearchMapScreenState extends State<StationSearchMapScreen> {
     FocusScope.of(context).unfocus();
     _mapController.move(LatLng(station.latitude, station.longitude), 16);
     _searchController.text = station.name;
-    _provider.selectStation(station);
+    _provider?.selectStation(station);
   }
 
   void _openStationDetail(WashStationMock station) {
@@ -59,8 +60,13 @@ class _StationSearchMapScreenState extends State<StationSearchMapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = _provider;
+    if (provider == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return ChangeNotifierProvider<StationSearchProvider>.value(
-      value: _provider,
+      value: provider,
       child: Consumer<StationSearchProvider>(
         builder: (context, provider, _) {
           final stations = provider.stations.isNotEmpty
@@ -135,13 +141,11 @@ class _StationSearchMapScreenState extends State<StationSearchMapScreen> {
                 if (provider.selectedStation != null)
                   Align(
                     alignment: Alignment.bottomCenter,
-                    child: SafeArea(
-                      minimum: const EdgeInsets.all(AppSpacing.lg),
-                      child: _SelectedStationSheet(
-                        station: provider.selectedStation!,
-                        onTap: () =>
-                            _openStationDetail(provider.selectedStation!),
-                      ),
+                    child: _SelectedStationPreviewSheet(
+                      station: provider.selectedStation!,
+                      onClose: provider.clearMapSelection,
+                      onTap: () =>
+                          _openStationDetail(provider.selectedStation!),
                     ),
                   ),
               ],
@@ -168,47 +172,71 @@ class _SearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A101828),
-            blurRadius: 16,
-            offset: Offset(0, 6),
+    return Row(
+      children: [
+        Material(
+          color: AppColors.gray800,
+          shape: const CircleBorder(
+            side: BorderSide(color: AppColors.gray25, width: 0.86),
           ),
-        ],
-      ),
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        onTap: onTap,
-        textInputAction: TextInputAction.search,
-        decoration: InputDecoration(
-          hintText: 'Search stations',
-          hintStyle: AppTextStyles.textSmMedium.copyWith(
-            color: AppColors.gray400,
-          ),
-          border: InputBorder.none,
-          prefixIcon: IconButton(
-            onPressed: onBack,
-            icon: const AppSvgIcon(
-              AppSvgIconName.arrowLeft,
-              color: AppColors.gray700,
+          child: InkWell(
+            onTap: onBack,
+            customBorder: const CircleBorder(),
+            child: const SizedBox(
+              width: 44,
+              height: 44,
+              child: Center(
+                child: AppSvgIcon(
+                  AppSvgIconName.arrowLeft,
+                  color: AppColors.white,
+                  size: 20,
+                ),
+              ),
             ),
-            color: AppColors.gray700,
-          ),
-          suffixIcon: const Padding(
-            padding: EdgeInsets.all(AppSpacing.md),
-            child: AppSvgIcon(AppSvgIconName.search, color: AppColors.gray500),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.md,
           ),
         ),
-      ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: AppColors.gray300),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0D101828),
+                  blurRadius: 2,
+                  offset: Offset(0, 1),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: controller,
+              onChanged: onChanged,
+              onTap: onTap,
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: 'Search stations',
+                hintStyle: AppTextStyles.textSmMedium.copyWith(
+                  color: AppColors.gray400,
+                ),
+                border: InputBorder.none,
+                suffixIcon: const Padding(
+                  padding: EdgeInsets.all(AppSpacing.md),
+                  child: AppSvgIcon(
+                    AppSvgIconName.search,
+                    color: AppColors.gray500,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: 10,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -309,107 +337,124 @@ class _StationMarker extends StatelessWidget {
   }
 }
 
-class _SelectedStationSheet extends StatelessWidget {
-  const _SelectedStationSheet({required this.station, required this.onTap});
+class _SelectedStationPreviewSheet extends StatelessWidget {
+  const _SelectedStationPreviewSheet({
+    required this.station,
+    required this.onTap,
+    required this.onClose,
+  });
 
   final WashStationMock station;
   final VoidCallback onTap;
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(AppRadius.xl),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x24101828),
-                blurRadius: 24,
-                offset: Offset(0, 10),
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: AppColors.gray50,
+        border: Border(top: BorderSide(color: AppColors.gray200)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x1A101828),
+            blurRadius: 8,
+            offset: Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.xxl,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  onPressed: onClose,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  icon: const AppSvgIcon(
+                    AppSvgIconName.close,
+                    color: AppColors.gray700,
+                    size: 20,
+                  ),
+                ),
+              ),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onTap,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                station.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.textMdSemiBold.copyWith(
+                                  color: AppColors.gray900,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                station.location,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.textSmRegular.copyWith(
+                                  color: AppColors.gray600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const AppSvgIcon(
+                          AppSvgIconName.chevronRight,
+                          color: AppColors.gray500,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Wrap(
+                spacing: AppSpacing.md,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  _MapMetaChip(
+                    icon: AppSvgIconName.star,
+                    label: station.rating,
+                    color: const Color(0xFFFEC84B),
+                  ),
+                  _MapMetaChip(
+                    icon: AppSvgIconName.route,
+                    label: station.distance,
+                    color: AppColors.gray700,
+                  ),
+                  _MapMetaChip(
+                    icon: AppSvgIconName.clock,
+                    label: station.slots,
+                    color: AppColors.brand500,
+                  ),
+                ],
               ),
             ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: AppColors.brand500.withValues(alpha: .1),
-                        borderRadius: BorderRadius.circular(AppRadius.lg),
-                      ),
-                      child: const Padding(
-                        padding: EdgeInsets.all(AppSpacing.md),
-                        child: AppSvgIcon(
-                          AppSvgIconName.wash,
-                          color: AppColors.brand500,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            station.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.textMdSemiBold.copyWith(
-                              color: AppColors.gray900,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            station.location,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.textXsMedium.copyWith(
-                              color: AppColors.gray600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const AppSvgIcon(
-                      AppSvgIconName.chevronRight,
-                      color: AppColors.gray500,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Wrap(
-                  spacing: AppSpacing.md,
-                  runSpacing: AppSpacing.sm,
-                  children: [
-                    _MapMetaChip(
-                      icon: AppSvgIconName.star,
-                      label: station.rating,
-                      color: const Color(0xFFFEC84B),
-                    ),
-                    _MapMetaChip(
-                      icon: AppSvgIconName.route,
-                      label: station.distance,
-                      color: AppColors.gray700,
-                    ),
-                    _MapMetaChip(
-                      icon: AppSvgIconName.clock,
-                      label: station.slots,
-                      color: AppColors.brand500,
-                    ),
-                  ],
-                ),
-              ],
-            ),
           ),
         ),
       ),

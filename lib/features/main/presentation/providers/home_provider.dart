@@ -19,7 +19,7 @@ class HomeProvider extends ChangeNotifier {
   bool _shouldShowSettingsPrompt = false;
   bool _isLoadingStations = true;
   bool _isDisposed = false;
-  HomeStationTab _selectedStationTab = HomeStationTab.all;
+  HomeStationTab _selectedStationTab = HomeStationTab.lessDistance;
   List<WashStationMock> _stations = const [];
   double? _latitude;
   double? _longitude;
@@ -30,6 +30,17 @@ class HomeProvider extends ChangeNotifier {
   bool get isLoadingStations => _isLoadingStations;
   HomeStationTab get selectedStationTab => _selectedStationTab;
   List<WashStationMock> get visibleStations => _stations;
+  double? get latitude => _latitude;
+  double? get longitude => _longitude;
+
+  /// Section heading above station list (Dev Handoff Droplet).
+  String get sectionTitle {
+    return switch (_selectedStationTab) {
+      HomeStationTab.nearby => 'Nearby',
+      HomeStationTab.lessDistance => 'Highest slot with less distance',
+      HomeStationTab.all => 'All stations',
+    };
+  }
 
   String get emptyStateMessage {
     return switch (_selectedStationTab) {

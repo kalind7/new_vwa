@@ -68,10 +68,26 @@ class ServiceStationMapper {
     }
 
     if (data is List) {
-      return data.whereType<Map<String, dynamic>>().map(_fromStationJson).toList();
+      return data
+          .whereType<Map<String, dynamic>>()
+          .map(_fromStationJson)
+          .toList();
     }
 
     return const [];
+  }
+
+  static WashStationMock fromDetailResponse(Map<String, dynamic> json) {
+    if (json['success'] == false) {
+      throw const FormatException('Station detail failed');
+    }
+
+    final data = json['data'];
+    if (data is Map<String, dynamic>) {
+      return _fromStationJson(data);
+    }
+
+    return _fromStationJson(json);
   }
 
   static WashStationMock _fromStationJson(Map<String, dynamic> json) {
@@ -89,9 +105,13 @@ class ServiceStationMapper {
     final reviewCount = json['total_reviews'] is int
         ? json['total_reviews'] as int
         : int.tryParse('${json['total_reviews']}') ?? 0;
+    final products = _parseProducts(json['products']);
     final price = _resolvePrice(json['products']);
+    final services = products.map((product) => product.name).toList();
+    final operatingHours = _parseOperatingHours(json);
 
     return WashStationMock(
+      id: '${json['id'] ?? ''}',
       name: '${json['name'] ?? 'Service Station'}',
       location: '${json['address'] ?? 'Address unavailable'}',
       rating: rating,
@@ -105,7 +125,75 @@ class ServiceStationMapper {
       longitude: longitude,
       reviewCount: reviewCount,
       availableSlotsCount: availableSlots,
+      services: services,
+      products: products,
+      operatingHours: operatingHours,
     );
+  }
+
+  static List<String> _parseOperatingHours(Map<String, dynamic> json) {
+    final hours = <String>[];
+
+    final operatingHours = json['operating_hours'];
+    if (operatingHours is List) {
+      for (final entry in operatingHours) {
+        if (entry is Map<String, dynamic>) {
+          final day = entry['day'] ?? entry['weekday'];
+          final open = entry['open'] ?? entry['opening_time'] ?? entry['from'];
+          final close = entry['close'] ?? entry['closing_time'] ?? entry['to'];
+          if (day != null && open != null && close != null) {
+            hours.add('$day: $open – $close');
+          } else if (open != null && close != null) {
+            hours.add('$open – $close');
+          }
+        } else if (entry != null) {
+          hours.add('$entry');
+        }
+      }
+    }
+
+    if (hours.isNotEmpty) {
+      return hours;
+    }
+
+    final opening =
+        json['opening_time'] ?? json['open_time'] ?? json['opens_at'];
+    final closing =
+        json['closing_time'] ?? json['close_time'] ?? json['closes_at'];
+    if (opening != null && closing != null) {
+      return ['$opening – $closing'];
+    }
+
+    final businessHours = json['business_hours'];
+    if (businessHours is String && businessHours.trim().isNotEmpty) {
+      return [businessHours.trim()];
+    }
+
+    if (json['is_open'] == false) {
+      return const ['Currently closed'];
+    }
+
+    return const [];
+  }
+
+  static List<StationProductMock> _parseProducts(Object? products) {
+    if (products is! List) {
+      return const [];
+    }
+
+    return products
+        .whereType<Map<String, dynamic>>()
+        .map(
+          (json) => StationProductMock(
+            id: json['id'] is int
+                ? json['id'] as int
+                : int.tryParse('${json['id']}') ?? 0,
+            name: '${json['name'] ?? json['title'] ?? 'Service'}',
+            price: json['price']?.toString(),
+          ),
+        )
+        .where((product) => product.id > 0)
+        .toList();
   }
 
   static String _resolvePrice(Object? products) {

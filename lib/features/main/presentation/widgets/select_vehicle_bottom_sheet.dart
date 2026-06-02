@@ -1,108 +1,141 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../../../../config/app_breakpoints.dart';
 import '../../../../config/app_colors.dart';
 import '../../../../config/app_radius.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
+import '../../../../shared/widgets/app_handoff_bottom_sheet.dart';
+import '../../../../shared/widgets/shimmers/app_shimmer.dart';
+import '../../../profile/data/models/user_profile.dart';
+import '../../../profile/domain/repositories/user_repository.dart';
+import '../../../profile/presentation/providers/user_profile_provider.dart';
 import '../../data/booking_flow_mock_data.dart';
 
 Future<VehicleMock?> showSelectVehicleBottomSheet({
   required BuildContext context,
   VehicleMock? selectedVehicle,
 }) {
-  return showModalBottomSheet<VehicleMock>(
+  return showAppHandoffBottomSheet<VehicleMock>(
     context: context,
-    isScrollControlled: true,
-    isDismissible: true,
-    enableDrag: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) {
-      return _SelectVehicleBottomSheet(initialVehicle: selectedVehicle);
-    },
+    title: 'Select vehicle',
+    child: _SelectVehicleSheetContent(initialVehicle: selectedVehicle),
   );
 }
 
-class _SelectVehicleBottomSheet extends StatefulWidget {
-  const _SelectVehicleBottomSheet({this.initialVehicle});
+class _SelectVehicleSheetContent extends StatefulWidget {
+  const _SelectVehicleSheetContent({this.initialVehicle});
 
   final VehicleMock? initialVehicle;
 
   @override
-  State<_SelectVehicleBottomSheet> createState() =>
-      _SelectVehicleBottomSheetState();
+  State<_SelectVehicleSheetContent> createState() =>
+      _SelectVehicleSheetContentState();
 }
 
-class _SelectVehicleBottomSheetState extends State<_SelectVehicleBottomSheet> {
-  late VehicleMock _selectedVehicle;
+class _SelectVehicleSheetContentState
+    extends State<_SelectVehicleSheetContent> {
+  List<VehicleMock> _vehicles = const [];
+  VehicleMock? _selectedVehicle;
+  var _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _selectedVehicle = widget.initialVehicle ?? vehicles[2];
+    _loadVehicles();
+  }
+
+  Future<void> _loadVehicles() async {
+    final repository = context.read<UserRepository>();
+    final result = await repository.fetchVehicles();
+
+    if (!mounted) {
+      return;
+    }
+
+    result.fold((_) => _applyFallbackVehicles(), (loaded) {
+      if (loaded.isEmpty) {
+        _applyFallbackVehicles();
+        return;
+      }
+
+      _vehicles = loaded;
+      if (widget.initialVehicle != null) {
+        _selectedVehicle = loaded.firstWhere(
+          (vehicle) => vehicle.id == widget.initialVehicle!.id,
+          orElse: () => widget.initialVehicle!,
+        );
+      } else {
+        _selectedVehicle = loaded.first;
+      }
+    });
+
+    setState(() => _isLoading = false);
+  }
+
+  void _applyFallbackVehicles() {
+    final profileVehicles =
+        context.read<UserProfileProvider>().profile?.vehicles ??
+        const <UserVehicle>[];
+
+    if (profileVehicles.isNotEmpty) {
+      _vehicles = profileVehicles
+          .map(
+            (vehicle) =>
+                VehicleMock(id: '${vehicle.id}', plate: vehicle.vehicleNumber),
+          )
+          .toList();
+    } else {
+      _vehicles = vehicles;
+    }
+
+    _selectedVehicle =
+        widget.initialVehicle ??
+        (_vehicles.isNotEmpty ? _vehicles.first : null);
   }
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
-
-    return SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: AppBreakpoints.maxMobileContentWidth,
-          ),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              AppBreakpoints.horizontalPadding(width),
-              0,
-              AppBreakpoints.horizontalPadding(width),
-              AppSpacing.lg + bottomInset,
-            ),
-            child: DecoratedBox(
-              decoration: const BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(AppRadius.md),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xxl,
-                  AppSpacing.xxl,
-                  AppSpacing.xxl,
-                  AppSpacing.xxl,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Select vehicle',
-                      style: AppTextStyles.textXlSemiBold.copyWith(
-                        color: AppColors.gray950,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
-                    for (final vehicle in vehicles) ...[
-                      _VehicleOptionTile(
-                        vehicle: vehicle,
-                        isSelected: _selectedVehicle.id == vehicle.id,
-                        onTap: () {
-                          setState(() => _selectedVehicle = vehicle);
-                          Navigator.of(context).pop(vehicle);
-                        },
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                    ],
-                  ],
-                ),
-              ),
+    if (_isLoading) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(
+          3,
+          (_) => const Padding(
+            padding: EdgeInsets.only(bottom: AppSpacing.md),
+            child: AppShimmerBox(
+              width: double.infinity,
+              height: 56,
+              borderRadius: AppRadius.md,
             ),
           ),
         ),
-      ),
+      );
+    }
+
+    if (_vehicles.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Text(
+          'No vehicles found. Add a vehicle from your profile.',
+          style: AppTextStyles.textSmRegular.copyWith(color: AppColors.gray600),
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final vehicle in _vehicles) ...[
+          _VehicleOptionTile(
+            vehicle: vehicle,
+            isSelected: _selectedVehicle?.id == vehicle.id,
+            onTap: () => Navigator.of(context).pop(vehicle),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+      ],
     );
   }
 }
@@ -148,24 +181,23 @@ class _VehicleOptionTile extends StatelessWidget {
               ),
               DecoratedBox(
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.gray500 : AppColors.white,
-                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  shape: BoxShape.circle,
                   border: Border.all(
-                    color: isSelected ? AppColors.gray500 : AppColors.gray300,
+                    color: isSelected ? AppColors.brand500 : AppColors.gray300,
+                    width: 2,
                   ),
                 ),
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: isSelected
-                      ? const Center(
-                          child: Icon(
-                            Icons.check,
-                            size: 14,
-                            color: AppColors.white,
-                          ),
-                        )
-                      : null,
+                child: Padding(
+                  padding: const EdgeInsets.all(3),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.brand500
+                          : Colors.transparent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const SizedBox(width: 10, height: 10),
+                  ),
                 ),
               ),
             ],

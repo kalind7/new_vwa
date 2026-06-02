@@ -3,9 +3,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 
 import 'package:vwa/app/vwa_app.dart';
+import 'package:vwa/core/connectivity/connectivity_provider.dart';
 import 'package:vwa/core/di/app_dependencies.dart';
 import 'package:vwa/features/auth/domain/repositories/auth_repository.dart';
+import 'package:vwa/features/booking/domain/repositories/booking_repository.dart';
 import 'package:vwa/features/main/data/wash_station_repository.dart';
+import 'package:vwa/features/profile/domain/repositories/user_repository.dart';
 
 Future<void> pumpVwaApp(
   WidgetTester tester, {
@@ -22,6 +25,11 @@ Future<void> pumpVwaApp(
         Provider<WashStationRepository>.value(
           value: dependencies.washStationRepository,
         ),
+        Provider<UserRepository>.value(value: dependencies.userRepository),
+        Provider<BookingRepository>.value(
+          value: dependencies.bookingRepository,
+        ),
+        ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
       ],
       child: const VwaApp(),
     ),

@@ -112,6 +112,23 @@ class ApiWashStationRepository implements WashStationRepository {
     }
   }
 
+  @override
+  Future<WashStationMock?> fetchStationDetail(String stationId) async {
+    if (stationId.isEmpty) {
+      return null;
+    }
+
+    try {
+      final data = await _getJson(ApiPaths.serviceStationDetails(stationId));
+      if (data == null) {
+        return null;
+      }
+      return ServiceStationMapper.fromDetailResponse(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>?> _getJson(
     String path, {
     Map<String, dynamic>? queryParameters,

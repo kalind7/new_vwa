@@ -3,8 +3,17 @@ import 'package:flutter/material.dart';
 import '../../../config/app_colors.dart';
 import '../../../shared/widgets/app_svg_icon.dart';
 
+class StationProductMock {
+  const StationProductMock({required this.id, required this.name, this.price});
+
+  final int id;
+  final String name;
+  final String? price;
+}
+
 class WashStationMock {
   const WashStationMock({
+    required this.id,
     required this.name,
     required this.location,
     required this.rating,
@@ -16,8 +25,12 @@ class WashStationMock {
     required this.longitude,
     this.reviewCount = 52,
     this.availableSlotsCount = 5,
+    this.services = const [],
+    this.products = const [],
+    this.operatingHours = const [],
   });
 
+  final String id;
   final String name;
   final String location;
   final String rating;
@@ -29,10 +42,124 @@ class WashStationMock {
   final double longitude;
   final int reviewCount;
   final int availableSlotsCount;
+  final List<String> services;
+  final List<StationProductMock> products;
+  final List<String> operatingHours;
+
+  List<String> get serviceNames {
+    if (services.isNotEmpty) {
+      return services;
+    }
+    return products.map((product) => product.name).toList();
+  }
+
+  WashStationMock copyWith({
+    String? id,
+    String? name,
+    String? location,
+    String? rating,
+    String? distance,
+    String? price,
+    String? slots,
+    Color? slotsColor,
+    double? latitude,
+    double? longitude,
+    int? reviewCount,
+    int? availableSlotsCount,
+    List<String>? services,
+    List<StationProductMock>? products,
+    List<String>? operatingHours,
+  }) {
+    return WashStationMock(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      location: location ?? this.location,
+      rating: rating ?? this.rating,
+      distance: distance ?? this.distance,
+      price: price ?? this.price,
+      slots: slots ?? this.slots,
+      slotsColor: slotsColor ?? this.slotsColor,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      reviewCount: reviewCount ?? this.reviewCount,
+      availableSlotsCount: availableSlotsCount ?? this.availableSlotsCount,
+      services: services ?? this.services,
+      products: products ?? this.products,
+      operatingHours: operatingHours ?? this.operatingHours,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'location': location,
+    'rating': rating,
+    'distance': distance,
+    'price': price,
+    'slots': slots,
+    'slotsColor': slotsColor.toARGB32(),
+    'latitude': latitude,
+    'longitude': longitude,
+    'reviewCount': reviewCount,
+    'availableSlotsCount': availableSlotsCount,
+    'services': services,
+    'products': products
+        .map(
+          (product) => {
+            'id': product.id,
+            'name': product.name,
+            'price': product.price,
+          },
+        )
+        .toList(),
+    'operatingHours': operatingHours,
+  };
+
+  factory WashStationMock.fromJson(Map<String, dynamic> json) {
+    final productsRaw = json['products'];
+    final products = productsRaw is List
+        ? productsRaw
+              .whereType<Map<String, dynamic>>()
+              .map(
+                (item) => StationProductMock(
+                  id: item['id'] is int
+                      ? item['id'] as int
+                      : int.tryParse('${item['id']}') ?? 0,
+                  name: '${item['name'] ?? ''}',
+                  price: item['price']?.toString(),
+                ),
+              )
+              .toList()
+        : const <StationProductMock>[];
+
+    return WashStationMock(
+      id: '${json['id'] ?? ''}',
+      name: '${json['name'] ?? ''}',
+      location: '${json['location'] ?? ''}',
+      rating: '${json['rating'] ?? '0.0'}',
+      distance: '${json['distance'] ?? 'Nearby'}',
+      price: '${json['price'] ?? 'Price on request'}',
+      slots: '${json['slots'] ?? '5 slots available'}',
+      slotsColor: Color(
+        json['slotsColor'] as int? ?? AppColors.success50.toARGB32(),
+      ),
+      latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
+      longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
+      reviewCount: json['reviewCount'] as int? ?? 0,
+      availableSlotsCount: json['availableSlotsCount'] as int? ?? 5,
+      services:
+          (json['services'] as List?)?.map((e) => '$e').toList() ?? const [],
+      products: products,
+      operatingHours:
+          (json['operatingHours'] as List?)?.map((e) => '$e').toList() ??
+          const [],
+    );
+  }
 }
 
 class WashBookingMock {
   const WashBookingMock({
+    this.id,
     required this.station,
     required this.location,
     required this.status,
@@ -42,8 +169,13 @@ class WashBookingMock {
     required this.vehicle,
     required this.price,
     required this.canCancel,
+    this.stationId,
+    this.vehicleId,
   });
 
+  final String? id;
+  final String? stationId;
+  final String? vehicleId;
   final String station;
   final String location;
   final String status;
@@ -53,6 +185,20 @@ class WashBookingMock {
   final String vehicle;
   final String price;
   final bool canCancel;
+}
+
+extension WashBookingMockProgress on WashBookingMock {
+  /// Dev Handoff steps: 0 Booking, 1 Washing, 2 Finish (all done).
+  int get washProgressStep {
+    switch (status) {
+      case 'Completed':
+        return 2;
+      case 'Washing':
+        return 1;
+      default:
+        return 0;
+    }
+  }
 }
 
 class ProfileMenuSectionMock {
@@ -76,6 +222,7 @@ class ProfileMenuItemMock {
 
 const nearbyStations = [
   WashStationMock(
+    id: '1',
     name: 'Clean Wave Station',
     location: 'Thamel, Kathmandu',
     rating: '4.5',
@@ -87,8 +234,11 @@ const nearbyStations = [
     longitude: 85.3123,
     reviewCount: 52,
     availableSlotsCount: 5,
+    services: ['Basic Wash', 'Premium Wash'],
+    operatingHours: ['Sun–Sat: 7:00 AM – 8:00 PM'],
   ),
   WashStationMock(
+    id: '2',
     name: 'Annapurna Daju Bhai Washing Station',
     location: 'Thamel, Kathmandu',
     rating: '4.2',
@@ -99,8 +249,11 @@ const nearbyStations = [
     latitude: 27.7172,
     longitude: 85.3153,
     availableSlotsCount: 25,
+    services: ['Express Wash', 'Detailing'],
+    operatingHours: ['Mon–Sun: 6:00 AM – 9:00 PM'],
   ),
   WashStationMock(
+    id: '3',
     name: 'Sparkle Bike Wash',
     location: 'Tudikhel, Kathmandu',
     rating: '4.5',
@@ -110,14 +263,20 @@ const nearbyStations = [
     slotsColor: Color(0xFFFFF7ED),
     latitude: 27.7047,
     longitude: 85.3157,
+    services: ['Standard Wash'],
+    operatingHours: [
+      'Mon–Fri: 8:00 AM – 7:00 PM',
+      'Sat–Sun: 9:00 AM – 6:00 PM',
+    ],
   ),
 ];
 
 const washBookings = [
   WashBookingMock(
+    id: '1',
     station: 'Sparkle Bike Wash',
     location: 'Jhamsikhel, Laltipur',
-    status: 'Pending',
+    status: 'Booked',
     date: 'Today',
     time: '10:00 AM',
     service: 'Exterior Wash',
@@ -126,6 +285,7 @@ const washBookings = [
     canCancel: true,
   ),
   WashBookingMock(
+    id: '2',
     station: 'Sparkle Bike Wash',
     location: 'Jhamsikhel, Laltipur',
     status: 'Completed',
@@ -138,11 +298,7 @@ const washBookings = [
   ),
 ];
 
-const stationServices = [
-  'Exterior Wash',
-  'Interior Clean',
-  'Wax Polish',
-];
+const stationServices = ['Exterior Wash', 'Interior Clean', 'Wax Polish'];
 
 const profileMenuSections = [
   ProfileMenuSectionMock(
@@ -155,7 +311,7 @@ const profileMenuSections = [
       ),
       ProfileMenuItemMock(
         icon: AppSvgIconName.profile,
-        title: 'My vehicle number',
+        title: 'Vehicle number',
         route: AppProfileRoutes.myVehicle,
       ),
       ProfileMenuItemMock(
@@ -167,6 +323,11 @@ const profileMenuSections = [
         icon: AppSvgIconName.card,
         title: 'Payments History',
         route: AppProfileRoutes.paymentHistory,
+      ),
+      ProfileMenuItemMock(
+        icon: AppSvgIconName.wash,
+        title: 'Wash History',
+        route: AppProfileRoutes.washHistoryTab,
       ),
       ProfileMenuItemMock(
         icon: AppSvgIconName.star,
@@ -208,4 +369,7 @@ class AppProfileRoutes {
   static const String aboutUs = '/about-us';
   static const String terms = '/terms';
   static const String privacyPolicy = '/privacy-policy';
+
+  /// Switches main shell to My wash tab (not a named route).
+  static const String washHistoryTab = '__wash_history_tab__';
 }

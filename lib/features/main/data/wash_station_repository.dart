@@ -9,6 +9,8 @@ abstract class WashStationRepository {
     double? longitude,
     String? locationLabel,
   });
+
+  Future<WashStationMock?> fetchStationDetail(String stationId);
 }
 
 class MockWashStationRepository implements WashStationRepository {
@@ -22,5 +24,15 @@ class MockWashStationRepository implements WashStationRepository {
     String? locationLabel,
   }) async {
     return nearbyStations;
+  }
+
+  @override
+  Future<WashStationMock?> fetchStationDetail(String stationId) async {
+    for (final station in nearbyStations) {
+      if (station.id == stationId) {
+        return station;
+      }
+    }
+    return nearbyStations.isNotEmpty ? nearbyStations.first : null;
   }
 }
