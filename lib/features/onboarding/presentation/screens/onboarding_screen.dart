@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../app/app_routes.dart';
 import '../../../../config/app_colors.dart';
 import '../../../../config/app_spacing.dart';
+import '../../../../core/di/app_dependencies.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_screen.dart';
 import '../../data/onboarding_slide.dart';
@@ -24,6 +26,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _openSignUp() async {
+    await context.read<AppDependencies>().localStorage.setOnboardingComplete();
+    if (!mounted) {
+      return;
+    }
+    await Navigator.of(context).pushNamed(AppRoutes.signUp);
+  }
+
+  Future<void> _openLogin() async {
+    await context.read<AppDependencies>().localStorage.setOnboardingComplete();
+    if (!mounted) {
+      return;
+    }
+    await Navigator.of(context).pushNamed(AppRoutes.login);
   }
 
   @override
@@ -66,15 +84,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     AppButton(
                       label: 'Sign Up',
                       variant: AppButtonVariant.secondary,
-                      onPressed: () =>
-                          Navigator.of(context).pushNamed(AppRoutes.signUp),
+                      onPressed: _openSignUp,
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    AppButton(
-                      label: 'Login',
-                      onPressed: () =>
-                          Navigator.of(context).pushNamed(AppRoutes.login),
-                    ),
+                    AppButton(label: 'Login', onPressed: _openLogin),
                   ],
                 ),
               ),

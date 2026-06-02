@@ -78,13 +78,34 @@ class AuthFormValidators {
       return 'Vehicle number is required';
     }
     final trimmed = value!.trim();
-    if (trimmed.length < 4) {
-      return 'Enter a valid vehicle number';
+    if (trimmed.length > 20) {
+      return 'Vehicle number must be 20 characters or less';
     }
-    if (!RegExp(r'^[A-Za-z0-9 -]+$').hasMatch(trimmed)) {
-      return 'Use letters, numbers, spaces, or hyphens only';
+    if (!isValidNepaliPlate(trimmed)) {
+      return 'Use a Nepali plate like Ba Pa 2446 (letters then numbers)';
     }
     return null;
+  }
+
+  /// Nepali plate: one or more letter groups, then digits (e.g. Ba Pa 2446, Ba-pa-1097).
+  static bool isValidNepaliPlate(String value) {
+    final parts = value.trim().split(RegExp(r'[\s-]+'));
+    if (parts.length < 2) {
+      return false;
+    }
+
+    final numberPart = parts.last;
+    if (!RegExp(r'^\d+$').hasMatch(numberPart)) {
+      return false;
+    }
+
+    for (var i = 0; i < parts.length - 1; i++) {
+      if (!RegExp(r'^[A-Za-z]+$').hasMatch(parts[i])) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   static bool hasMinPasswordLength(String value) => value.length >= 8;

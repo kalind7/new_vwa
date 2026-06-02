@@ -6,21 +6,23 @@ Purpose
 
 Standing User Instructions
 - Target Android and iOS only.
-- Do not run the app from the assistant side.
-- Do not build APK/IPA files from the assistant side.
-- The user will run the app manually.
+- Do not build APK/IPA files from the assistant side unless explicitly requested.
+- The user will run the app manually on device OJUSLVIVT4BE75JZ.
 - After every feature integration, use static verification such as flutter analyze and focused tests when possible.
 - Update this file after every user query so the project context remains current.
-- Latest override: after completing Milestone 3, the user explicitly asked the assistant to run the app to check for runtime errors or UI mismatches.
+- Do not commit unless the user explicitly asks.
 
 Current Technical Decisions
 - State management: Provider.
-- API client: Dio.
-- Auth storage: flutter_secure_storage.
-- Local cache: Hive.
+- API client: Dio (station calls use soft HTTP handling: validateStatus < 500).
+- Auth and app preferences: shared_preferences via LocalStorageService (access token, has_seen_onboarding, remember-me email/password).
+- USE_MOCK_DATA toggle in assets/env/.env for mock vs live auth.
+- Local cache: Hive (legacy/planned; auth prefs are in LocalStorageService).
 - Notifications: Firebase Core, Firebase Messaging, Flutter Local Notifications.
-- Maps: Google Maps dependency is present; the current static map UI uses Flutter Map/OpenStreetMap with Geolocator and Geocoding.
-- Payments: Khalti and eSewa planned.
+- Maps: flutter_map on Droplet home + Search flow screen; Home search opens StationSearchMapScreen.
+- Payments: Khalti and eSewa planned (static UI done).
+- Feedback: bot_toast via AppToast (green success, red error, gray400 neutral, bottom).
+- Loading: AppLoadingOverlay + AppLogoProgressIndicator (center screen, not button spinners).
 - Package/bundle ID: com.kauwatech.vwa.
 
 Firebase
@@ -32,65 +34,82 @@ Firebase
   - ios/Runner/GoogleService-Info.plist
 - Flutter options file is present:
   - lib/firebase_options.dart
+- Backend (Laravel) uses same Firebase project for push; app registers FCM token after login when ENABLE_FIREBASE_NOTIFICATIONS=true.
 
 Current Project Status
-- Flutter app is created under /home/kalind7/visual_studio_projects/new_vwa/VWA.
-- README.md has been updated with project-specific setup details.
-- Root PLAN.md has been created with the UI-first workflow.
-- SUMMARY.md has been created as a handoff document for another AI model.
-- docs/PROJECT_PLAN.md contains the implementation plan.
-- Milestone 2 splash/onboarding flow is complete and ready for user testing.
-- Pre-Milestone-3 responsive foundation pass is complete.
-- Milestone 3 auth static screens have been implemented with static/mock UI and real route wiring.
-- Cursor/VS Code launch config exists at .vscode/launch.json.
+- Flutter app under /home/kalind7/visual_studio_projects/new_vwa/VWA.
+- Milestones 1–5 static UI + Dev Handoff UI (A–E) complete.
+- API integration ACTIVE on branch Api-integration.
+- Batches 1–2 done: auth login/register, home station tabs, GET auth/me, POST vehicles.
+- Batches 3–11 in progress: station detail, vehicles list, bookings, payments, reviews, profile edit, FCM.
+- 41+ passing tests.
+- User tests live on Android device OJUSLVIVT4BE75JZ.
 
 Current Implementation Priority
-- First build a static, pixel-perfect UI/UX replica from the Figma design.
-- UI code must be modularized into feature screens, reusable widgets, shared theme/style files, and mock data.
-- Do not begin API integration until all Figma screens are completed and approved.
-- After UI completion, replace mock data with live Postman API integrations.
-- Do not build the entire UI in one large pass. Work in small milestones and stop after each milestone so the user can run and test.
-- Current checkpoint is the `phase-5-static-flow` branch: implement and review the static booking/payment/wash-detail flow, reusable dialogs/bottom sheets, SVG icon consistency, Provider-backed state, and route management before API integration.
-- Next implementation phase after user approval remains API integration only after the static UI flow is approved.
+- Batch 3+: station id + GET detail, bookings CRUD, GET vehicles, promo/payment, ratings, profile PUT, FCM token.
+- Dev Handoff UI flows frozen (no route changes).
+- OTP/send-otp/forgot-password deferred (SMTP not ready).
+- Profile photo upload skipped (no endpoint).
+
+App Entry And Auth Routing (Api-integration)
+- SplashScreen: SplashNavigationResolver checks token + has_seen_onboarding.
+- Valid token -> mainShell (dashboard).
+- No token + first launch -> OnboardingScreen.
+- No token + seen onboarding -> LoginScreen.
+- Login success -> mainShell.
+- Register success -> addVehicle (OTP skipped).
+- Remember Me: saves email+password; NOT cleared on logout.
+- Logout: clears token; optional POST auth/logout when live.
+- Add vehicle: POST vehicles per plate (form-urlencoded).
+- Main shell: UserProfileProvider loads GET auth/me.
+
+Home Station API (done)
+- All: GET service-stations.
+- Nearby: GET service-stations/nearest.
+- Less distance: GET suggest-nearest (auth + POST locations first).
+- Station cards include API id for detail/booking.
+
+Profile & Vehicles API
+- GET auth/me, POST vehicles (one plate per request).
+- GET vehicles for picker and My Vehicle screen.
+- PUT auth/me for profile edit (when backend accepts).
+
+Bookings API (in progress)
+- POST bookings (JSON: service_station_id, vehicle_id, booking_date, booking_time, products[], payment_method, promo_code).
+- GET bookings, GET bookings/{id}, POST bookings/{id}/cancel.
+- My wash tab and wash detail use live data when USE_MOCK_DATA=false.
+
+Payments & Reviews
+- POST promo-codes/validate on checkout Apply.
+- POST payments/initiate on payment method screen.
+- POST ratings, GET user/ratings, GET service-stations/{id}/ratings.
+
+FCM
+- ENABLE_FIREBASE_NOTIFICATIONS in assets/env/.env.
+- NotificationService: foreground, background handler, token refresh.
+- POST fcm-token (or backend-confirmed path) after login with Bearer token.
 
 Figma Status
-- User wants to use the recent Figma project named Bike-wash.
-- Available Figma MCP tools are get_figma_data and download_figma_images.
-- Figma file key is 16x5FR5xF6mJQ550ZNbMmU.
-- Starting node is 7:3.
-- Figma data has been fetched successfully.
-- Use Figma fonts and colors exactly where possible. Observed fonts include Poppins, Inter, SF Pro Text, Montserrat, Roboto, Public Sans, Protest Strike, and Mulish.
-- Observed color tokens include white, black, gray scale, Secondary/500 #1A1C1E, Secondary/400 #6C7278, Indigo/600 #444CE7, Error/500 #F04438, and input border #EDF1F3.
+- Bike-wash file key 16x5FR5xF6mJQ550ZNbMmU, Dev Handoff node 7:4.
 
-Current UI Milestone Plan
-- Milestone 1: Design system and app shell.
-- Milestone 2: Splash and onboarding flow.
-- Milestone 3: Auth static screens implemented; pre-Phase-4 finalization pass complete on `authentication-fixes` pending verification/user review.
-- Milestone 4: Main app shell with Home/My wash/Profile navbar implemented; Provider/location/map/Home UI fixes verified.
-- Milestone 5: Static booking/payment/wash-detail flow started on `phase-5-static-flow`.
-- User will run/test after each milestone before the next one starts.
-
-Responsive Layout Rules
-- Figma design width is 430 and should be treated as the mobile content baseline.
-- Wide devices should center/constrain mobile content instead of stretching it.
-- Small devices should use tighter padding and scaled image heights.
-- Auth screens in Milestone 3 should use scrollable form layouts to avoid overflow.
+Key Files
+- lib/core/network/api_paths.dart
+- lib/core/di/app_dependencies.dart
+- lib/features/main/data/api_wash_station_repository.dart
+- lib/features/booking/ (bookings API)
+- lib/features/profile/
+- lib/core/services/notification_service.dart
+- .cursor/agents/vwa-api-integration.md, vwa-platform-permissions.md
 
 How User Runs App
-- Preferred connected mobile device:
-  M2006C3LI / OJUSLVIVT4BE75JZ / Android 10 API 29.
-- Command:
-  flutter run -d OJUSLVIVT4BE75JZ
-- Do not use:
-  flutter run -d linux
+- Device: OJUSLVIVT4BE75JZ
+- Command: flutter run -d OJUSLVIVT4BE75JZ
+- Live API: USE_MOCK_DATA=false in assets/env/.env
+
+Platform Permissions & Connectivity
+- HTTP cleartext for bike.yarsanptech.com (Android network_security_config, iOS ATS).
+- ConnectivityProvider + NoInternetScreen global gate.
+- POST_NOTIFICATIONS for FCM.
 
 Latest Query Update
-- User provided Figma screenshots for missing post-booking screens (checkout, billing method, payment confirmed, booking success, booking info, leave review, feedback thanks) and requested full static UI completion except maps.
-- Implemented all missing screens, wired navigation from station booking flow and My Wash detail checkout, fixed header back button placement (~24px below status bar), and disabled map route with toast via `navigateToStationSearchMap` / `buildDisabledMapRoute`.
-- New routes: `bookingSuccess`, `bookingInfo`, `leaveReview`, `feedbackThanks`.
-- New shared widgets: `AppSuccessIcon`, `AppFlowCloseHeader`, updated `AppScreenHeader` / `buildAppScreenHeader`.
-- Flow 1 (Book a slot): Station detail → Select vehicle popup → Confirm popup → Slot booked successfully → Close returns to station detail; Go to my wash opens My Wash tab.
-- Flow 2 (My Wash checkout): My Wash list → Check out on booked item → Checkout → Billing Method → Payment Confirmed → optional Leave a review (validated) → Feedback thanks → Done returns to My Wash tab.
-- Verification passed: `dart analyze` (no issues), `flutter test` (passed).
-- Remaining: Android device review; re-enable map screen; API integration after static UI approval.
-- Do not build APK/IPA. Do not integrate APIs yet.
+- Resume API integration plan approved: batches 3–11, OTP deferred, FCM active with Laravel Firebase backend.

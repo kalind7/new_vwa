@@ -27,9 +27,7 @@ class BookingSuccessScreen extends StatelessWidget {
           ),
           child: Column(
             children: [
-              AppFlowCloseHeader(
-                onClose: () => Navigator.of(context).pop(),
-              ),
+              AppFlowCloseHeader(onClose: () => Navigator.of(context).pop()),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -55,11 +53,12 @@ class BookingSuccessScreen extends StatelessWidget {
                 ),
                 child: AppButton(
                   label: 'Go to my wash',
-                  onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
-                    AppRoutes.mainShell,
-                    (route) => false,
-                    arguments: 1,
-                  ),
+                  onPressed: () =>
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        AppRoutes.mainShell,
+                        (route) => false,
+                        arguments: 1,
+                      ),
                 ),
               ),
             ],
@@ -89,13 +88,14 @@ class BookingInfoScreen extends StatelessWidget {
           child: Column(
             children: [
               AppFlowCloseHeader(
-                onClose: () => Navigator.of(context).popUntil(
-                  (route) => route.isFirst,
-                ),
+                onClose: () =>
+                    Navigator.of(context).popUntil((route) => route.isFirst),
               ),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xxl,
+                  ),
                   child: Column(
                     children: [
                       const SizedBox(height: AppSpacing.lg),
@@ -148,16 +148,14 @@ class BookingInfoScreen extends StatelessWidget {
                                 children: [
                                   Text(
                                     'Total',
-                                    style: AppTextStyles.textMdSemiBold.copyWith(
-                                      color: AppColors.gray900,
-                                    ),
+                                    style: AppTextStyles.textMdSemiBold
+                                        .copyWith(color: AppColors.gray900),
                                   ),
                                   const Spacer(),
                                   Text(
                                     total,
-                                    style: AppTextStyles.textMdSemiBold.copyWith(
-                                      color: AppColors.gray900,
-                                    ),
+                                    style: AppTextStyles.textMdSemiBold
+                                        .copyWith(color: AppColors.gray900),
                                   ),
                                 ],
                               ),
@@ -178,11 +176,12 @@ class BookingInfoScreen extends StatelessWidget {
                 ),
                 child: AppButton(
                   label: 'Go to my wash',
-                  onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
-                    AppRoutes.mainShell,
-                    (route) => false,
-                    arguments: 1,
-                  ),
+                  onPressed: () =>
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        AppRoutes.mainShell,
+                        (route) => false,
+                        arguments: 1,
+                      ),
                 ),
               ),
             ],

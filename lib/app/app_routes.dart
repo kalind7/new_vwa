@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../shared/utils/map_navigation.dart';
+import '../features/auth/presentation/models/add_vehicle_route_args.dart';
 import '../features/auth/presentation/screens/add_vehicle_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
@@ -24,6 +24,7 @@ import '../features/main/presentation/screens/reviews_screen.dart';
 import '../features/main/presentation/screens/service_selection_screen.dart';
 import '../features/main/presentation/screens/slot_selection_screen.dart';
 import '../features/main/presentation/screens/station_detail_screen.dart';
+import '../features/main/presentation/screens/station_search_map_screen.dart';
 import '../features/main/presentation/screens/wash_detail_screen.dart';
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../features/onboarding/presentation/screens/splash_screen.dart';
@@ -74,15 +75,20 @@ class AppRoutes {
       verifyEmail => (_) => const VerifyEmailScreen(),
       verifyOtp => (_) => const OtpVerificationScreen(),
       resetPassword => (_) => const ResetPasswordScreen(),
-      addVehicle => (_) => const AddVehicleScreen(),
+      addVehicle => (_) {
+        final args = settings.arguments;
+        final fromProfile = args is AddVehicleRouteArgs
+            ? args.fromProfile
+            : args == true;
+        return AddVehicleScreen(fromProfile: fromProfile);
+      },
       mainShell => (_) {
         final initialIndex = settings.arguments is int
             ? settings.arguments as int
             : 0;
         return MainShellScreen(initialIndex: initialIndex);
       },
-      // Map screen disabled for static UI phase — toast + pop.
-      stationSearchMap => (context) => buildDisabledMapRoute(context),
+      stationSearchMap => (_) => const StationSearchMapScreen(),
       stationDetail => (_) {
         final station = settings.arguments is WashStationMock
             ? settings.arguments as WashStationMock
@@ -134,7 +140,12 @@ class AppRoutes {
             : _defaultDraft();
         return BookingInfoScreen(draft: draft);
       },
-      leaveReview => (_) => const LeaveReviewScreen(),
+      leaveReview => (_) {
+        final bookingId = settings.arguments is String
+            ? settings.arguments as String
+            : null;
+        return LeaveReviewScreen(bookingId: bookingId);
+      },
       feedbackThanks => (_) => const FeedbackThanksScreen(),
       washDetail => (_) {
         final booking = settings.arguments is WashBookingMock
@@ -154,9 +165,6 @@ class AppRoutes {
       _ => (_) => const SplashScreen(),
     };
 
-    return MaterialPageRoute<void>(
-      builder: builder,
-      settings: settings,
-    );
+    return MaterialPageRoute<void>(builder: builder, settings: settings);
   }
 }

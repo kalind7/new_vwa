@@ -41,7 +41,10 @@ class StationSearchProvider extends ChangeNotifier {
   }
 
   Future<void> loadStations() async {
-    _stations = await _stationRepository.fetchNearbyStations();
+    _stations = await _stationRepository.fetchStations(
+      source: StationListSource.all,
+      locationLabel: null,
+    );
     _notifyListeners();
   }
 

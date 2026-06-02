@@ -4,6 +4,7 @@ import '../../../../app/app_routes.dart';
 import '../../../../config/app_colors.dart';
 import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_button.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../utils/auth_form_validators.dart';
 import '../widgets/auth_flow_layout.dart';
 import '../widgets/auth_form_section.dart';
@@ -20,9 +21,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   final _formKey = GlobalKey<FormState>();
 
   void _showResendMessage(BuildContext context) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Mock OTP code sent again.')));
+    AppToast.showNeutral(context, 'Mock OTP code sent again.');
   }
 
   void _submit() {
@@ -31,9 +30,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Mock phone number verified.')),
-    );
+    AppToast.showSuccess(context, 'Mock phone number verified.');
     Navigator.of(context).pushNamed(AppRoutes.resetPassword);
   }
 

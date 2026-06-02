@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../app/app_routes.dart';
 import '../../../../config/app_colors.dart';
@@ -7,58 +8,22 @@ import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_confirmation_dialog.dart';
 import '../../../../shared/widgets/app_svg_icon.dart';
+import '../../../../shared/widgets/app_toast.dart';
+import '../../../../shared/widgets/profile_avatar.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
+import '../../../profile/presentation/providers/user_profile_provider.dart';
 import '../../data/main_shell_mock_data.dart';
+import '../providers/main_shell_provider.dart';
 
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: AppColors.white,
-      child: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  const _ProfileHero(),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.lg,
-                      AppSpacing.xxxl,
-                      AppSpacing.lg,
-                      AppSpacing.xxl,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (final section in profileMenuSections) ...[
-                          Text(
-                            section.title,
-                            style: AppTextStyles.textSmMedium.copyWith(
-                              color: AppColors.gray500,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          _ProfileMenuCard(
-                            items: section.items,
-                            onTap: (route) =>
-                                Navigator.of(context).pushNamed(route),
-                          ),
-                          const SizedBox(height: AppSpacing.xxl),
-                        ],
-                        _LogoutCard(onTap: () => _confirmLogout(context)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  void _onMenuTap(BuildContext context, ProfileMenuItemMock item) {
+    if (item.route == AppProfileRoutes.washHistoryTab) {
+      context.read<MainShellProvider>().setTab(1);
+      return;
+    }
+    Navigator.of(context).pushNamed(item.route);
   }
 
   Future<void> _confirmLogout(BuildContext context) async {
@@ -71,71 +36,108 @@ class ProfileTab extends StatelessWidget {
     );
 
     if (shouldLogout && context.mounted) {
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+      final result = await context.read<AuthRepository>().logout();
+      if (!context.mounted) {
+        return;
+      }
+
+      result.fold((failure) => AppToast.showError(context, failure.message), (
+        _,
+      ) {
+        context.read<UserProfileProvider>().clear();
+        AppToast.showSuccess(context, 'Logged out successfully.');
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+      });
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: AppColors.white,
+      child: SafeArea(
+        bottom: false,
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _ProfileHero()),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.xxl,
+                AppSpacing.lg,
+                AppSpacing.xxl,
+              ),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  for (final section in profileMenuSections) ...[
+                    Text(
+                      section.title,
+                      style: AppTextStyles.textSmMedium.copyWith(
+                        color: AppColors.gray500,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    _ProfileMenuCard(
+                      items: section.items,
+                      onTap: (item) => _onMenuTap(context, item),
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+                  ],
+                  _LogoutCard(onTap: () => _confirmLogout(context)),
+                ]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
 class _ProfileHero extends StatelessWidget {
-  const _ProfileHero();
-
   @override
   Widget build(BuildContext context) {
+    final profileProvider = context.watch<UserProfileProvider>();
+    final displayName = profileProvider.displayName;
+    final avatarUrl = profileProvider.avatarUrl;
+
     return Column(
       children: [
         Container(
-          height: 120,
           width: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [AppColors.homeGradientStart, AppColors.homeGradientEnd],
-            ),
-          ),
+          height: 108,
+          color: AppColors.brand25,
         ),
         Transform.translate(
-          offset: const Offset(0, -48),
+          offset: const Offset(0, -60),
           child: Column(
             children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 96,
-                    height: 96,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.gray25, width: 2),
-                      color: AppColors.gray100,
-                    ),
-                    child: const AppSvgIcon(
-                      AppSvgIconName.profile,
-                      size: 44,
-                      color: AppColors.gray500,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                'Louis Becket',
-                style: AppTextStyles.textXlSemiBold.copyWith(
-                  color: AppColors.gray800,
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.gray25, width: 2),
+                  color: AppColors.gray100,
+                ),
+                child: ClipOval(
+                  child: ProfileAvatar(avatarUrl: avatarUrl, size: 120),
                 ),
               ),
-              const SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: AppSpacing.md),
               Text(
-                'Vehicle Number',
-                style: AppTextStyles.textSmRegular.copyWith(
-                  color: AppColors.gray600,
+                displayName,
+                style: AppTextStyles.textXlSemiBold.copyWith(
+                  color: AppColors.gray800,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
         ),
+        const SizedBox(height: 8),
       ],
     );
   }
@@ -145,7 +147,7 @@ class _ProfileMenuCard extends StatelessWidget {
   const _ProfileMenuCard({required this.items, required this.onTap});
 
   final List<ProfileMenuItemMock> items;
-  final ValueChanged<String> onTap;
+  final ValueChanged<ProfileMenuItemMock> onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -161,14 +163,17 @@ class _ProfileMenuCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        children: [
-          for (var i = 0; i < items.length; i++) ...[
-            _ProfileMenuTile(item: items[i], onTap: () => onTap(items[i].route)),
-            if (i != items.length - 1)
-              const Divider(height: 1, color: AppColors.gray200),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          children: [
+            for (var i = 0; i < items.length; i++) ...[
+              _ProfileMenuTile(item: items[i], onTap: () => onTap(items[i])),
+              if (i != items.length - 1)
+                const Divider(height: 1, color: AppColors.gray200),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -185,13 +190,10 @@ class _ProfileMenuTile extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.lg,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         child: Row(
           children: [
-            AppSvgIcon(item.icon, color: AppColors.gray700, size: 20),
+            AppSvgIcon(item.icon, color: AppColors.gray800, size: 20),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
@@ -240,7 +242,7 @@ class _LogoutCard extends StatelessWidget {
           child: Row(
             children: [
               const AppSvgIcon(
-                AppSvgIconName.arrowLeft,
+                AppSvgIconName.logOut,
                 color: AppColors.gray600,
                 size: 20,
               ),

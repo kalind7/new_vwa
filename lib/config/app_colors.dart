@@ -32,7 +32,9 @@ class AppColors {
   static const Color green600 = Color(0xFF00A63E);
   static const Color green700 = Color(0xFF00C950);
 
-  static const Color brand25 = Color(0xFFFFF5F5);
+  static const Color brand25 = Color(0xFFFFEEEE);
+  static const Color brand50 = Color(0xFFFFFCF5);
+  static const Color handoffLabelMuted = Color(0xFF4A5565);
 
   // App-specific Figma tokens.
   static const Color secondary300 = Color(0xFFACB5BB);
@@ -58,6 +60,18 @@ class AppColors {
   static const Color logoAccent = Color(0xFFFF5656);
   static const Color brand500 = Color(0xFFFF5656);
   static const Color lightText = Color(0xFFEEEEEE);
-  static const Color homeGradientStart = Color(0xFF0B7CFF);
-  static const Color homeGradientEnd = Color(0xFFDDEBFF);
+
+  /// Dev Handoff Droplet header gradient (bottom → top).
+  static const Color homeGradientStart = Color(0xFF005BEA);
+  static const Color homeGradientMid = Color(0xFF80ABF0);
+  static const Color homeGradientEnd = Color(0xFFFFFFFF);
+  static const Color filterChipBorder = Color(0xFF8D97AD);
+  static const Color mapUserLocation = Color(0xFF1A73E8);
+
+  static const LinearGradient homeDropletGradient = LinearGradient(
+    begin: Alignment.bottomCenter,
+    end: Alignment.topCenter,
+    colors: [homeGradientEnd, homeGradientMid, homeGradientStart],
+    stops: [0.0, 0.48, 1.0],
+  );
 }

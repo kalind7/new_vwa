@@ -50,10 +50,31 @@ class StationBookingArgs {
 }
 
 class VehicleMock {
-  const VehicleMock({required this.id, required this.plate});
+  const VehicleMock({
+    required this.id,
+    required this.plate,
+    this.isDefault = false,
+    this.vehicleType = 'bike',
+  });
 
   final String id;
   final String plate;
+  final bool isDefault;
+  final String vehicleType;
+
+  VehicleMock copyWith({
+    String? id,
+    String? plate,
+    bool? isDefault,
+    String? vehicleType,
+  }) {
+    return VehicleMock(
+      id: id ?? this.id,
+      plate: plate ?? this.plate,
+      isDefault: isDefault ?? this.isDefault,
+      vehicleType: vehicleType ?? this.vehicleType,
+    );
+  }
 }
 
 class BookingDraft {
@@ -64,6 +85,8 @@ class BookingDraft {
     this.vehicle,
     this.paymentMethod,
     this.checkoutTotal,
+    this.promoCode,
+    this.bookingId,
     this.isSuccess = true,
   });
 
@@ -73,6 +96,8 @@ class BookingDraft {
   final VehicleMock? vehicle;
   final PaymentMethodMock? paymentMethod;
   final String? checkoutTotal;
+  final String? promoCode;
+  final String? bookingId;
   final bool isSuccess;
 
   BookingDraft copyWith({
@@ -82,6 +107,8 @@ class BookingDraft {
     VehicleMock? vehicle,
     PaymentMethodMock? paymentMethod,
     String? checkoutTotal,
+    String? promoCode,
+    String? bookingId,
     bool? isSuccess,
   }) {
     return BookingDraft(
@@ -91,6 +118,8 @@ class BookingDraft {
       vehicle: vehicle ?? this.vehicle,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       checkoutTotal: checkoutTotal ?? this.checkoutTotal,
+      promoCode: promoCode ?? this.promoCode,
+      bookingId: bookingId ?? this.bookingId,
       isSuccess: isSuccess ?? this.isSuccess,
     );
   }
@@ -127,21 +156,33 @@ BookingDraft bookingDraftForStation({
 }
 
 BookingDraft bookingDraftFromWashBooking(WashBookingMock booking) {
-  final station = nearbyStations.firstWhere(
-    (item) => item.name == booking.station,
-    orElse: () => nearbyStations.first,
-  );
+  final station = booking.stationId != null && booking.stationId!.isNotEmpty
+      ? nearbyStations.firstWhere(
+          (item) => item.id == booking.stationId,
+          orElse: () => nearbyStations.firstWhere(
+            (item) => item.name == booking.station,
+            orElse: () => nearbyStations.first,
+          ),
+        )
+      : nearbyStations.firstWhere(
+          (item) => item.name == booking.station,
+          orElse: () => nearbyStations.first,
+        );
   final service = washServices.firstWhere(
     (item) => item.title == booking.service,
     orElse: () => washServices.first,
   );
+  final vehicle = booking.vehicleId != null && booking.vehicleId!.isNotEmpty
+      ? VehicleMock(id: booking.vehicleId!, plate: booking.vehicle)
+      : VehicleMock(id: 'wash-${booking.vehicle}', plate: booking.vehicle);
 
   return BookingDraft(
     station: station,
     service: service,
     slot: washSlots.first,
-    vehicle: VehicleMock(id: 'wash-${booking.vehicle}', plate: booking.vehicle),
+    vehicle: vehicle,
     checkoutTotal: booking.price,
+    bookingId: booking.id,
   );
 }
 

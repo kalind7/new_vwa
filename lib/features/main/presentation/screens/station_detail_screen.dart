@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../app/app_routes.dart';
 import '../../../../config/app_assets.dart';
@@ -9,35 +10,161 @@ import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_flow_modal.dart';
+import '../../../../shared/utils/map_navigation.dart';
+import '../../../../shared/widgets/app_loading_overlay.dart';
 import '../../../../shared/widgets/app_svg_icon.dart';
+import '../../../../shared/widgets/app_toast.dart';
+import '../../../../shared/widgets/shimmers/station_detail_shimmer.dart';
+import '../providers/saved_stations_provider.dart';
+import '../../../booking/domain/repositories/booking_repository.dart';
+import '../../../booking/presentation/providers/wash_bookings_provider.dart';
 import '../../data/booking_flow_mock_data.dart';
 import '../../data/main_shell_mock_data.dart';
+import '../../data/wash_station_repository.dart';
+import '../widgets/booking_summary_bottom_sheet.dart';
 import '../widgets/select_vehicle_bottom_sheet.dart';
 
-class StationDetailScreen extends StatelessWidget {
+class StationDetailScreen extends StatefulWidget {
   const StationDetailScreen({super.key, required this.station});
 
   final WashStationMock station;
 
-  Future<void> _handleBookSlot(BuildContext context) async {
+  @override
+  State<StationDetailScreen> createState() => _StationDetailScreenState();
+}
+
+class _StationDetailScreenState extends State<StationDetailScreen> {
+  late WashStationMock _station;
+  var _isLoadingDetail = false;
+  var _isCreatingBooking = false;
+  var _isSaved = false;
+  var _isTogglingSave = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _station = widget.station;
+    _loadStationDetail();
+    _refreshSavedState();
+  }
+
+  Future<void> _refreshSavedState() async {
+    final saved = await context.read<SavedStationsProvider>().isSaved(
+      _station.id,
+    );
+    if (mounted) {
+      setState(() => _isSaved = saved);
+    }
+  }
+
+  Future<void> _toggleSaved() async {
+    if (_isTogglingSave) {
+      return;
+    }
+
+    setState(() => _isTogglingSave = true);
+    final isSaved = await context.read<SavedStationsProvider>().toggleStation(
+      _station,
+    );
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _isSaved = isSaved;
+      _isTogglingSave = false;
+    });
+    AppToast.showSuccess(
+      context,
+      isSaved ? 'Station saved to your list.' : 'Station removed from saved.',
+    );
+  }
+
+  Future<void> _loadStationDetail() async {
+    if (_station.id.isEmpty) {
+      return;
+    }
+
+    setState(() => _isLoadingDetail = true);
+    final updated = await context
+        .read<WashStationRepository>()
+        .fetchStationDetail(_station.id);
+    if (!mounted) {
+      return;
+    }
+
+    if (updated != null) {
+      _station = updated;
+    }
+    setState(() => _isLoadingDetail = false);
+    await _refreshSavedState();
+  }
+
+  Future<void> _handleBookSlot() async {
     final vehicle = await showSelectVehicleBottomSheet(context: context);
-    if (vehicle == null || !context.mounted) {
+    if (vehicle == null || !mounted) {
       return;
     }
 
     final shouldBook = await showAppFlowModal(
       context: context,
-      messageLines: const ['Are you sure you want ', 'book a slot?'],
+      message: 'Are you sure you want to book a slot?',
     );
 
-    if (!shouldBook || !context.mounted) {
+    if (!shouldBook || !mounted) {
       return;
     }
 
-    await Navigator.of(context).pushNamed(
-      AppRoutes.bookingSuccess,
-      arguments: bookingDraftForStation(station: station, vehicle: vehicle),
+    final draft = bookingDraftForStation(station: _station, vehicle: vehicle);
+    final confirmed = await showBookingSummaryBottomSheet(
+      context: context,
+      draft: draft,
     );
+
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    setState(() => _isCreatingBooking = true);
+    final result = await context.read<BookingRepository>().createBooking(draft);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _isCreatingBooking = false);
+
+    await result.fold(
+      (failure) async {
+        AppToast.showError(context, failure.message);
+      },
+      (booking) async {
+        AppToast.showSuccess(context, 'Booking created successfully.');
+        context.read<WashBookingsProvider>().loadBookings();
+        await Navigator.of(context).pushNamed(
+          AppRoutes.bookingSuccess,
+          arguments: draft.copyWith(bookingId: booking.id),
+        );
+      },
+    );
+  }
+
+  List<String> get _serviceItems => _station.serviceNames;
+
+  List<String> get _operatingHourItems => _station.operatingHours;
+
+  Future<void> _openDirections() async {
+    final opened = await openGoogleMapsForStation(
+      latitude: _station.latitude,
+      longitude: _station.longitude,
+      label: _station.name,
+    );
+    if (!mounted) {
+      return;
+    }
+    if (!opened) {
+      AppToast.showError(
+        context,
+        'Could not open maps. Station location may be unavailable.',
+      );
+    }
   }
 
   @override
@@ -49,48 +176,61 @@ class StationDetailScreen extends StatelessWidget {
           constraints: const BoxConstraints(
             maxWidth: AppBreakpoints.maxMobileContentWidth,
           ),
-          child: Column(
+          child: Stack(
             children: [
-              Expanded(
-                child: CustomScrollView(
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: _StationHero(station: station),
+              if (_isLoadingDetail)
+                const StationDetailShimmer()
+              else
+                Column(
+                  children: [
+                    Expanded(
+                      child: CustomScrollView(
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: _StationHero(
+                              station: _station,
+                              isSaved: _isSaved,
+                              onBookmark: _toggleSaved,
+                            ),
+                          ),
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppSpacing.lg,
+                              AppSpacing.xxl,
+                              AppSpacing.lg,
+                              AppSpacing.xxxl,
+                            ),
+                            sliver: SliverList(
+                              delegate: SliverChildListDelegate([
+                                _StationSummaryCard(station: _station),
+                                if (_serviceItems.isNotEmpty) ...[
+                                  const SizedBox(height: AppSpacing.lg),
+                                  _InfoSectionCard(
+                                    title: 'Services Offered',
+                                    items: _serviceItems,
+                                  ),
+                                ],
+                                if (_operatingHourItems.isNotEmpty) ...[
+                                  const SizedBox(height: AppSpacing.lg),
+                                  _InfoSectionCard(
+                                    title: 'Operating hour',
+                                    items: _operatingHourItems,
+                                    icon: AppSvgIconName.clock,
+                                  ),
+                                ],
+                              ]),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
-                        AppSpacing.xxl,
-                        AppSpacing.lg,
-                        AppSpacing.xxxl,
-                      ),
-                      sliver: SliverList(
-                        delegate: SliverChildListDelegate([
-                          _StationSummaryCard(station: station),
-                          const SizedBox(height: AppSpacing.lg),
-                          _InfoSectionCard(
-                            title: 'Services Offered',
-                            items: stationServices,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _InfoSectionCard(
-                            title: 'Operating hour',
-                            items: stationServices,
-                          ),
-                        ]),
-                      ),
+                    _StationActionBar(
+                      onBookSlot: _handleBookSlot,
+                      onGetDirection: _openDirections,
                     ),
                   ],
                 ),
-              ),
-              _StationActionBar(
-                onBookSlot: () => _handleBookSlot(context),
-                onGetDirection: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Opening directions.')),
-                  );
-                },
-              ),
+              if (_isCreatingBooking) const AppLoadingOverlay(),
             ],
           ),
         ),
@@ -100,14 +240,20 @@ class StationDetailScreen extends StatelessWidget {
 }
 
 class _StationHero extends StatelessWidget {
-  const _StationHero({required this.station});
+  const _StationHero({
+    required this.station,
+    required this.isSaved,
+    required this.onBookmark,
+  });
 
   final WashStationMock station;
+  final bool isSaved;
+  final VoidCallback onBookmark;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 280,
+      height: 277,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -129,7 +275,8 @@ class _StationHero extends StatelessWidget {
                   ),
                   _FloatingIconButton(
                     icon: AppSvgIconName.bookmark,
-                    onPressed: () {},
+                    iconColor: isSaved ? AppColors.brand500 : AppColors.white,
+                    onPressed: onBookmark,
                   ),
                 ],
               ),
@@ -142,10 +289,15 @@ class _StationHero extends StatelessWidget {
 }
 
 class _FloatingIconButton extends StatelessWidget {
-  const _FloatingIconButton({required this.icon, required this.onPressed});
+  const _FloatingIconButton({
+    required this.icon,
+    required this.onPressed,
+    this.iconColor = AppColors.white,
+  });
 
   final AppSvgIconName icon;
   final VoidCallback onPressed;
+  final Color iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -158,9 +310,7 @@ class _FloatingIconButton extends StatelessWidget {
         child: SizedBox(
           width: 40,
           height: 40,
-          child: Center(
-            child: AppSvgIcon(icon, color: AppColors.white, size: 20),
-          ),
+          child: Center(child: AppSvgIcon(icon, color: iconColor, size: 20)),
         ),
       ),
     );
@@ -234,9 +384,8 @@ class _StationSummaryCard extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 GestureDetector(
-                  onTap: () => Navigator.of(context).pushNamed(
-                    AppProfileRoutes.reviews,
-                  ),
+                  onTap: () =>
+                      Navigator.of(context).pushNamed(AppProfileRoutes.reviews),
                   child: Text(
                     '(${station.reviewCount} reviews)',
                     style: AppTextStyles.textSmRegular.copyWith(
@@ -326,10 +475,15 @@ class _MetricTile extends StatelessWidget {
 }
 
 class _InfoSectionCard extends StatelessWidget {
-  const _InfoSectionCard({required this.title, required this.items});
+  const _InfoSectionCard({
+    required this.title,
+    required this.items,
+    this.icon = AppSvgIconName.wash,
+  });
 
   final String title;
   final List<String> items;
+  final AppSvgIconName icon;
 
   @override
   Widget build(BuildContext context) {
@@ -359,7 +513,7 @@ class _InfoSectionCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             for (final item in items) ...[
-              _ServiceRow(label: item),
+              _ServiceRow(label: item, icon: icon),
               if (item != items.last) const SizedBox(height: AppSpacing.md),
             ],
           ],
@@ -370,9 +524,10 @@ class _InfoSectionCard extends StatelessWidget {
 }
 
 class _ServiceRow extends StatelessWidget {
-  const _ServiceRow({required this.label});
+  const _ServiceRow({required this.label, required this.icon});
 
   final String label;
+  final AppSvgIconName icon;
 
   @override
   Widget build(BuildContext context) {
@@ -383,15 +538,11 @@ class _ServiceRow extends StatelessWidget {
             color: AppColors.green100,
             borderRadius: BorderRadius.circular(6.8),
           ),
-          child: const SizedBox(
+          child: SizedBox(
             width: 36,
             height: 36,
             child: Center(
-              child: AppSvgIcon(
-                AppSvgIconName.wash,
-                color: AppColors.green700,
-                size: 18,
-              ),
+              child: AppSvgIcon(icon, color: AppColors.green700, size: 18),
             ),
           ),
         ),

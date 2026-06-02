@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../app/app_routes.dart';
 import '../../../../config/app_breakpoints.dart';
 import '../../../../config/app_colors.dart';
-import '../../../../config/app_radius.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_flow_modal.dart';
+import '../../../../shared/widgets/app_loading_overlay.dart';
 import '../../../../shared/widgets/app_screen_header.dart';
 import '../../../../shared/widgets/app_svg_icon.dart';
+import '../../../../shared/widgets/app_toast.dart';
+import '../../../booking/domain/repositories/booking_repository.dart';
+import '../../../booking/presentation/providers/wash_bookings_provider.dart';
 import '../../data/booking_flow_mock_data.dart';
 import '../../data/main_shell_mock_data.dart';
+import '../widgets/wash_booking_progress_card.dart';
+import '../widgets/wash_booking_summary_card.dart';
 
 class WashDetailScreen extends StatefulWidget {
   const WashDetailScreen({super.key, required this.booking});
@@ -23,175 +29,217 @@ class WashDetailScreen extends StatefulWidget {
 }
 
 class _WashDetailScreenState extends State<WashDetailScreen> {
+  late WashBookingMock _booking;
   var _isCancelled = false;
+  var _isLoading = false;
+  var _isCancelling = false;
 
-  WashBookingMock get booking => widget.booking;
+  @override
+  void initState() {
+    super.initState();
+    _booking = widget.booking;
+    _loadBookingDetail();
+  }
+
+  Future<void> _loadBookingDetail() async {
+    final bookingId = _booking.id;
+    if (bookingId == null || bookingId.isEmpty) {
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    final result = await context.read<BookingRepository>().fetchBookingDetail(
+      bookingId,
+    );
+    if (!mounted) {
+      return;
+    }
+
+    result.fold((_) {}, (detail) => _booking = detail);
+    setState(() => _isLoading = false);
+  }
 
   Future<void> _confirmCancel() async {
     final shouldCancel = await showAppFlowModal(
       context: context,
-      messageLines: const ['Are you sure you want ', 'cancel booking?'],
+      message: 'Are you sure you want to cancel your booking?',
     );
 
-    if (shouldCancel && mounted) {
-      setState(() => _isCancelled = true);
+    if (!shouldCancel || !mounted) {
+      return;
     }
+
+    final bookingId = _booking.id;
+    if (bookingId == null || bookingId.isEmpty) {
+      setState(() => _isCancelled = true);
+      return;
+    }
+
+    setState(() => _isCancelling = true);
+    final result = await context.read<BookingRepository>().cancelBooking(
+      bookingId,
+    );
+    if (!mounted) {
+      return;
+    }
+    setState(() => _isCancelling = false);
+
+    await result.fold(
+      (failure) async {
+        AppToast.showError(context, failure.message);
+      },
+      (_) async {
+        AppToast.showSuccess(context, 'Booking cancelled.');
+        context.read<WashBookingsProvider>().loadBookings();
+        setState(() => _isCancelled = true);
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
-      appBar: buildAppScreenHeader(context, title: 'My Wash'),
+      appBar: buildAppScreenHeader(context, title: 'Wash detail'),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(
             maxWidth: AppBreakpoints.maxMobileContentWidth,
           ),
-          child: _isCancelled
-              ? _CancelledContent(
-                  onGoBack: () => Navigator.of(context).maybePop(),
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSpacing.xxl),
-                  child: _BookingDetailContent(
-                    booking: booking,
-                    onCheckOut: () {
-                      Navigator.of(context).pushNamed(
-                        AppRoutes.bookingSummary,
-                        arguments: bookingDraftFromWashBooking(booking),
-                      );
-                    },
-                    onCancel: _confirmCancel,
-                  ),
-                ),
+          child: Stack(
+            children: [
+              _isCancelled
+                  ? _CancelledContent(
+                      onGoBack: () => Navigator.of(context).maybePop(),
+                    )
+                  : Column(
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppSpacing.lg,
+                              AppSpacing.xxl,
+                              AppSpacing.lg,
+                              AppSpacing.lg,
+                            ),
+                            child: _WashDetailBody(
+                              booking: _booking,
+                              showProgress: !_isCompleted,
+                            ),
+                          ),
+                        ),
+                        if (_isActive || _isCompleted)
+                          _WashDetailActions(
+                            isActive: _isActive,
+                            isCompleted: _isCompleted,
+                            onCheckOut: () {
+                              Navigator.of(context).pushNamed(
+                                AppRoutes.bookingSummary,
+                                arguments: bookingDraftFromWashBooking(
+                                  _booking,
+                                ),
+                              );
+                            },
+                            onCancel: _confirmCancel,
+                            onWriteReview: () {
+                              Navigator.of(context).pushNamed(
+                                AppRoutes.leaveReview,
+                                arguments: _booking.id,
+                              );
+                            },
+                          ),
+                      ],
+                    ),
+              if (_isLoading || _isCancelling) const AppLoadingOverlay(),
+            ],
+          ),
         ),
       ),
     );
   }
+
+  bool get _isCompleted => _booking.status == 'Completed';
+  bool get _isActive => _booking.canCancel && !_isCompleted;
 }
 
-class _BookingDetailContent extends StatelessWidget {
-  const _BookingDetailContent({
-    required this.booking,
-    required this.onCheckOut,
-    required this.onCancel,
-  });
+class _WashDetailBody extends StatelessWidget {
+  const _WashDetailBody({required this.booking, required this.showProgress});
 
   final WashBookingMock booking;
-  final VoidCallback onCheckOut;
-  final VoidCallback onCancel;
+  final bool showProgress;
 
   @override
   Widget build(BuildContext context) {
-    final isCompleted = booking.status == 'Completed';
-
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          booking.date,
-          style: AppTextStyles.textMdSemiBold.copyWith(
-            color: AppColors.gray800,
-          ),
+        WashBookingSummaryCard(
+          stationName: booking.station,
+          location: booking.location,
+          date: booking.date,
+          vehicleNumber: booking.vehicle,
+          paidVia: showProgress ? 'eSewa' : null,
+          total: booking.price,
+          status: showProgress ? null : booking.status,
         ),
-        const SizedBox(height: AppSpacing.lg),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: AppColors.gray50,
-            border: Border.all(color: AppColors.gray200),
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x140D121C),
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
+        if (showProgress) ...[
+          const SizedBox(height: 14),
+          WashBookingProgressCard(activeStep: booking.washProgressStep),
+        ],
+      ],
+    );
+  }
+}
+
+class _WashDetailActions extends StatelessWidget {
+  const _WashDetailActions({
+    required this.isActive,
+    required this.isCompleted,
+    required this.onCheckOut,
+    required this.onCancel,
+    required this.onWriteReview,
+  });
+
+  final bool isActive;
+  final bool isCompleted;
+  final VoidCallback onCheckOut;
+  final VoidCallback onCancel;
+  final VoidCallback onWriteReview;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: AppColors.white,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.md,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (isActive) ...[
+                AppButton(
+                  label: 'Check out',
+                  variant: AppButtonVariant.secondary,
+                  onPressed: onCheckOut,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppButton(label: 'Cancel booking', onPressed: onCancel),
+              ] else if (isCompleted)
+                AppButton(
+                  label: 'Write a review',
+                  variant: AppButtonVariant.secondary,
+                  onPressed: onWriteReview,
+                ),
             ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        booking.station,
-                        style: AppTextStyles.textMdMedium.copyWith(
-                          color: AppColors.gray900,
-                        ),
-                      ),
-                    ),
-                    _StatusBadge(status: booking.status),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Text(
-                  '${booking.date}, ${booking.time}',
-                  style: AppTextStyles.textMdMedium.copyWith(
-                    color: AppColors.gray600,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  booking.price,
-                  style: AppTextStyles.textMdMedium.copyWith(
-                    color: AppColors.gray600,
-                  ),
-                ),
-                if (!isCompleted) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    'Location: ${booking.location}',
-                    style: AppTextStyles.textSmRegular.copyWith(
-                      color: AppColors.gray600,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    'Vehicle number: ${booking.vehicle}',
-                    style: AppTextStyles.textSmRegular.copyWith(
-                      color: AppColors.gray600,
-                    ),
-                  ),
-                ],
-                if (booking.canCancel) ...[
-                  const SizedBox(height: AppSpacing.xxl),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: AppButton(
-                          label: 'Check out',
-                          onPressed: onCheckOut,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: AppButton(
-                          label: 'Cancel booking',
-                          variant: AppButtonVariant.secondary,
-                          onPressed: onCancel,
-                        ),
-                      ),
-                    ],
-                  ),
-                ] else ...[
-                  const SizedBox(height: AppSpacing.lg),
-                  Text(
-                    'Bike wash has been completed',
-                    style: AppTextStyles.textSmMedium.copyWith(
-                      color: AppColors.success600,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -209,7 +257,7 @@ class _CancelledContent extends StatelessWidget {
         children: [
           const SizedBox(height: AppSpacing.xxxl),
           DecoratedBox(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.green100,
               shape: BoxShape.circle,
             ),
@@ -241,52 +289,6 @@ class _CancelledContent extends StatelessWidget {
           const SizedBox(height: AppSpacing.xxxl),
           AppButton(label: 'Go back to my wash', onPressed: onGoBack),
         ],
-      ),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
-
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    final isCompleted = status == 'Completed';
-    final isInWash = status == 'In wash';
-
-    final backgroundColor = isCompleted
-        ? AppColors.success100
-        : isInWash
-        ? AppColors.blue50
-        : AppColors.orange50;
-    final borderColor = isCompleted
-        ? AppColors.success200
-        : isInWash
-        ? AppColors.blue600
-        : AppColors.orange100;
-    final textColor = isCompleted
-        ? AppColors.success600
-        : isInWash
-        ? AppColors.blue700
-        : AppColors.orange600;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        border: Border.all(color: borderColor),
-        borderRadius: BorderRadius.circular(6.8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs,
-        ),
-        child: Text(
-          status,
-          style: AppTextStyles.textXsMedium.copyWith(color: textColor),
-        ),
       ),
     );
   }

@@ -9,16 +9,18 @@ import 'app_button.dart';
 
 Future<bool> showAppFlowModal({
   required BuildContext context,
-  required List<String> messageLines,
+  String? message,
+  List<String>? messageLines,
   String confirmLabel = 'Yes',
   String cancelLabel = 'No',
 }) async {
   final result = await showDialog<bool>(
     context: context,
     barrierDismissible: true,
-    barrierColor: AppColors.gray900.withValues(alpha: 0.7),
+    barrierColor: AppColors.gray950.withValues(alpha: 0.7),
     builder: (context) {
       return AppFlowModal(
+        message: message,
         messageLines: messageLines,
         confirmLabel: confirmLabel,
         cancelLabel: cancelLabel,
@@ -32,17 +34,23 @@ Future<bool> showAppFlowModal({
 class AppFlowModal extends StatelessWidget {
   const AppFlowModal({
     super.key,
-    required this.messageLines,
+    this.message,
+    this.messageLines,
     required this.confirmLabel,
     required this.cancelLabel,
   });
 
-  final List<String> messageLines;
+  final String? message;
+  final List<String>? messageLines;
   final String confirmLabel;
   final String cancelLabel;
 
   @override
   Widget build(BuildContext context) {
+    final lines = message != null
+        ? [message!]
+        : (messageLines ?? const <String>[]);
+
     return Dialog(
       insetPadding: const EdgeInsets.all(AppSpacing.xxl),
       constraints: const BoxConstraints(
@@ -63,15 +71,13 @@ class AppFlowModal extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final line in messageLines) ...[
-              Text(
-                line,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.flowModalMessage.copyWith(
-                  color: AppColors.gray900,
-                ),
+            Text(
+              lines.join(' '),
+              textAlign: TextAlign.center,
+              style: AppTextStyles.flowModalMessage.copyWith(
+                color: AppColors.gray900,
               ),
-            ],
+            ),
             const SizedBox(height: AppSpacing.xxxl),
             Row(
               children: [

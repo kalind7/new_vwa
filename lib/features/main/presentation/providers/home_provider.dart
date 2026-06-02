@@ -5,7 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../data/main_shell_mock_data.dart';
 import '../../data/wash_station_repository.dart';
 
-enum HomeStationTab { nearby, lessDistance }
+enum HomeStationTab { all, nearby, lessDistance }
 
 class HomeProvider extends ChangeNotifier {
   HomeProvider({required WashStationRepository stationRepository})
@@ -19,34 +19,81 @@ class HomeProvider extends ChangeNotifier {
   bool _shouldShowSettingsPrompt = false;
   bool _isLoadingStations = true;
   bool _isDisposed = false;
-  HomeStationTab _selectedStationTab = HomeStationTab.nearby;
+  HomeStationTab _selectedStationTab = HomeStationTab.lessDistance;
   List<WashStationMock> _stations = const [];
+  double? _latitude;
+  double? _longitude;
 
   String get currentLocation => _currentLocation;
   bool get isResolvingLocation => _isResolvingLocation;
   bool get shouldShowSettingsPrompt => _shouldShowSettingsPrompt;
   bool get isLoadingStations => _isLoadingStations;
   HomeStationTab get selectedStationTab => _selectedStationTab;
+  List<WashStationMock> get visibleStations => _stations;
+  double? get latitude => _latitude;
+  double? get longitude => _longitude;
 
-  List<WashStationMock> get visibleStations {
-    final stations = List<WashStationMock>.of(_stations);
-    if (_selectedStationTab == HomeStationTab.lessDistance) {
-      stations.sort(
-        (first, second) => _distanceValue(
-          first.distance,
-        ).compareTo(_distanceValue(second.distance)),
-      );
+  /// Section heading above station list (Dev Handoff Droplet).
+  String get sectionTitle {
+    return switch (_selectedStationTab) {
+      HomeStationTab.nearby => 'Nearby',
+      HomeStationTab.lessDistance => 'Highest slot with less distance',
+      HomeStationTab.all => 'All stations',
+    };
+  }
+
+  String get emptyStateMessage {
+    return switch (_selectedStationTab) {
+      HomeStationTab.all => 'No service stations available right now.',
+      HomeStationTab.nearby =>
+        'No nearby washing stations found. Try enabling location access.',
+      HomeStationTab.lessDistance =>
+        'No suggested stations found for your location.',
+    };
+  }
+
+  /// Applies a server-saved user location (from profile/login) before fetching stations.
+  void applySavedLocation({
+    required double latitude,
+    required double longitude,
+    required String address,
+  }) {
+    if (latitude == 0 && longitude == 0) {
+      return;
     }
-    return stations;
+
+    _latitude = latitude;
+    _longitude = longitude;
+    _setLocationState(
+      label: address.isEmpty ? 'Saved location' : address,
+      isResolving: false,
+    );
+  }
+
+  Future<void> refreshForCurrentTab() async {
+    if (_selectedStationTab == HomeStationTab.all) {
+      await loadStations();
+      return;
+    }
+
+    await resolveCurrentLocation();
   }
 
   Future<void> loadStations() async {
     _isLoadingStations = true;
     _notifyListeners();
 
-    _stations = await _stationRepository.fetchNearbyStations();
-    _isLoadingStations = false;
-    _notifyListeners();
+    try {
+      _stations = await _stationRepository.fetchStations(
+        source: _sourceForTab(_selectedStationTab),
+        latitude: _latitude,
+        longitude: _longitude,
+        locationLabel: _currentLocation,
+      );
+    } finally {
+      _isLoadingStations = false;
+      _notifyListeners();
+    }
   }
 
   Future<void> resolveCurrentLocation({bool retryAfterDeny = false}) async {
@@ -68,6 +115,7 @@ class HomeProvider extends ChangeNotifier {
           label: 'Turn on location services',
           isResolving: false,
         );
+        await loadStations();
         await Geolocator.openLocationSettings();
         return;
       }
@@ -83,6 +131,7 @@ class HomeProvider extends ChangeNotifier {
           isResolving: false,
         );
         _isRequestingLocation = false;
+        await loadStations();
         if (retryAfterDeny) {
           await Future<void>.delayed(const Duration(milliseconds: 450));
           await resolveCurrentLocation();
@@ -96,6 +145,7 @@ class HomeProvider extends ChangeNotifier {
           isResolving: false,
           showSettingsPrompt: true,
         );
+        await loadStations();
         return;
       }
 
@@ -104,11 +154,15 @@ class HomeProvider extends ChangeNotifier {
           timeLimit: Duration(seconds: 12),
         ),
       );
+      _latitude = position.latitude;
+      _longitude = position.longitude;
       final locationLabel = await _locationLabelFor(position);
 
       _setLocationState(label: locationLabel, isResolving: false);
+      await loadStations();
     } catch (_) {
       _setLocationState(label: 'Current area unavailable', isResolving: false);
+      await loadStations();
     } finally {
       _isRequestingLocation = false;
     }
@@ -127,13 +181,22 @@ class HomeProvider extends ChangeNotifier {
     _notifyListeners();
   }
 
-  void setStationTab(HomeStationTab tab) {
+  Future<void> setStationTab(HomeStationTab tab) async {
     if (_selectedStationTab == tab) {
       return;
     }
 
     _selectedStationTab = tab;
     _notifyListeners();
+    await loadStations();
+  }
+
+  StationListSource _sourceForTab(HomeStationTab tab) {
+    return switch (tab) {
+      HomeStationTab.all => StationListSource.all,
+      HomeStationTab.nearby => StationListSource.nearby,
+      HomeStationTab.lessDistance => StationListSource.lessDistance,
+    };
   }
 
   void _setLocationState({
@@ -203,10 +266,5 @@ class HomeProvider extends ChangeNotifier {
       }
     }
     return null;
-  }
-
-  double _distanceValue(String distance) {
-    final match = RegExp(r'\d+(\.\d+)?').firstMatch(distance);
-    return double.tryParse(match?.group(0) ?? '') ?? double.maxFinite;
   }
 }

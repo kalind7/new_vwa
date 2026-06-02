@@ -1,102 +1,114 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../app/app_routes.dart';
 import '../../../../config/app_colors.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
-import '../../../../shared/widgets/app_flow_modal.dart';
-import '../../data/booking_flow_mock_data.dart';
+import '../../../../shared/widgets/shimmers/station_card_shimmer.dart';
+import '../../../../shared/widgets/dev_handoff_tab_header.dart';
+import '../../../booking/presentation/providers/wash_bookings_provider.dart';
 import '../../data/main_shell_mock_data.dart';
 import '../widgets/wash_booking_card.dart';
 
 class MyWashTab extends StatelessWidget {
   const MyWashTab({super.key});
 
-  static Map<String, List<WashBookingMock>> get _groupedBookings {
+  static Map<String, List<WashBookingMock>> _groupedBookings(
+    List<WashBookingMock> bookings,
+  ) {
     final grouped = <String, List<WashBookingMock>>{};
-    for (final booking in washBookings) {
+    for (final booking in bookings) {
       grouped.putIfAbsent(booking.date, () => []).add(booking);
     }
     return grouped;
   }
 
-  Future<void> _confirmCancel(
-    BuildContext context,
-    WashBookingMock booking,
-  ) async {
-    final shouldCancel = await showAppFlowModal(
-      context: context,
-      messageLines: const ['Are you sure you want ', 'cancel booking?'],
-    );
-
-    if (shouldCancel && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Booking cancelled.')),
-      );
-    }
-  }
-
-  void _openCheckout(BuildContext context, WashBookingMock booking) {
-    Navigator.of(context).pushNamed(
-      AppRoutes.bookingSummary,
-      arguments: bookingDraftFromWashBooking(booking),
-    );
+  void _openWashDetail(BuildContext context, WashBookingMock booking) {
+    Navigator.of(context).pushNamed(AppRoutes.washDetail, arguments: booking);
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.xxl,
-              AppSpacing.lg,
-              AppSpacing.xxl,
-            ),
-            sliver: SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'My Wash',
-                    style: AppTextStyles.titleLarge.copyWith(
-                      color: AppColors.gray900,
+    return ColoredBox(
+      color: AppColors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const DevHandoffTabHeader(title: 'Wash history'),
+          Expanded(
+            child: Consumer<WashBookingsProvider>(
+              builder: (context, provider, _) {
+                if (provider.isLoading && provider.bookings.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.xxl,
+                      AppSpacing.lg,
+                      AppSpacing.lg,
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    'Track your booked and completed bike washes.',
-                    style: AppTextStyles.textSmRegular.copyWith(
-                      color: AppColors.gray600,
+                    child: StationListShimmer(itemCount: 3),
+                  );
+                }
+
+                final grouped = _groupedBookings(provider.bookings);
+
+                if (grouped.isEmpty) {
+                  return const _EmptyWashHistory();
+                }
+
+                return RefreshIndicator(
+                  onRefresh: provider.loadBookings,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.xxl,
+                      AppSpacing.lg,
+                      AppSpacing.xxl,
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  for (final entry in _groupedBookings.entries) ...[
-                    Text(
-                      entry.key,
-                      style: AppTextStyles.textMdSemiBold.copyWith(
-                        color: AppColors.gray800,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    for (final booking in entry.value) ...[
-                      WashBookingCard(
-                        booking: booking,
-                        onCancel: () => _confirmCancel(context, booking),
-                        onCheckOut: booking.canCancel
-                            ? () => _openCheckout(context, booking)
-                            : null,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
+                    children: [
+                      for (final entry in grouped.entries) ...[
+                        Text(
+                          entry.key,
+                          style: AppTextStyles.textSmMedium.copyWith(
+                            color: AppColors.gray500,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        for (final booking in entry.value) ...[
+                          WashBookingCard(
+                            booking: booking,
+                            onViewDetails: () =>
+                                _openWashDetail(context, booking),
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                        ],
+                      ],
                     ],
-                  ],
-                ],
-              ),
+                  ),
+                );
+              },
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _EmptyWashHistory extends StatelessWidget {
+  const _EmptyWashHistory();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xxl),
+        child: Text(
+          'No wash bookings yet.\nBook a slot from a station to see your history here.',
+          textAlign: TextAlign.center,
+          style: AppTextStyles.textMdRegular.copyWith(color: AppColors.gray500),
+        ),
       ),
     );
   }

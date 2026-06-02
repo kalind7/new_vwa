@@ -3,71 +3,120 @@ import 'package:provider/provider.dart';
 
 import '../../../../app/app_routes.dart';
 import '../../../../config/app_colors.dart';
+import '../../../../config/app_config.dart';
 import '../../../../config/app_radius.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
+import '../../../../shared/widgets/app_loading_overlay.dart';
 import '../../../../shared/widgets/app_svg_icon.dart';
+import '../../../../shared/widgets/app_toast.dart';
+import '../../../booking/data/datasources/payment_remote_data_source.dart';
 import '../../data/booking_flow_mock_data.dart';
 import '../providers/booking_flow_provider.dart';
 import '../widgets/booking_flow_scaffold.dart';
 
-class PaymentMethodScreen extends StatelessWidget {
+class PaymentMethodScreen extends StatefulWidget {
   const PaymentMethodScreen({super.key, required this.draft});
 
   final BookingDraft draft;
 
-  void _handlePaymentTap(
+  @override
+  State<PaymentMethodScreen> createState() => _PaymentMethodScreenState();
+}
+
+class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
+  var _isProcessing = false;
+
+  Future<void> _handlePaymentTap(
     BuildContext context,
     BookingFlowProvider provider,
     PaymentMethodMock method,
-  ) {
+  ) async {
     provider.selectPaymentMethod(method);
-
-    Navigator.of(context).pushNamed(
-      AppRoutes.paymentResult,
-      arguments: provider.draft.copyWith(
-        paymentMethod: method,
-        isSuccess: true,
-      ),
+    final updatedDraft = provider.draft.copyWith(
+      paymentMethod: method,
+      isSuccess: true,
     );
+
+    if (AppConfig.useMockData) {
+      if (!context.mounted) {
+        return;
+      }
+      Navigator.of(
+        context,
+      ).pushNamed(AppRoutes.paymentResult, arguments: updatedDraft);
+      return;
+    }
+
+    final bookingId = updatedDraft.bookingId;
+    if (bookingId == null || bookingId.isEmpty) {
+      AppToast.showError(
+        context,
+        'Booking reference missing. Complete booking first.',
+      );
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+    final result = await context
+        .read<PaymentRemoteDataSource>()
+        .initiatePayment(bookingId: bookingId, paymentMethod: method.id);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _isProcessing = false);
+
+    result.fold((failure) => AppToast.showError(context, failure.message), (_) {
+      Navigator.of(
+        context,
+      ).pushNamed(AppRoutes.paymentResult, arguments: updatedDraft);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => BookingFlowProvider(
-        station: draft.station,
-        vehicle: draft.vehicle,
-        initialService: draft.service,
-        initialSlot: draft.slot,
-        initialPaymentMethod: draft.paymentMethod,
+        station: widget.draft.station,
+        vehicle: widget.draft.vehicle,
+        initialService: widget.draft.service,
+        initialSlot: widget.draft.slot,
+        initialPaymentMethod: widget.draft.paymentMethod,
       ),
       child: Consumer<BookingFlowProvider>(
         builder: (context, provider, _) {
-          return BookingFlowScaffold(
-            title: 'Billing Method',
-            backgroundColor: AppColors.gray50,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _PriceSummaryCard(draft: provider.draft),
-                const SizedBox(height: AppSpacing.xxl),
-                Text(
-                  'Choose billing methods',
-                  style: AppTextStyles.textSmMedium.copyWith(
-                    color: AppColors.gray700,
-                  ),
+          return Stack(
+            children: [
+              BookingFlowScaffold(
+                title: 'Billing Method',
+                backgroundColor: AppColors.gray50,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _PriceSummaryCard(draft: provider.draft),
+                    const SizedBox(height: AppSpacing.xxl),
+                    Text(
+                      'Choose billing methods',
+                      style: AppTextStyles.textSmMedium.copyWith(
+                        color: AppColors.gray700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    for (final method in paymentMethods) ...[
+                      _PaymentOption(
+                        method: method,
+                        onTap: _isProcessing
+                            ? null
+                            : () =>
+                                  _handlePaymentTap(context, provider, method),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
+                  ],
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                for (final method in paymentMethods) ...[
-                  _PaymentOption(
-                    method: method,
-                    onTap: () => _handlePaymentTap(context, provider, method),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                ],
-              ],
-            ),
+              ),
+              if (_isProcessing) const AppLoadingOverlay(),
+            ],
           );
         },
       ),
@@ -159,10 +208,10 @@ class _BillingRow extends StatelessWidget {
 }
 
 class _PaymentOption extends StatelessWidget {
-  const _PaymentOption({required this.method, required this.onTap});
+  const _PaymentOption({required this.method, this.onTap});
 
   final PaymentMethodMock method;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   String get _label => switch (method.id) {
     'khalti' => 'Khalti by IME',

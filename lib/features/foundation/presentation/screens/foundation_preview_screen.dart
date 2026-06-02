@@ -7,6 +7,7 @@ import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_logo_mark.dart';
 import '../../../../shared/widgets/app_screen.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/auth_tab_switcher.dart';
 
 class FoundationPreviewScreen extends StatefulWidget {
@@ -21,9 +22,7 @@ class _FoundationPreviewScreenState extends State<FoundationPreviewScreen> {
   int _selectedAuthTab = 0;
 
   void _showPreviewMessage(String label) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$label preview button is connected.')),
-    );
+    AppToast.showNeutral(context, '$label preview button is connected.');
   }
 
   @override
