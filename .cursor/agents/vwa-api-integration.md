@@ -1,8 +1,8 @@
 ---
-name: vwa-api-integration
-description: VWA API integration specialist. Integrates Postman bike-wash-api endpoints two at a time with fpdart Either, secure token storage, and green/red toasts. Use proactively when adding or wiring API calls after static UI is complete.
-model: sonnet
 allowed-tools: Read, Glob, Grep, Bash, CallMcpTool
+name: vwa-api-integration
+model: inherit
+description: VWA API integration specialist. Integrates Postman bike-wash-api endpoints two at a time with fpdart Either, secure token storage, and green/red toasts. Use proactively when adding or wiring API calls after static UI is complete.
 ---
 
 # VWA API Integration Specialist
