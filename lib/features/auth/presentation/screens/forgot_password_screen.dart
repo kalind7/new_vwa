@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../../app/app_routes.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../utils/auth_form_validators.dart';
 import '../widgets/auth_flow_layout.dart';
 import '../widgets/auth_form_section.dart';
@@ -31,9 +32,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Mock OTP sent to this phone number.')),
-    );
+    AppToast.showNeutral(context, 'Mock OTP sent to this phone number.');
     Navigator.of(context).pushNamed(AppRoutes.verifyOtp);
   }
 

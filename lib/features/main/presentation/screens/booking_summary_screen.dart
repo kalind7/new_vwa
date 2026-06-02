@@ -8,6 +8,7 @@ import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_svg_icon.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../data/booking_flow_mock_data.dart';
 
 class BookingSummaryScreen extends StatefulWidget {
@@ -260,9 +261,7 @@ class _PromoCodeCard extends StatelessWidget {
                 label: 'Apply',
                 height: 44,
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Promo code applied (mock).')),
-                  );
+                  AppToast.showSuccess(context, 'Promo code applied (mock).');
                 },
               ),
             ],

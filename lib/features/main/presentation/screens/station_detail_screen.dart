@@ -8,6 +8,7 @@ import '../../../../config/app_radius.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_button.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/app_flow_modal.dart';
 import '../../../../shared/widgets/app_svg_icon.dart';
 import '../../data/booking_flow_mock_data.dart';
@@ -86,9 +87,7 @@ class StationDetailScreen extends StatelessWidget {
               _StationActionBar(
                 onBookSlot: () => _handleBookSlot(context),
                 onGetDirection: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Opening directions.')),
-                  );
+                  AppToast.showNeutral(context, 'Opening directions.');
                 },
               ),
             ],

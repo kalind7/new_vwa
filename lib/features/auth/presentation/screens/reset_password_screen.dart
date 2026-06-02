@@ -4,6 +4,7 @@ import '../../../../app/app_routes.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../utils/auth_form_validators.dart';
 import '../widgets/auth_flow_layout.dart';
 import '../widgets/auth_form_section.dart';
@@ -36,9 +37,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Mock password reset complete.')),
-    );
+    AppToast.showSuccess(context, 'Mock password reset complete.');
     Navigator.of(
       context,
     ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);

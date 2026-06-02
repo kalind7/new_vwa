@@ -8,6 +8,7 @@ import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_screen.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../utils/auth_form_validators.dart';
 
 class AddVehicleScreen extends StatefulWidget {
@@ -50,10 +51,9 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
 
   void _showUploadMockMessage() {
     FocusScope.of(context).unfocus();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Picture upload will be connected in a later milestone.'),
-      ),
+    AppToast.showNeutral(
+      context,
+      'Picture upload will be connected in a later milestone.',
     );
   }
 
@@ -66,8 +66,9 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
     final vehicleCount = _vehicleNumberControllers
         .where((controller) => controller.text.trim().isNotEmpty)
         .length;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Mock saved $vehicleCount vehicle number(s).')),
+    AppToast.showSuccess(
+      context,
+      'Mock saved $vehicleCount vehicle number(s).',
     );
     Navigator.of(
       context,

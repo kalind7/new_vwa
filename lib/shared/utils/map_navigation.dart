@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../app/app_routes.dart';
+import '../widgets/app_toast.dart';
 
 /// Map screen is disabled during static UI phase — show a toast instead.
 void navigateToStationSearchMap(BuildContext context) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text('Map view is coming soon.'),
-    ),
-  );
+  AppToast.showNeutral(context, 'Map view is coming soon.');
 }
 
 /// Route builder placeholder while [StationSearchMapScreen] is disabled.

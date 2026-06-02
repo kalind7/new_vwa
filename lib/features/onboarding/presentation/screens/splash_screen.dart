@@ -1,11 +1,12 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../app/app_routes.dart';
 import '../../../../config/app_assets.dart';
 import '../../../../config/app_colors.dart';
+import '../../../../core/di/app_dependencies.dart';
 import '../../../../shared/widgets/app_screen.dart';
+import '../../domain/splash_navigation_resolver.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,21 +16,31 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  Timer? _timer;
-
   @override
   void initState() {
     super.initState();
-    _timer = Timer(const Duration(milliseconds: 2400), () {
-      if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _navigateFromSplash());
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  Future<void> _navigateFromSplash() async {
+    if (!mounted) {
+      return;
+    }
+
+    final localStorage = context.read<AppDependencies>().localStorage;
+    final destination = await SplashNavigationResolver(localStorage).resolve();
+
+    if (!mounted) {
+      return;
+    }
+
+    final route = switch (destination) {
+      SplashDestination.mainShell => AppRoutes.mainShell,
+      SplashDestination.onboarding => AppRoutes.onboarding,
+      SplashDestination.login => AppRoutes.login,
+    };
+
+    await Navigator.of(context).pushReplacementNamed(route);
   }
 
   @override

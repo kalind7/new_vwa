@@ -5,6 +5,7 @@ import '../../../../config/app_colors.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_flow_modal.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../data/booking_flow_mock_data.dart';
 import '../../data/main_shell_mock_data.dart';
 import '../widgets/wash_booking_card.dart';
@@ -30,9 +31,7 @@ class MyWashTab extends StatelessWidget {
     );
 
     if (shouldCancel && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Booking cancelled.')),
-      );
+      AppToast.showSuccess(context, 'Booking cancelled.');
     }
   }
 

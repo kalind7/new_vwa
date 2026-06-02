@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../app/app_routes.dart';
+import '../../../../config/app_config.dart';
 import '../../../../config/app_spacing.dart';
+import '../../domain/repositories/auth_repository.dart';
 import '../../../../shared/widgets/app_button.dart';
+import '../../../../shared/widgets/app_loading_overlay.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/auth_tab_switcher.dart';
 import '../utils/auth_form_validators.dart';
 import '../widgets/auth_flow_layout.dart';
@@ -26,6 +31,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -37,30 +43,72 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     FocusScope.of(context).unfocus();
-    if (!(_formKey.currentState?.validate() ?? false)) {
+    if (!(_formKey.currentState?.validate() ?? false) || _isSubmitting) {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Mock registration details accepted.')),
+    if (AppConfig.useMockData) {
+      setState(() => _isSubmitting = true);
+      AppToast.showSuccess(context, 'Mock registration details accepted.');
+      if (!mounted) {
+        return;
+      }
+      setState(() => _isSubmitting = false);
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.addVehicle, (route) => false);
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    final name =
+        '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}';
+    final password = _passwordController.text;
+
+    final result = await context.read<AuthRepository>().register(
+      name: name,
+      email: _emailController.text.trim(),
+      phone: _phoneController.text.trim(),
+      password: password,
+      passwordConfirmation: password,
     );
-    Navigator.of(context).pushNamed(AppRoutes.verifyEmail);
+
+    if (!mounted) {
+      return;
+    }
+
+    result.fold(
+      (failure) {
+        setState(() => _isSubmitting = false);
+        AppToast.showError(context, failure.message);
+      },
+      (_) {
+        setState(() => _isSubmitting = false);
+        AppToast.showSuccess(context, 'Registration successful.');
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(AppRoutes.addVehicle, (route) => false);
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final password = _passwordController.text;
 
-    return AuthFlowLayout(
-      title: 'Get Started now',
-      subtitle: 'Create an account or log in to explore about our app',
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    return Stack(
+      children: [
+        AuthFlowLayout(
+          title: 'Get Started now',
+          subtitle: 'Create an account or log in to explore about our app',
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
             AuthTabSwitcher(
               selectedIndex: 1,
               onChanged: (index) {
@@ -159,17 +207,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ],
             ),
             const SizedBox(height: AppSpacing.xxl),
-            AppButton(label: 'Register', onPressed: _submit),
+            AppButton(
+              label: 'Register',
+              onPressed: _isSubmitting ? null : _submit,
+            ),
             const SizedBox(height: AppSpacing.lg),
             AuthLinkRow(
               text: 'Already have an account?',
               actionText: 'Login',
-              onPressed: () =>
-                  Navigator.of(context).pushReplacementNamed(AppRoutes.login),
+              onPressed: _isSubmitting
+                  ? () {}
+                  : () => Navigator.of(
+                      context,
+                    ).pushReplacementNamed(AppRoutes.login),
             ),
-          ],
+              ],
+            ),
+          ),
         ),
-      ),
+        if (_isSubmitting) const AppLoadingOverlay(),
+      ],
     );
   }
 }

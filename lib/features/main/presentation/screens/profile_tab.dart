@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../app/app_routes.dart';
 import '../../../../config/app_colors.dart';
@@ -7,6 +8,8 @@ import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_confirmation_dialog.dart';
 import '../../../../shared/widgets/app_svg_icon.dart';
+import '../../../../shared/widgets/app_toast.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../data/main_shell_mock_data.dart';
 
 class ProfileTab extends StatelessWidget {
@@ -71,9 +74,20 @@ class ProfileTab extends StatelessWidget {
     );
 
     if (shouldLogout && context.mounted) {
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+      final result = await context.read<AuthRepository>().logout();
+      if (!context.mounted) {
+        return;
+      }
+
+      result.fold(
+        (failure) => AppToast.showError(context, failure.message),
+        (_) {
+          AppToast.showSuccess(context, 'Logged out successfully.');
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+        },
+      );
     }
   }
 }

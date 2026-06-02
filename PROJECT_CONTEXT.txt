@@ -50,8 +50,10 @@ Current Implementation Priority
 - Do not begin API integration until all Figma screens are completed and approved.
 - After UI completion, replace mock data with live Postman API integrations.
 - Do not build the entire UI in one large pass. Work in small milestones and stop after each milestone so the user can run and test.
-- Current checkpoint is the `phase-5-static-flow` branch: implement and review the static booking/payment/wash-detail flow, reusable dialogs/bottom sheets, SVG icon consistency, Provider-backed state, and route management before API integration.
-- Next implementation phase after user approval remains API integration only after the static UI flow is approved.
+- Current checkpoint is the `Api-integration` branch (branched from `phase-5-static-flow`).
+- Batch 1 API integration complete: login + register wired with fpdart `Either<Failure, T>`, typed failures, `AppToast` (green/red), token persistence via `SecureStorageService`.
+- `USE_MOCK_DATA=false` in `assets/env/.env` for live auth testing; set to `true` to restore mock-only auth flows.
+- Next API batch (TBD): send-otp/verify-otp, logout, or vehicles/profile — confirm before starting.
 
 Figma Status
 - User wants to use the recent Figma project named Bike-wash.
@@ -92,5 +94,5 @@ Latest Query Update
 - Flow 1 (Book a slot): Station detail → Select vehicle popup → Confirm popup → Slot booked successfully → Close returns to station detail; Go to my wash opens My Wash tab.
 - Flow 2 (My Wash checkout): My Wash list → Check out on booked item → Checkout → Billing Method → Payment Confirmed → optional Leave a review (validated) → Feedback thanks → Done returns to My Wash tab.
 - Verification passed: `dart analyze` (no issues), `flutter test` (passed).
-- Remaining: Android device review; re-enable map screen; API integration after static UI approval.
-- Do not build APK/IPA. Do not integrate APIs yet.
+- Remaining: Android device review; re-enable map screen; continue API phases on `Api-integration`.
+- Do not build APK/IPA from the assistant side.

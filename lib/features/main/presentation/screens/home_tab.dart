@@ -9,7 +9,9 @@ import '../../../../config/app_radius.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_confirmation_dialog.dart';
+import '../../../../shared/widgets/app_logo_progress_indicator.dart';
 import '../../../../shared/widgets/app_svg_icon.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../data/wash_station_repository.dart';
 import '../providers/home_provider.dart';
 import '../widgets/station_card.dart';
@@ -23,35 +25,49 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   late final HomeProvider _provider;
+  bool _providerInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _provider = HomeProvider(
-      stationRepository: const MockWashStationRepository(),
-    );
-    _provider
-      ..loadStations()
-      ..resolveCurrentLocation(retryAfterDeny: true);
     WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_providerInitialized) {
+      return;
+    }
+    _providerInitialized = true;
+    _provider = HomeProvider(
+      stationRepository: context.read<WashStationRepository>(),
+    );
+    _provider.resolveCurrentLocation(retryAfterDeny: true);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _provider.dispose();
+    if (_providerInitialized) {
+      _provider.dispose();
+    }
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed && _providerInitialized) {
       _provider.resolveCurrentLocation();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_providerInitialized) {
+      return const SizedBox.shrink();
+    }
+
     return ChangeNotifierProvider<HomeProvider>.value(
       value: _provider,
       child: Consumer<HomeProvider>(
@@ -117,7 +133,20 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                             Expanded(
                               child: provider.isLoadingStations
                                   ? const Center(
-                                      child: CircularProgressIndicator(),
+                                      child: AppLogoProgressIndicator(
+                                        size: 56,
+                                      ),
+                                    )
+                                  : visibleStations.isEmpty
+                                  ? Center(
+                                      child: Text(
+                                        provider.emptyStateMessage,
+                                        style: AppTextStyles.textSmRegular
+                                            .copyWith(
+                                              color: AppColors.gray500,
+                                            ),
+                                        textAlign: TextAlign.center,
+                                      ),
                                     )
                                   : ListView.separated(
                                       padding: EdgeInsets.zero,
@@ -181,34 +210,35 @@ class _StationSectionHeader extends StatelessWidget {
   });
 
   final HomeStationTab selectedTab;
-  final ValueChanged<HomeStationTab> onTabChanged;
+  final Future<void> Function(HomeStationTab tab) onTabChanged;
+
+  static const _tabs = [
+    (HomeStationTab.nearby, 'Nearby'),
+    (HomeStationTab.lessDistance, 'Less distance'),
+    (HomeStationTab.all, 'All'),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(
-          child: Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: [
-              _StationTabChip(
-                label: 'Nearby Station',
-                isSelected: selectedTab == HomeStationTab.nearby,
-                onTap: () => onTabChanged(HomeStationTab.nearby),
-              ),
-              _StationTabChip(
-                label: 'Less distance',
-                isSelected: selectedTab == HomeStationTab.lessDistance,
-                onTap: () => onTabChanged(HomeStationTab.lessDistance),
-              ),
-            ],
+        for (var index = 0; index < _tabs.length; index++) ...[
+          if (index > 0) const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: _StationTabChip(
+              label: _tabs[index].$2,
+              isSelected: selectedTab == _tabs[index].$1,
+              onTap: () => onTabChanged(_tabs[index].$1),
+            ),
           ),
-        ),
+        ],
         IconButton(
-          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Filters open in a later phase.')),
+          onPressed: () => AppToast.showNeutral(
+            context,
+            'Filters open in a later phase.',
           ),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
           icon: const AppSvgIcon(
             AppSvgIconName.filter,
             color: AppColors.gray900,
@@ -232,21 +262,33 @@ class _StationTabChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => onTap(),
-      showCheckmark: false,
-      selectedColor: AppColors.gray900,
-      backgroundColor: AppColors.white,
-      side: BorderSide(
-        color: isSelected ? AppColors.gray900 : AppColors.gray200,
-      ),
-      labelStyle: AppTextStyles.textSmMedium.copyWith(
-        color: isSelected ? AppColors.white : AppColors.gray700,
-      ),
+    return Material(
+      color: isSelected ? AppColors.gray900 : AppColors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.pill),
+        side: BorderSide(
+          color: isSelected ? AppColors.gray900 : AppColors.gray200,
+        ),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.sm,
+          ),
+          child: Center(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.textXsMedium.copyWith(
+                color: isSelected ? AppColors.white : AppColors.gray700,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -309,10 +351,9 @@ class _HomeHeader extends StatelessWidget {
               ),
             ),
             IconButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Notifications open in a later phase.'),
-                ),
+              onPressed: () => AppToast.showNeutral(
+                context,
+                'Notifications open in a later phase.',
               ),
               icon: const AppSvgIcon(
                 AppSvgIconName.notification,
@@ -357,13 +398,9 @@ class _HomeHeader extends StatelessWidget {
                   ),
                   if (isResolvingLocation) ...[
                     const SizedBox(width: AppSpacing.xs),
-                    const SizedBox(
-                      width: 12,
-                      height: 12,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 1.5,
-                        color: AppColors.white,
-                      ),
+                    const AppLogoProgressIndicator(
+                      size: 18,
+                      progressColor: AppColors.white,
                     ),
                   ],
                 ],
