@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_paths.dart';
 import 'main_shell_mock_data.dart';
@@ -9,11 +11,16 @@ class ApiWashStationRepository implements WashStationRepository {
 
   final ApiClient _apiClient;
 
+  static final _softErrorOptions = Options(
+    validateStatus: (status) => status != null && status < 500,
+  );
+
   @override
   Future<List<WashStationMock>> fetchStations({
     required StationListSource source,
     double? latitude,
     double? longitude,
+    String? locationLabel,
   }) async {
     try {
       return switch (source) {
@@ -25,6 +32,7 @@ class ApiWashStationRepository implements WashStationRepository {
         StationListSource.lessDistance => _fetchSuggestNearest(
           latitude: latitude,
           longitude: longitude,
+          locationLabel: locationLabel,
         ),
       };
     } catch (_) {
@@ -33,10 +41,7 @@ class ApiWashStationRepository implements WashStationRepository {
   }
 
   Future<List<WashStationMock>> _fetchAll() async {
-    final response = await _apiClient.dio.get<Map<String, dynamic>>(
-      ApiPaths.serviceStations,
-    );
-    final data = response.data;
+    final data = await _getJson(ApiPaths.serviceStations);
     if (data == null) {
       return const [];
     }
@@ -51,7 +56,7 @@ class ApiWashStationRepository implements WashStationRepository {
       return const [];
     }
 
-    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+    final data = await _getJson(
       ApiPaths.nearestStations,
       queryParameters: {
         'latitude': latitude,
@@ -59,7 +64,6 @@ class ApiWashStationRepository implements WashStationRepository {
         'radius': 10,
       },
     );
-    final data = response.data;
     if (data == null) {
       return const [];
     }
@@ -69,22 +73,54 @@ class ApiWashStationRepository implements WashStationRepository {
   Future<List<WashStationMock>> _fetchSuggestNearest({
     double? latitude,
     double? longitude,
+    String? locationLabel,
   }) async {
     if (latitude == null || longitude == null) {
       return const [];
     }
 
-    final response = await _apiClient.dio.get<Map<String, dynamic>>(
-      ApiPaths.suggestStationNearest,
-      queryParameters: {
-        'latitude': latitude,
-        'longitude': longitude,
-      },
+    await _syncUserLocation(
+      latitude: latitude,
+      longitude: longitude,
+      address: locationLabel,
     );
-    final data = response.data;
+
+    final data = await _getJson(ApiPaths.suggestStationNearest);
     if (data == null) {
       return const [];
     }
     return ServiceStationMapper.fromSuggestResponse(data);
+  }
+
+  Future<void> _syncUserLocation({
+    required double latitude,
+    required double longitude,
+    String? address,
+  }) async {
+    try {
+      await _apiClient.dio.post<Map<String, dynamic>>(
+        ApiPaths.saveLocation,
+        data: {
+          'latitude': latitude,
+          'longitude': longitude,
+          'address': address ?? 'Current location',
+        },
+        options: _softErrorOptions,
+      );
+    } catch (_) {
+      // Suggest may still work if the user already has a saved location.
+    }
+  }
+
+  Future<Map<String, dynamic>?> _getJson(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      path,
+      queryParameters: queryParameters,
+      options: _softErrorOptions,
+    );
+    return response.data;
   }
 }

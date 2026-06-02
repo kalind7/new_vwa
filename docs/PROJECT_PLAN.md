@@ -9,43 +9,49 @@
 - I will not build APKs or create release builds unless you explicitly request it.
 - The user explicitly allowed `flutter run -d OJUSLVIVT4BE75JZ` after Milestone 3 for runtime/UI smoke testing.
 - After each feature integration, I will run static verification such as `flutter analyze` and focused tests.
+- Do not commit unless the user explicitly asks.
 
 ## Foundation
 
-1. Configure dependencies for API, Provider state, secure storage, local cache, maps, Firebase notifications, and tests.
-2. Keep environment values in `assets/env/.env` during development, then move real secrets to secure CI or platform config before release.
+1. Configure dependencies for API, Provider state, local preferences, local cache, maps, Firebase notifications, and tests.
+2. Keep environment values in `assets/env/.env` during development (`USE_MOCK_DATA` toggle), then move real secrets to secure CI or platform config before release.
 3. Use a feature-first structure under `lib/features`.
 4. Use shared infrastructure under `lib/core`, `lib/config`, and `lib/shared`.
 
 ## Feature Order
 
 1. Authentication
-   - Email/password login.
-   - Sign up.
-   - Token storage with `flutter_secure_storage`.
-   - Dio authorization interceptor.
+   - Email/password login. **Done (batch 1).**
+   - Sign up. **Done (batch 1).**
+   - Token storage with `LocalStorageService` (`shared_preferences`). **Done.**
+   - Remember Me, onboarding-once flag, splash resolver, logout (token-only). **Done.**
+   - Dio authorization interceptor. **In use.**
+   - OTP send/verify, forgot-password API. **Not started.**
 
 2. Home, Stations, and Search
-   - Station list API.
-   - Search and filter.
-   - Station detail page.
-   - Loading, empty, and error states.
+   - Station list API (All / Nearby / Less distance tabs). **Done (batch 2).**
+   - `POST locations` before suggest-nearest. **Done.**
+   - Search/filter UI (filter icon present; map search disabled with toast). **Partial.**
+   - Station detail API. **Not started.**
+   - Loading, empty, and error states per tab. **Done for list.**
 
 3. Google Maps
-   - Location permission handling.
-   - Show washing stations as map markers.
-   - Navigate to selected station using external maps.
+   - Location permission handling (in-Home geolocation for label and nearest APIs). **Partial.**
+   - Show washing stations as map markers. **Not started — map route disabled.**
+   - Navigate to selected station using external maps. **Static UI only.**
 
 4. Booking
    - Service selection.
    - Date/time slot selection.
-   - Booking confirmation.
+   - Create booking.
    - Booking history.
+   - Static UI complete; APIs not started.
 
 5. Payments
    - Khalti integration.
    - eSewa integration.
    - Backend payment verification before marking booking as paid.
+   - Static billing UI complete; APIs not started.
 
 6. Notifications
    - Firebase Cloud Messaging setup.
@@ -54,15 +60,15 @@
 
 7. Polish and Release Readiness
    - Figma UI matching.
-   - Error handling and validations.
-   - Unit and widget tests for auth, booking, and payments.
+   - Error handling and validations (`AppToast`, soft HTTP on stations).
+   - Unit and widget tests — **33 passing**; add per feature going forward.
    - Android/iOS configuration review.
 
 ## Verification After Each Feature
 
-- `flutter analyze`
-- Focused unit/widget tests for the touched feature
-- Manual run from the user side unless the user explicitly allows assistant runtime smoke testing.
+- `flutter analyze` when code changes.
+- Focused unit/widget tests for the touched feature (one feature at a time).
+- Manual run from the user side on device `OJUSLVIVT4BE75JZ`.
 
 ## Current Setup Status
 
@@ -70,14 +76,11 @@
 - Android package path is `com.kauwatech.vwa`.
 - Provider foundation added.
 - Firebase notification dependencies, native config files, and service skeleton added.
-- Android Firebase app ID: `1:544772728837:android:9dedbae23c26ca8fa2d46c`.
-- iOS Firebase app ID: `1:544772728837:ios:0466e254df1c2697a2d46c`.
-- API client and secure token storage skeleton added.
-- Milestone 1 design system and app shell completed.
-- Milestone 2 splash/onboarding flow completed.
-- Milestone 3 static auth screens implemented with no API integration.
-- Current branch `authentication-fixes` adjusts splash duration, auth white panel height on larger phones, add-vehicle multiple number entry, tap-to-dismiss keyboards, 10-digit phone validation, and six-box OTP entry before Milestone 4.
-- Current branch `phase-4-main-shell` adds the static logged-in Home/My wash/Profile shell, reworks Home from the attached Droplet page, requests location automatically inside Home, resolves the displayed location into area/city text, adds compact station tabs and a filter icon, fixes station-card overflow, moves Phase 4 main state into Provider, introduces a station repository boundary for later API data, and routes search/station cards to marker-based map/detail placeholders.
-- Latest verification passed: `dart analyze` and `flutter test`.
-- Latest session on `phase-5-static-flow`: completed post-booking static screens (checkout, billing, payment confirmed, booking success/info, leave review, feedback thanks), wired My Wash checkout, fixed header back placement (~24px below status bar), disabled map route with toast stub, updated shared success/close header widgets.
-- Remaining: Android device review of full flows; re-enable map + API integration after static UI approval.
+- Milestones 1–5 static UI completed across branches `authentication-fixes`, `phase-4-main-shell`, `phase-5-static-flow`.
+- **Current branch: `Api-integration`** — API work in progress.
+- **API batch 1 (auth):** Login/register with fpdart `Either`, `AppToast`, `AppLoadingOverlay`, token via `LocalStorageService`, `SplashNavigationResolver`, remember-me, onboarding-once, post-auth routes (login → main shell, register → add vehicle).
+- **API batch 2 (home stations):** `ApiWashStationRepository`, three tabs (All → `service-stations`, Nearby → `service-stations/nearest`, Less distance → `suggest-nearest`), `ServiceStationMapper`, `api_paths.dart` including `locations` POST.
+- Map search route remains disabled; Home search shows toast.
+- Latest verification: `flutter test` — 33 tests passing.
+- Remaining API work: OTP, profile/vehicles, station detail, booking, payments, FCM; re-enable map when location/map APIs begin.
+- User runs live device tests; assistant does not commit unless asked.

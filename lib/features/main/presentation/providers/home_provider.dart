@@ -45,13 +45,17 @@ class HomeProvider extends ChangeNotifier {
     _isLoadingStations = true;
     _notifyListeners();
 
-    _stations = await _stationRepository.fetchStations(
-      source: _sourceForTab(_selectedStationTab),
-      latitude: _latitude,
-      longitude: _longitude,
-    );
-    _isLoadingStations = false;
-    _notifyListeners();
+    try {
+      _stations = await _stationRepository.fetchStations(
+        source: _sourceForTab(_selectedStationTab),
+        latitude: _latitude,
+        longitude: _longitude,
+        locationLabel: _currentLocation,
+      );
+    } finally {
+      _isLoadingStations = false;
+      _notifyListeners();
+    }
   }
 
   Future<void> resolveCurrentLocation({bool retryAfterDeny = false}) async {

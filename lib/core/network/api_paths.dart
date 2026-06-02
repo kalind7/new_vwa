@@ -19,11 +19,12 @@ class ApiPaths {
   static const String serviceStations = 'service-stations';
   static String serviceStationDetails(String id) => 'service-stations/$id';
   static const String nearestStations = 'service-stations/nearest';
-  static const String suggestStationNearest = 'service-stations/suggest-nearest';
+  /// Postman: GET `suggest-nearest` (auth required, uses saved user location).
+  static const String suggestStationNearest = 'suggest-nearest';
 
   // Location
-  static const String userLocations = 'user/locations';
-  static const String saveLocation = 'user/locations';
+  static const String userLocations = 'locations';
+  static const String saveLocation = 'locations';
 
   // Bookings
   static const String bookings = 'bookings';

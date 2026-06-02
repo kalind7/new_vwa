@@ -50,10 +50,21 @@ class ServiceStationMapper {
 
     final data = json['data'];
     if (data is Map<String, dynamic>) {
+      final suggestedStations = data['suggested_stations'];
+      if (suggestedStations is List) {
+        return suggestedStations
+            .whereType<Map<String, dynamic>>()
+            .map(_fromStationJson)
+            .toList();
+      }
+
       if (data['stations'] is List) {
         return fromNearestResponse(json);
       }
-      return [_fromStationJson(data)];
+
+      if (data.containsKey('name')) {
+        return [_fromStationJson(data)];
+      }
     }
 
     if (data is List) {

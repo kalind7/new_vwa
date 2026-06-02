@@ -53,24 +53,32 @@ void main() {
       expect(stations.first.name, 'New Service Station');
       expect(stations.first.price, 'Price on request');
     });
-    test('maps suggest response with single station', () {
+    test('maps suggest response with suggested_stations array', () {
       final stations = ServiceStationMapper.fromSuggestResponse({
         'success': true,
         'data': {
-          'name': 'Suggested Station',
-          'address': 'Lazimpat, Kathmandu',
-          'latitude': '27.72150000',
-          'longitude': '85.32010000',
-          'capacity': 4,
-          'average_rating': '4.0',
-          'total_reviews': 3,
-          'user_distance': 0.4,
-          'products': [],
+          'suggested_stations': [
+            {
+              'name': 'Hero Honda Washing Station',
+              'address': 'Lazimpat, Kathmandu',
+              'latitude': '27.72150000',
+              'longitude': '85.32010000',
+              'capacity': 6,
+              'average_rating': '4.0',
+              'total_reviews': 3,
+              'distance': 0.61,
+              'products': [
+                {'price': '200.00'},
+              ],
+            },
+          ],
+          'total_suggestions': 1,
         },
       });
 
       expect(stations, hasLength(1));
-      expect(stations.first.name, 'Suggested Station');
+      expect(stations.first.name, 'Hero Honda Washing Station');
+      expect(stations.first.price, 'Rs. 200');
     });
 
     test('returns empty list when suggest response fails', () {

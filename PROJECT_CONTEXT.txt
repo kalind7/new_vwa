@@ -6,21 +6,23 @@ Purpose
 
 Standing User Instructions
 - Target Android and iOS only.
-- Do not run the app from the assistant side.
-- Do not build APK/IPA files from the assistant side.
-- The user will run the app manually.
+- Do not build APK/IPA files from the assistant side unless explicitly requested.
+- The user will run the app manually on device OJUSLVIVT4BE75JZ.
 - After every feature integration, use static verification such as flutter analyze and focused tests when possible.
 - Update this file after every user query so the project context remains current.
-- Latest override: after completing Milestone 3, the user explicitly asked the assistant to run the app to check for runtime errors or UI mismatches.
+- Do not commit unless the user explicitly asks.
 
 Current Technical Decisions
 - State management: Provider.
-- API client: Dio.
-- Auth storage: flutter_secure_storage.
-- Local cache: Hive.
+- API client: Dio (station calls use soft HTTP handling: validateStatus < 500).
+- Auth and app preferences: shared_preferences via LocalStorageService (access token, has_seen_onboarding, remember-me email/password).
+- USE_MOCK_DATA toggle in assets/env/.env for mock vs live auth.
+- Local cache: Hive (legacy/planned; auth prefs are in LocalStorageService).
 - Notifications: Firebase Core, Firebase Messaging, Flutter Local Notifications.
-- Maps: Google Maps dependency is present; the current static map UI uses Flutter Map/OpenStreetMap with Geolocator and Geocoding.
-- Payments: Khalti and eSewa planned.
+- Maps: Google Maps dependency present; map search route DISABLED — Home search shows toast via navigateToStationSearchMap.
+- Payments: Khalti and eSewa planned (static UI done).
+- Feedback: bot_toast via AppToast (green success, red error, gray400 neutral, bottom).
+- Loading: AppLoadingOverlay + AppLogoProgressIndicator (center screen, not button spinners).
 - Package/bundle ID: com.kauwatech.vwa.
 
 Firebase
@@ -34,65 +36,67 @@ Firebase
   - lib/firebase_options.dart
 
 Current Project Status
-- Flutter app is created under /home/kalind7/visual_studio_projects/new_vwa/VWA.
-- README.md has been updated with project-specific setup details.
-- Root PLAN.md has been created with the UI-first workflow.
-- SUMMARY.md has been created as a handoff document for another AI model.
-- docs/PROJECT_PLAN.md contains the implementation plan.
-- Milestone 2 splash/onboarding flow is complete and ready for user testing.
-- Pre-Milestone-3 responsive foundation pass is complete.
-- Milestone 3 auth static screens have been implemented with static/mock UI and real route wiring.
-- Cursor/VS Code launch config exists at .vscode/launch.json.
+- Flutter app under /home/kalind7/visual_studio_projects/new_vwa/VWA.
+- Milestones 1–5 static UI largely complete.
+- API integration STARTED on branch Api-integration (from phase-5-static-flow).
+- 33 passing tests (storage, splash resolver, auth navigation, station mapper, token persistence).
+- User tests live on Android device OJUSLVIVT4BE75JZ.
 
 Current Implementation Priority
-- First build a static, pixel-perfect UI/UX replica from the Figma design.
-- UI code must be modularized into feature screens, reusable widgets, shared theme/style files, and mock data.
-- Do not begin API integration until all Figma screens are completed and approved.
-- After UI completion, replace mock data with live Postman API integrations.
-- Do not build the entire UI in one large pass. Work in small milestones and stop after each milestone so the user can run and test.
-- Current checkpoint is the `Api-integration` branch (branched from `phase-5-static-flow`).
-- Batch 1 API integration complete: login + register wired with fpdart `Either<Failure, T>`, typed failures, `AppToast` (green/red), token persistence via `SecureStorageService`.
-- `USE_MOCK_DATA=false` in `assets/env/.env` for live auth testing; set to `true` to restore mock-only auth flows.
-- Next API batch (TBD): send-otp/verify-otp, logout, or vehicles/profile — confirm before starting.
+- Continue API integration in small batches on Api-integration.
+- Batch 1 DONE: auth (login, register, token, remember-me, splash resolver, toasts, loading overlay).
+- Batch 2 DONE: home station list (All / Nearby / Less distance tabs, ApiWashStationRepository).
+- Next batches TBD: OTP, logout API, profile/vehicles, station detail, booking, payments, FCM.
+- Map screen: still disabled with toast until map/location API phase.
+- Add unit/widget tests one feature at a time as APIs land.
+
+App Entry And Auth Routing (Api-integration)
+- SplashScreen: no fixed delay; SplashNavigationResolver checks token + has_seen_onboarding.
+- Valid token -> mainShell (dashboard).
+- No token + first launch -> OnboardingScreen (sets has_seen_onboarding when completed).
+- No token + seen onboarding -> LoginScreen.
+- Login success -> mainShell.
+- Register success -> addVehicle (OTP flow skipped for now).
+- Remember Me: saves email+password in LocalStorageService when checked; prefilled on return; NOT cleared on logout.
+- Logout: AuthRepository.logout() clears token only; onboarding + remember-me persist; restart goes to login not onboarding.
+
+Home Station API (Api-integration)
+- Tabs: All | Nearby | Less distance (single row, filter, no overflow).
+- All: GET service-stations.
+- Nearby: GET service-stations/nearest (lat, lng, radius).
+- Less distance: GET suggest-nearest (NOT service-stations/suggest-nearest — 404).
+- suggest-nearest requires auth + POST locations with user coordinates before fetch.
+- Response data.suggested_stations[] via ServiceStationMapper.
+- HomeProvider.loadStations() uses try/finally so loading always clears.
 
 Figma Status
-- User wants to use the recent Figma project named Bike-wash.
-- Available Figma MCP tools are get_figma_data and download_figma_images.
-- Figma file key is 16x5FR5xF6mJQ550ZNbMmU.
-- Starting node is 7:3.
-- Figma data has been fetched successfully.
-- Use Figma fonts and colors exactly where possible. Observed fonts include Poppins, Inter, SF Pro Text, Montserrat, Roboto, Public Sans, Protest Strike, and Mulish.
-- Observed color tokens include white, black, gray scale, Secondary/500 #1A1C1E, Secondary/400 #6C7278, Indigo/600 #444CE7, Error/500 #F04438, and input border #EDF1F3.
+- Figma project Bike-wash, file key 16x5FR5xF6mJQ550ZNbMmU, node 7:3.
+- Use Figma fonts and colors. Observed: Poppins, Inter, Secondary/500 #1A1C1E, Brand/500 #FF5656, Error/500 #F04438, etc.
 
 Current UI Milestone Plan
-- Milestone 1: Design system and app shell.
-- Milestone 2: Splash and onboarding flow.
-- Milestone 3: Auth static screens implemented; pre-Phase-4 finalization pass complete on `authentication-fixes` pending verification/user review.
-- Milestone 4: Main app shell with Home/My wash/Profile navbar implemented; Provider/location/map/Home UI fixes verified.
-- Milestone 5: Static booking/payment/wash-detail flow started on `phase-5-static-flow`.
-- User will run/test after each milestone before the next one starts.
+- Milestone 1: Complete.
+- Milestone 2: Complete (splash routing updated for API phase).
+- Milestone 3: Complete static UI; API auth wired on Api-integration.
+- Milestone 4: Complete UI; home stations API wired on Api-integration.
+- Milestone 5: Static booking/payment/review complete; map still disabled.
 
-Responsive Layout Rules
-- Figma design width is 430 and should be treated as the mobile content baseline.
-- Wide devices should center/constrain mobile content instead of stretching it.
-- Small devices should use tighter padding and scaled image heights.
-- Auth screens in Milestone 3 should use scrollable form layouts to avoid overflow.
+Key Files
+- lib/core/storage/local_storage_service.dart
+- lib/features/onboarding/domain/splash_navigation_resolver.dart
+- lib/shared/widgets/app_toast.dart, app_loading_overlay.dart, app_logo_progress_indicator.dart
+- lib/features/main/data/api_wash_station_repository.dart
+- lib/features/main/data/models/service_station_mapper.dart
+- lib/core/network/api_paths.dart
+- lib/core/di/app_dependencies.dart
+- test/ (33 tests)
+- .cursor/agents/vwa-auth-flow-coordinator.md, vwa-api-integration.md
 
 How User Runs App
-- Preferred connected mobile device:
-  M2006C3LI / OJUSLVIVT4BE75JZ / Android 10 API 29.
-- Command:
-  flutter run -d OJUSLVIVT4BE75JZ
-- Do not use:
-  flutter run -d linux
+- Device: M2006C3LI / OJUSLVIVT4BE75JZ / Android 10 API 29.
+- Command: flutter run -d OJUSLVIVT4BE75JZ
+- Do not use: flutter run -d linux
 
 Latest Query Update
-- User provided Figma screenshots for missing post-booking screens (checkout, billing method, payment confirmed, booking success, booking info, leave review, feedback thanks) and requested full static UI completion except maps.
-- Implemented all missing screens, wired navigation from station booking flow and My Wash detail checkout, fixed header back button placement (~24px below status bar), and disabled map route with toast via `navigateToStationSearchMap` / `buildDisabledMapRoute`.
-- New routes: `bookingSuccess`, `bookingInfo`, `leaveReview`, `feedbackThanks`.
-- New shared widgets: `AppSuccessIcon`, `AppFlowCloseHeader`, updated `AppScreenHeader` / `buildAppScreenHeader`.
-- Flow 1 (Book a slot): Station detail → Select vehicle popup → Confirm popup → Slot booked successfully → Close returns to station detail; Go to my wash opens My Wash tab.
-- Flow 2 (My Wash checkout): My Wash list → Check out on booked item → Checkout → Billing Method → Payment Confirmed → optional Leave a review (validated) → Feedback thanks → Done returns to My Wash tab.
-- Verification passed: `dart analyze` (no issues), `flutter test` (passed).
-- Remaining: Android device review; re-enable map screen; continue API phases on `Api-integration`.
-- Do not build APK/IPA from the assistant side.
+- Documented full Api-integration session: auth finalization (onboarding-once, LocalStorageService, splash resolver, remember-me, logout behavior, loading/toasts) and home stations API (three tabs, endpoints, suggest-nearest + POST locations, mapper, repository).
+- Updated SUMMARY.md, PLAN.md, chat_summary.md, PROJECT_CONTEXT.txt, docs/PROJECT_PLAN.md.
+- No commit per user instruction.

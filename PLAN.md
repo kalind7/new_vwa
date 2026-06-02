@@ -171,7 +171,7 @@ After each feature or group of screens:
 
 ## Current Decision
 
-The next implementation work should focus only on modular static UI/UX based on the Figma design. API integration comes after the static UI is complete.
+Static UI milestones (1–5) are largely complete and reviewed on device. **API integration has started** on branch `Api-integration` (from `phase-5-static-flow`). Continue in small batches: auth and home stations are done; next batches TBD (OTP, profile/vehicles, station detail, booking, payments). Map screen remains disabled with toast until map/location API work begins.
 
 ## Figma Access Status
 
@@ -224,7 +224,7 @@ Review checkpoint: you test the startup flow and onboarding navigation.
 
 Build all auth-related screens without APIs.
 
-- Status: Pre-Phase-4 auth finalization pass complete on branch `authentication-fixes`; verification and Android runtime smoke check pending.
+- Status: Complete (static UI). API batch 1 on `Api-integration`: live login/register, token + remember-me + onboarding flags via `LocalStorageService`, splash resolver, post-auth routing (login → main shell, register → add vehicle).
 - Added static Figma-inspired auth layout with dark header, rounded white content sheet, tab switcher, form inputs, OTP boxes, password rules, and setup-profile vehicle screen.
 - Replaced placeholder auth routes with real static routes:
   - Login.
@@ -235,17 +235,17 @@ Build all auth-related screens without APIs.
   - Reset password.
   - Add vehicle number.
   - Back-to-login transitions.
-- Kept behavior static/mock only. No API integration has started.
+- Static validation and navigation remain. Live API when `USE_MOCK_DATA=false`: login/register with fpdart `Either`, `AppToast`, `AppLoadingOverlay`.
 - Added static form validation for login, sign up, forgot password/send OTP, reset password, and add vehicle number.
 - Connected current buttons, links, resend controls, upload picture, and preview controls to validation, navigation, or mock feedback.
 - Updated auth and profile setup layouts to stay scrollable and visible when the keyboard is open.
-- Increased static splash visibility by one second for the current UI review phase.
+- Splash: removed fixed delay on `Api-integration`; `SplashNavigationResolver` routes by token + `has_seen_onboarding`.
 - Extended auth white content panels so login, verification, forgot/reset password, and related auth screens fill the remaining device height instead of floating in the middle on larger phones.
 - Updated add-vehicle UI to support multiple vehicle number fields with plus and minus controls.
 - Added scaffold tap-to-dismiss keyboard behavior through `AppScreen`.
 - Tightened mobile number entry to digits-only, exactly 10 digits, with empty-state validation.
 - Replaced static OTP display with validated six-square OTP input on email and phone verification screens.
-- Added project subagent `.cursor/agents/vwa-ui-form-guardian.md` for future auth/UI validation, button, and keyboard safety reviews.
+- Added project subagents: `vwa-ui-form-guardian.md`, `vwa-auth-flow-coordinator.md`, `vwa-api-integration.md`.
 - Verification passed so far: `dart format`, `flutter analyze`, and `flutter test`.
 - Remaining Milestone 3 verification: finish `flutter run -d OJUSLVIVT4BE75JZ --no-resident` for Android runtime/UI smoke testing if the device run completes.
 - Current user request also asks to create or reuse a GitHub repository named `new-vwa` and push the code there after verification.
@@ -256,12 +256,13 @@ Review checkpoint: you test all auth navigation paths and form visuals.
 
 Build the static logged-in area.
 
-- Status: Reworked on branch `phase-4-main-shell` from the attached Droplet/Home Figma page; Provider/location/map/Home UI fixes verified with analyzer/tests and pending device review.
+- Status: UI complete on `phase-4-main-shell`; live station APIs wired on `Api-integration` via `ApiWashStationRepository`.
 - Added Figma-aligned static logged-in shell with bottom navbar labels/icons:
   - Home.
   - My wash.
   - Profile.
-- Home tab now uses the attached Droplet page as the base: blue-to-white header, user avatar/greeting, search and notification icons, red `Brand/500 #FF5656` active nav state, automatic in-Home location permission request, geocoded area/city location label, compact `Nearby Station`/`Less distance` station tabs, filter icon, and vertical nearby station cards with Figma station imagery.
+- Home tab uses the Droplet page base: blue-to-white header, avatar/greeting, search/notification icons, red `Brand/500 #FF5656` active nav, in-Home location permission, geocoded area/city label, filter icon, vertical station cards with Figma imagery.
+- Station tabs (single row, no overflow): **All** | **Nearby** | **Less distance**. Live endpoints: All → `service-stations`; Nearby → `service-stations/nearest`; Less distance → `suggest-nearest` (requires auth + `POST locations` first).
 - Station-card metadata wraps across lines to avoid render overflow around the slots chip.
 - Search icon opens a marker-based Flutter Map/OpenStreetMap page. Search results appear while typing; selecting a result recenters the map and opens a bottom station sheet that routes to detail.
 - Station cards open a static station detail page to preserve the future API-backed flow shape.
@@ -269,20 +270,20 @@ Build the static logged-in area.
   - `MainShellProvider` controls bottom-tab selection.
   - `HomeProvider` controls location resolution, station loading, and Home station tabs.
   - `StationSearchProvider` controls map search query, results visibility, and selected station.
-  - `WashStationRepository` / `MockWashStationRepository` isolates the current mock station source from the UI.
+  - `WashStationRepository` with `MockWashStationRepository` and `ApiWashStationRepository` (DI-selected); `ServiceStationMapper` for API payloads.
 - My wash tab includes booked/completed summary cards and static wash booking cards with mock cancel feedback.
 - Profile tab includes avatar/add affordance, user identity, profile setting, payments history, reviews, and logout rows.
-- Login and completed add-vehicle flows now route into the static main shell.
-- No API integration has started.
+- Login success routes to main shell; register success routes to add vehicle (OTP skipped for now).
+- API integration (home stations) started on `Api-integration` — see Milestone 4 API notes below.
 
-Review checkpoint: you test navbar switching and static screen layout.
+Review checkpoint: you test navbar switching, home station tabs (All / Nearby / Less distance), and live API empty/loading states.
 
 ### Milestone 5: Map and Wash Detail Static Screens
 
 Build the remaining static screens needed before API integration.
 
-- Status: In progress on branch `phase-5-static-flow`. Post-booking checkout/payment/review static UI largely complete; map route disabled pending API phase.
-- Continue using static/mock data only; no API integration.
+- Status: Static UI complete on `phase-5-static-flow`. Post-booking checkout/payment/review flows done; map route disabled with toast (unchanged during early API phase).
+- Booking/payment screens remain static/mock; home station list uses live API on `Api-integration`.
 - Maintain responsive layouts with the Figma mobile width baseline and safe scrolling on compact devices.
 - Keep state management Provider-backed and route-driven for API readiness.
 - Use shared SVG icon rendering for new visible app icons instead of adding more ad hoc Material icons.
@@ -308,11 +309,26 @@ Build the remaining static screens needed before API integration.
 - Map search route disabled for static phase: Home search shows toast via `navigateToStationSearchMap`; route stub pops immediately.
 - Verification passed: `dart analyze` and `flutter test`.
 
-### Remaining Before API Integration
+### Phase 2: API Integration (Started — `Api-integration`)
 
-- Device review of full booking → payment → review flow and My Wash checkout on Android.
-- Re-enable and wire live map screen when API/location integration begins.
-- Final Figma pixel pass on any screens flagged during device review.
-- API integration (auth, stations, booking, payments, notifications) after static UI approval.
+**Batch 1 — Auth (done)**
 
-Review checkpoint: full static UI flow is reviewed against Figma before API work begins.
+- Login + register with fpdart `Either`, `AppToast`, token via `LocalStorageService` (`shared_preferences`).
+- `USE_MOCK_DATA` in `assets/env/.env`.
+- Remember Me, onboarding-once, logout token-only, splash resolver, loading overlay.
+
+**Batch 2 — Home stations (done)**
+
+- `ApiWashStationRepository`, `ServiceStationMapper`, `api_paths.dart` (stations, nearest, suggest-nearest, locations).
+- Soft HTTP errors (validateStatus < 500).
+
+**Next batches (TBD)**
+
+- OTP, logout API, profile/vehicles, station detail, booking, payments, FCM.
+- Re-enable map when location/map API work begins.
+
+**Testing discipline**
+
+- 33 passing tests; add unit/widget tests one feature at a time going forward.
+
+Review checkpoint: device test auth + home tabs on `OJUSLVIVT4BE75JZ`; confirm Less distance after location POST.

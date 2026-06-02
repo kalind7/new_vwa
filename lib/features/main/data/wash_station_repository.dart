@@ -7,6 +7,7 @@ abstract class WashStationRepository {
     required StationListSource source,
     double? latitude,
     double? longitude,
+    String? locationLabel,
   });
 }
 
@@ -18,6 +19,7 @@ class MockWashStationRepository implements WashStationRepository {
     required StationListSource source,
     double? latitude,
     double? longitude,
+    String? locationLabel,
   }) async {
     return nearbyStations;
   }
