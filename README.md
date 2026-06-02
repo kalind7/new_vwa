@@ -28,12 +28,12 @@ Current package/bundle identifier:
 - Flutter project created as `vwa`.
 - Android and iOS platforms are configured.
 - Firebase apps are registered and configured for `com.kauwatech.vwa`.
-- Provider foundation is in place, and the current Phase 4 main shell uses feature providers for tab, Home/location, and map/search state.
+- Provider foundation is in place, and the current main/booking flows use feature providers for tab, Home/location, map/search, and booking selection state.
 - API client and secure token storage skeletons are available.
 - Static design system, splash/onboarding, and auth screens are implemented.
 - Auth screens are static/mock only: login, sign up, forgot password, verify email, verify OTP, reset password, and add vehicle number.
 - Current pre-Phase-4 branch: `authentication-fixes`, covering splash timing, auth panel height consistency, multi-vehicle number entry, keyboard dismissal, 10-digit phone validation, and six-box OTP verification.
-- Current Phase 4 branch: `phase-4-main-shell`, adding the static Home/My wash/Profile shell with Droplet-style Home UI, automatic in-Home location permission, geocoded area/city text, compact station tabs, filter icon, overflow-safe station cards, Provider-backed state, repository-backed mock station data, and marker-based map/detail routes.
+- Current Phase 5 branch: `phase-5-static-flow`, adding the static booking/payment/wash-detail flow, shared popup/dialog and bottom-sheet components, logo-centered exit/logout confirmations, SVG icon wrapper usage, Provider-backed booking state, and route-managed static screens.
 - Project plan is documented in `docs/PROJECT_PLAN.md`.
 
 ## Running Locally

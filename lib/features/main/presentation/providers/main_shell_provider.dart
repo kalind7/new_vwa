@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 
 class MainShellProvider extends ChangeNotifier {
-  int _currentIndex = 0;
+  MainShellProvider({int initialIndex = 0}) : _currentIndex = initialIndex;
+
+  int _currentIndex;
 
   int get currentIndex => _currentIndex;
 

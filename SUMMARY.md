@@ -157,23 +157,25 @@ Verification passed:
 - Milestone 4 main app shell has started on branch `phase-4-main-shell`.
 - Static logged-in shell now includes Home, My wash, and Profile tabs. Home was reworked from the attached Droplet page: blue-to-white header, Figma station imagery, red `Brand/500 #FF5656` active nav state, automatic in-Home location permission request, geocoded area/city location label, compact `Nearby Station`/`Less distance` tabs, filter icon, marker-based map search route, and station-to-detail route.
 - Phase 4 main state is now Provider-backed through `MainShellProvider`, `HomeProvider`, and `StationSearchProvider`. Station data is read through `WashStationRepository` / `MockWashStationRepository` so later API integration can replace the mock source without rewriting the UI.
+- Milestone 5 has advanced on branch `phase-5-static-flow` with Figma-aligned station detail, profile/settings sub-pages, full post-booking static flow (checkout, billing, payment confirmed, booking success/info, leave review, feedback thanks), My Wash detail with checkout wiring, and shared popup/header components.
+- Map search route is disabled during static UI phase; Home search shows a toast instead of opening the map screen.
+- `AppScreenHeader` back button placement fixed to ~24px below the status bar across detail and booking screens.
 
 ## Next Required Work
 
-Finish Milestone 4 verification:
+Finish Milestone 5 device review:
 
-- Complete device review for the `phase-4-main-shell` branch.
-- Run the app on the connected Android phone to check runtime errors/UI mismatches.
-- Have the user review the auth-to-main flow, automatic Home location prompt, resolved area/city location label, compact Home station tabs/filter icon, Home list UI, marker-based map/search flow, station detail placeholder, and My wash/Profile tabs.
-- If approved, continue Milestone 5 map/station detail/payment-flow static screens.
+- Run the app on the connected Android phone to check the full flow: station detail → book → service → slot → checkout → billing → payment confirmed → leave review → feedback thanks.
+- Test My Wash detail → Check out → same checkout flow.
+- Confirm header back button placement and success/confirmation screen layouts against Figma screenshots.
+- Re-enable map screen and integrate live APIs only after static UI approval.
 - Do not integrate APIs yet.
 - Do not build APK/IPA.
 
-Milestone 3 verification completed so far:
+Latest verification (post-booking flow pass):
 
-- `dart format`
-- `flutter analyze`
-- `flutter test`
+- `dart analyze` — no issues.
+- `flutter test` — passed.
 
 ## Important Files
 

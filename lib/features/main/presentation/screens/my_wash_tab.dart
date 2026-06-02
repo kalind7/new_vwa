@@ -1,13 +1,40 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/app_routes.dart';
 import '../../../../config/app_colors.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
+import '../../../../shared/widgets/app_flow_modal.dart';
+import '../../data/booking_flow_mock_data.dart';
 import '../../data/main_shell_mock_data.dart';
 import '../widgets/wash_booking_card.dart';
 
 class MyWashTab extends StatelessWidget {
   const MyWashTab({super.key});
+
+  static Map<String, List<WashBookingMock>> get _groupedBookings {
+    final grouped = <String, List<WashBookingMock>>{};
+    for (final booking in washBookings) {
+      grouped.putIfAbsent(booking.date, () => []).add(booking);
+    }
+    return grouped;
+  }
+
+  Future<void> _confirmCancel(
+    BuildContext context,
+    WashBookingMock booking,
+  ) async {
+    final shouldCancel = await showAppFlowModal(
+      context: context,
+      messageLines: const ['Are you sure you want ', 'cancel booking?'],
+    );
+
+    if (shouldCancel && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Booking cancelled.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +46,7 @@ class MyWashTab extends StatelessWidget {
               AppSpacing.lg,
               AppSpacing.xxl,
               AppSpacing.lg,
-              AppSpacing.lg,
+              AppSpacing.xxl,
             ),
             sliver: SliverToBoxAdapter(
               child: Column(
@@ -39,105 +66,37 @@ class MyWashTab extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xxl),
-                  const _WashSummaryStrip(),
+                  for (final entry in _groupedBookings.entries) ...[
+                    Text(
+                      entry.key,
+                      style: AppTextStyles.textMdSemiBold.copyWith(
+                        color: AppColors.gray800,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    for (final booking in entry.value) ...[
+                      WashBookingCard(
+                        booking: booking,
+                        onCancel: () => _confirmCancel(context, booking),
+                        onCheckOut: booking.canCancel
+                            ? () => Navigator.of(context).pushNamed(
+                                AppRoutes.bookingSummary,
+                                arguments: bookingDraftFromWashBooking(booking),
+                              )
+                            : null,
+                        onTap: () => Navigator.of(context).pushNamed(
+                          AppRoutes.washDetail,
+                          arguments: booking,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
+                  ],
                 ],
               ),
             ),
           ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              0,
-              AppSpacing.lg,
-              AppSpacing.xxl,
-            ),
-            sliver: SliverList.separated(
-              itemCount: washBookings.length,
-              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.lg),
-              itemBuilder: (context, index) {
-                return WashBookingCard(
-                  booking: washBookings[index],
-                  onCancel: () => _showCancelMock(context),
-                );
-              },
-            ),
-          ),
         ],
-      ),
-    );
-  }
-
-  void _showCancelMock(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Mock cancel booking action selected.')),
-    );
-  }
-}
-
-class _WashSummaryStrip extends StatelessWidget {
-  const _WashSummaryStrip();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: const [
-        Expanded(
-          child: _WashSummaryCard(
-            label: 'Booked',
-            value: '1',
-            icon: Icons.event_available_outlined,
-          ),
-        ),
-        SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: _WashSummaryCard(
-            label: 'Completed',
-            value: '1',
-            icon: Icons.check_circle_outline_rounded,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _WashSummaryCard extends StatelessWidget {
-  const _WashSummaryCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.gray900,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: AppColors.white),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              value,
-              style: AppTextStyles.titleLarge.copyWith(color: AppColors.white),
-            ),
-            Text(
-              label,
-              style: AppTextStyles.textSmRegular.copyWith(
-                color: AppColors.gray300,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

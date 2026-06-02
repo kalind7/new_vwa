@@ -107,6 +107,26 @@
 - My wash tab has booked/completed summary and static wash booking cards.
 - Profile tab has avatar/add affordance, user identity, profile setting, payments history, reviews, and logout rows.
 
+### Milestone 5: Static Booking Flow Started
+
+- Current branch: `phase-5-static-flow`.
+- Added `flutter_svg` and shared `AppSvgIcon` wrapper so new/main visible icons use an SVG pathway rather than ad hoc Material icons.
+- Added route-managed static screens:
+  - Service selection.
+  - Slot selection.
+  - Booking summary.
+  - Payment method.
+  - Payment result.
+  - Wash detail.
+- Added `BookingFlowProvider` and static booking mock models for Provider-backed service, slot, and payment selection.
+- Added shared modal components:
+  - `AppConfirmationDialog` / `showAppConfirmationDialog`.
+  - `AppActionBottomSheet` / `showAppActionBottomSheet`.
+- Added exit confirmation dialogs on Login and Main Shell with centered logo mark and exactly `Yes` / `No`.
+- Added logout confirmation dialog in Profile.
+- Booking payment confirmation and cancel booking mock action now use the shared bottom-sheet component.
+- Added `.cursor/agents/vwa-popup-flow-guardian.md` for popup/dialog/bottom-sheet consistency reviews.
+
 ## Important New Files
 
 - `lib/features/main/data/main_shell_mock_data.dart`
@@ -128,47 +148,47 @@
 
 ## Current Verification Status
 
-Latest verification after Provider/location/map/Home UI fixes:
+## Latest Session (Post-Booking Static UI)
 
-- `flutter pub add flutter_map latlong2 geocoding` passed.
-- `dart format` passed.
-- `flutter analyze` passed.
-- `flutter test` passed.
+User provided Figma screenshots for missing post-booking screens and requested:
+
+- Complete static UI for checkout, billing method, payment confirmed, booking success, booking info, leave review, and feedback thanks.
+- Wire navigation from station booking popup and My Wash detail checkout.
+- Fix detail page back/save header placement (~20–30px from top).
+- Disable map page with toast on navigation attempt.
+- Run `dart analyze` / `flutter test` (not `flutter run` or APK build).
+- Update project context docs.
+
+Implemented:
+
+- `booking_summary_screen.dart` — Figma checkout with wash summary (station + duration), expandable promo code, Apply button.
+- `payment_method_screen.dart` — billing method list (Khalti, eSewa, Cash on Delivery); tap + confirm navigates forward.
+- `payment_result_screen.dart` — Payment Confirmed with green check, Go to home, Leave a review.
+- `booking_success_screen.dart` / `BookingInfoScreen` — slot booked success variants.
+- `leave_review_screen.dart` / `feedback_thanks_screen.dart` — star rating, comment, submit, thank-you Done.
+- `AppScreenHeader` / `buildAppScreenHeader` — back button ~24px below status bar.
+- `AppSuccessIcon`, `AppFlowCloseHeader` shared widgets.
+- `map_navigation.dart` — toast stub; map route disabled in `app_routes.dart`.
+- My Wash detail Check out → `AppRoutes.bookingSummary` via `bookingDraftFromWashBooking`.
+- Cash on Delivery → booking info screen; Khalti/eSewa → payment confirmed.
+
+Verification:
+
+- `dart analyze` — no issues.
+- `flutter test` — passed.
 
 ## Current Git State
 
-- Branch: `phase-4-main-shell`.
-- There are uncommitted Phase 4 changes, including:
-  - Main shell feature files.
-  - Provider and repository files for Phase 4 main state.
-  - Main screen assets.
-  - map/geocoding dependency updates.
-  - route updates.
-  - auth route-to-main updates.
-  - docs updates.
-  - `pubspec.yaml` asset registration.
-- Do not accidentally switch back to `main` or `authentication-fixes` unless the user asks.
+- Branch: `phase-5-static-flow`.
+- Uncommitted Phase 5 changes include post-booking screens, header fixes, map disable stub, route wiring, and doc updates.
 - Do not commit unless the user explicitly asks.
 
 ## Next Best Step
 
-Wait for the user to test the corrected Home/location/map UI on the Android device.
+Device review on Android:
 
-If approved:
-
-- Continue Milestone 5 static screens:
-  - full map/search flow,
-  - station detail polish,
-  - service selection,
-  - booking summary,
-  - payment static screens,
-  - payment success/failure,
-  - deeper My wash states.
-
-If the user says the Home page still does not match:
-
-- Ask for the exact Figma frame name or screenshot if needed.
-- Re-check the Figma data around the Droplet/Home page.
-- Keep using `Brand/500 #FF5656` for active bottom nav state.
-- Keep API integration out of scope until static UI is approved.
+- Full booking flow from station detail through payment/review.
+- My Wash checkout entry.
+- Header placement and success screen visuals vs Figma.
+- If approved → API integration phase; re-enable map when ready.
 

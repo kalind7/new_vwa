@@ -1,0 +1,199 @@
+import 'main_shell_mock_data.dart';
+
+class WashServiceMock {
+  const WashServiceMock({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+    required this.duration,
+    required this.price,
+  });
+
+  final String id;
+  final String title;
+  final String subtitle;
+  final String duration;
+  final String price;
+}
+
+class WashSlotMock {
+  const WashSlotMock({
+    required this.id,
+    required this.dateLabel,
+    required this.dayLabel,
+    required this.timeLabel,
+  });
+
+  final String id;
+  final String dateLabel;
+  final String dayLabel;
+  final String timeLabel;
+}
+
+class PaymentMethodMock {
+  const PaymentMethodMock({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final String id;
+  final String title;
+  final String subtitle;
+}
+
+class StationBookingArgs {
+  const StationBookingArgs({required this.station, required this.vehicle});
+
+  final WashStationMock station;
+  final VehicleMock vehicle;
+}
+
+class VehicleMock {
+  const VehicleMock({required this.id, required this.plate});
+
+  final String id;
+  final String plate;
+}
+
+class BookingDraft {
+  const BookingDraft({
+    required this.station,
+    required this.service,
+    required this.slot,
+    this.vehicle,
+    this.paymentMethod,
+    this.isSuccess = true,
+  });
+
+  final WashStationMock station;
+  final WashServiceMock service;
+  final WashSlotMock slot;
+  final VehicleMock? vehicle;
+  final PaymentMethodMock? paymentMethod;
+  final bool isSuccess;
+
+  BookingDraft copyWith({
+    WashStationMock? station,
+    WashServiceMock? service,
+    WashSlotMock? slot,
+    VehicleMock? vehicle,
+    PaymentMethodMock? paymentMethod,
+    bool? isSuccess,
+  }) {
+    return BookingDraft(
+      station: station ?? this.station,
+      service: service ?? this.service,
+      slot: slot ?? this.slot,
+      vehicle: vehicle ?? this.vehicle,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      isSuccess: isSuccess ?? this.isSuccess,
+    );
+  }
+}
+
+BookingDraft bookingDraftForStation({
+  required WashStationMock station,
+  required VehicleMock vehicle,
+}) {
+  return BookingDraft(
+    station: station,
+    service: washServices.first,
+    slot: washSlots.first,
+    vehicle: vehicle,
+  );
+}
+
+BookingDraft bookingDraftFromWashBooking(WashBookingMock booking) {
+  final station = nearbyStations.firstWhere(
+    (item) => item.name == booking.station,
+    orElse: () => nearbyStations.first,
+  );
+  final service = washServices.firstWhere(
+    (item) => item.title == booking.service,
+    orElse: () => washServices.first,
+  );
+
+  return BookingDraft(
+    station: station,
+    service: service,
+    slot: washSlots.first,
+    vehicle: VehicleMock(id: 'wash-${booking.vehicle}', plate: booking.vehicle),
+  );
+}
+
+const vehicles = [
+  VehicleMock(id: '1', plate: 'Ba- pa-1024'),
+  VehicleMock(id: '2', plate: 'Ba-pa 2045'),
+  VehicleMock(id: '3', plate: 'Ba-pa 1097'),
+  VehicleMock(id: '4', plate: 'Ba-pa 9873'),
+];
+
+const washServices = [
+  WashServiceMock(
+    id: 'exterior',
+    title: 'Exterior Wash',
+    subtitle: 'Foam wash, rinse, and dry for daily bike care.',
+    duration: '25 min',
+    price: 'Nrs 100',
+  ),
+  WashServiceMock(
+    id: 'full-bike',
+    title: 'Full Bike Wash',
+    subtitle: 'Exterior wash with tyre, chain cover, and seat cleaning.',
+    duration: '40 min',
+    price: 'Nrs 150',
+  ),
+  WashServiceMock(
+    id: 'premium',
+    title: 'Premium Detailing',
+    subtitle: 'Deep cleaning, polish, dashboard wipe, and finishing coat.',
+    duration: '60 min',
+    price: 'Nrs 250',
+  ),
+];
+
+const washSlots = [
+  WashSlotMock(
+    id: 'today-10',
+    dateLabel: 'Today',
+    dayLabel: 'Jun 2',
+    timeLabel: '10:00 AM',
+  ),
+  WashSlotMock(
+    id: 'today-1130',
+    dateLabel: 'Today',
+    dayLabel: 'Jun 2',
+    timeLabel: '11:30 AM',
+  ),
+  WashSlotMock(
+    id: 'tomorrow-9',
+    dateLabel: 'Tomorrow',
+    dayLabel: 'Jun 3',
+    timeLabel: '09:00 AM',
+  ),
+  WashSlotMock(
+    id: 'tomorrow-4',
+    dateLabel: 'Tomorrow',
+    dayLabel: 'Jun 3',
+    timeLabel: '04:00 PM',
+  ),
+];
+
+const paymentMethods = [
+  PaymentMethodMock(
+    id: 'khalti',
+    title: 'Khalti',
+    subtitle: 'Pay with Khalti wallet',
+  ),
+  PaymentMethodMock(
+    id: 'esewa',
+    title: 'eSewa',
+    subtitle: 'Pay with eSewa wallet',
+  ),
+  PaymentMethodMock(
+    id: 'cash',
+    title: 'Cash on Delivery',
+    subtitle: 'Pay when your wash is delivered',
+  ),
+];

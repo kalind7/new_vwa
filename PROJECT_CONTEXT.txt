@@ -50,8 +50,8 @@ Current Implementation Priority
 - Do not begin API integration until all Figma screens are completed and approved.
 - After UI completion, replace mock data with live Postman API integrations.
 - Do not build the entire UI in one large pass. Work in small milestones and stop after each milestone so the user can run and test.
-- Current checkpoint is the `phase-4-main-shell` branch: verify the auth-to-main flow, automatic Home location permission prompt, geocoded area/city label, attached Droplet/Home page replication, compact station tabs/filter icon, marker-based map search flow, station-detail placeholder, Provider-backed Phase 4 state, and My wash/Profile shell before continuing deeper static flows.
-- Next implementation phase after user approval is Milestone 5: map/station detail/payment-flow static screens.
+- Current checkpoint is the `phase-5-static-flow` branch: implement and review the static booking/payment/wash-detail flow, reusable dialogs/bottom sheets, SVG icon consistency, Provider-backed state, and route management before API integration.
+- Next implementation phase after user approval remains API integration only after the static UI flow is approved.
 
 Figma Status
 - User wants to use the recent Figma project named Bike-wash.
@@ -66,8 +66,8 @@ Current UI Milestone Plan
 - Milestone 1: Design system and app shell.
 - Milestone 2: Splash and onboarding flow.
 - Milestone 3: Auth static screens implemented; pre-Phase-4 finalization pass complete on `authentication-fixes` pending verification/user review.
-- Milestone 4: Main app shell with Home/My wash/Profile navbar implemented; Provider/location/map/Home UI fixes verified and awaiting device review.
-- Milestone 5: Map and wash detail static screens.
+- Milestone 4: Main app shell with Home/My wash/Profile navbar implemented; Provider/location/map/Home UI fixes verified.
+- Milestone 5: Static booking/payment/wash-detail flow started on `phase-5-static-flow`.
 - User will run/test after each milestone before the next one starts.
 
 Responsive Layout Rules
@@ -85,19 +85,12 @@ How User Runs App
   flutter run -d linux
 
 Latest Query Update
-- User approved the corrected Droplet-style Home direction but requested final Phase 4 fixes before the next phase.
-- Removed the separate location gate between auth and Home. Login/sign-up/add-vehicle flows now enter Home directly, and Home automatically triggers the native location permission prompt.
-- Home resolves the displayed location from the device with `geolocator` and `geocoding` into area/city text. It no longer hardcodes `Thamel, Kathmandu` and no longer shows raw latitude/longitude as the fallback UI.
-- If location permission is denied once, Home requests it again automatically. If permanently denied, Home shows an app-settings prompt.
-- Replaced the oversized `Nearby Stations` title with compact Home station tabs: `Nearby Station` and `Less distance`.
-- Added the missing Home filter/tune icon with mock-only feedback.
-- Fixed station-card render overflow by wrapping the rating/distance/price/slots metadata instead of forcing it into one row.
-- Replaced the drawn static map/search placeholder with a Flutter Map/OpenStreetMap page that shows station markers. Search results appear while typing; selecting a station moves the map and opens a bottom sheet that routes to station detail.
-- Added `flutter_map`, `latlong2`, and `geocoding` dependencies.
-- Moved Phase 4 main state from local `setState` into Provider where it matters for app flow/API readiness:
-  - `MainShellProvider` controls bottom-tab selection.
-  - `HomeProvider` controls location resolution, station loading, and Home station tabs.
-  - `StationSearchProvider` controls map search query, result visibility, and selected station.
-- Added `WashStationRepository` / `MockWashStationRepository` so the static station UI consumes a repository boundary that can later be replaced by API data.
-- Verification passed after the Provider/location/map/Home UI fixes: `dart format`, `flutter analyze`, and `flutter test`.
-- Remaining check: user should run `flutter run -d OJUSLVIVT4BE75JZ` for Android runtime/UI review; do not build APK/IPA.
+- User provided Figma screenshots for missing post-booking screens (checkout, billing method, payment confirmed, booking success, booking info, leave review, feedback thanks) and requested full static UI completion except maps.
+- Implemented all missing screens, wired navigation from station booking flow and My Wash detail checkout, fixed header back button placement (~24px below status bar), and disabled map route with toast via `navigateToStationSearchMap` / `buildDisabledMapRoute`.
+- New routes: `bookingSuccess`, `bookingInfo`, `leaveReview`, `feedbackThanks`.
+- New shared widgets: `AppSuccessIcon`, `AppFlowCloseHeader`, updated `AppScreenHeader` / `buildAppScreenHeader`.
+- Flow 1 (Book a slot): Station detail → Select vehicle popup → Confirm popup → Slot booked successfully → Close returns to station detail; Go to my wash opens My Wash tab.
+- Flow 2 (My Wash checkout): My Wash list → Check out on booked item → Checkout → Billing Method → Payment Confirmed → optional Leave a review (validated) → Feedback thanks → Done returns to My Wash tab.
+- Verification passed: `dart analyze` (no issues), `flutter test` (passed).
+- Remaining: Android device review; re-enable map screen; API integration after static UI approval.
+- Do not build APK/IPA. Do not integrate APIs yet.

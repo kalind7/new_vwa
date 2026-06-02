@@ -21,6 +21,18 @@ class AppColors {
   static const Color gray700 = Color(0xFF344054);
   static const Color gray800 = Color(0xFF182230);
   static const Color gray900 = Color(0xFF101828);
+  static const Color gray950 = Color(0xFF0C111D);
+
+  static const Color blue50 = Color(0xFFEFF6FF);
+  static const Color blue600 = Color(0xFF1570EF);
+  static const Color blue700 = Color(0xFF155DFC);
+
+  static const Color green50 = Color(0xFFF0FDF4);
+  static const Color green100 = Color(0xFFDCFCE7);
+  static const Color green600 = Color(0xFF00A63E);
+  static const Color green700 = Color(0xFF00C950);
+
+  static const Color brand25 = Color(0xFFFFF5F5);
 
   // App-specific Figma tokens.
   static const Color secondary300 = Color(0xFFACB5BB);
@@ -32,6 +44,13 @@ class AppColors {
   static const Color error500 = Color(0xFFF04438);
   static const Color success50 = Color(0xFFECFDF3);
   static const Color success100 = Color(0xFFD1FADF);
+  static const Color success200 = Color(0xFFA6F4C5);
+  static const Color success600 = Color(0xFF079455);
+  static const Color success700 = Color(0xFF027A48);
+
+  static const Color orange50 = Color(0xFFFFF7ED);
+  static const Color orange100 = Color(0xFFFFF2E1);
+  static const Color orange600 = Color(0xFFF54900);
   static const Color inputBorder = Color(0xFFEDF1F3);
   static const Color segmentedControl = Color(0xFFF5F6F9);
   static const Color mutedText = Color(0xFF7D7D91);

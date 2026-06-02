@@ -1,3 +1,7 @@
+// Map screen is disabled during the static UI phase.
+// Navigation to AppRoutes.stationSearchMap shows a toast via map_navigation.dart.
+// This file is kept for future API/map integration.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -8,6 +12,7 @@ import '../../../../config/app_colors.dart';
 import '../../../../config/app_radius.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
+import '../../../../shared/widgets/app_svg_icon.dart';
 import '../../data/main_shell_mock_data.dart';
 import '../../data/wash_station_repository.dart';
 import '../providers/station_search_provider.dart';
@@ -188,12 +193,15 @@ class _SearchBar extends StatelessWidget {
           border: InputBorder.none,
           prefixIcon: IconButton(
             onPressed: onBack,
-            icon: const Icon(Icons.arrow_back_rounded),
+            icon: const AppSvgIcon(
+              AppSvgIconName.arrowLeft,
+              color: AppColors.gray700,
+            ),
             color: AppColors.gray700,
           ),
-          suffixIcon: const Icon(
-            Icons.search_rounded,
-            color: AppColors.gray500,
+          suffixIcon: const Padding(
+            padding: EdgeInsets.all(AppSpacing.md),
+            child: AppSvgIcon(AppSvgIconName.search, color: AppColors.gray500),
           ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
@@ -254,8 +262,8 @@ class _SearchResultsPanel extends StatelessWidget {
                   final station = stations[index];
                   return ListTile(
                     onTap: () => onStationTap(station),
-                    leading: const Icon(
-                      Icons.local_car_wash_outlined,
+                    leading: const AppSvgIcon(
+                      AppSvgIconName.wash,
                       color: AppColors.brand500,
                     ),
                     title: Text(
@@ -292,8 +300,8 @@ class _StationMarker extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Icon(
-        Icons.location_on_rounded,
+      child: AppSvgIcon(
+        AppSvgIconName.location,
         color: isSelected ? AppColors.brand500 : AppColors.indigo600,
         size: isSelected ? 48 : 40,
       ),
@@ -341,8 +349,8 @@ class _SelectedStationSheet extends StatelessWidget {
                       ),
                       child: const Padding(
                         padding: EdgeInsets.all(AppSpacing.md),
-                        child: Icon(
-                          Icons.local_car_wash_outlined,
+                        child: AppSvgIcon(
+                          AppSvgIconName.wash,
                           color: AppColors.brand500,
                         ),
                       ),
@@ -372,8 +380,8 @@ class _SelectedStationSheet extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const Icon(
-                      Icons.chevron_right_rounded,
+                    const AppSvgIcon(
+                      AppSvgIconName.chevronRight,
                       color: AppColors.gray500,
                     ),
                   ],
@@ -384,17 +392,17 @@ class _SelectedStationSheet extends StatelessWidget {
                   runSpacing: AppSpacing.sm,
                   children: [
                     _MapMetaChip(
-                      icon: Icons.star_rounded,
+                      icon: AppSvgIconName.star,
                       label: station.rating,
                       color: const Color(0xFFFEC84B),
                     ),
                     _MapMetaChip(
-                      icon: Icons.route_outlined,
+                      icon: AppSvgIconName.route,
                       label: station.distance,
                       color: AppColors.gray700,
                     ),
                     _MapMetaChip(
-                      icon: Icons.schedule_rounded,
+                      icon: AppSvgIconName.clock,
                       label: station.slots,
                       color: AppColors.brand500,
                     ),
@@ -416,7 +424,7 @@ class _MapMetaChip extends StatelessWidget {
     required this.color,
   });
 
-  final IconData icon;
+  final AppSvgIconName icon;
   final String label;
   final Color color;
 
@@ -435,7 +443,7 @@ class _MapMetaChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 16),
+            AppSvgIcon(icon, color: color, size: 16),
             const SizedBox(width: AppSpacing.xs),
             Text(
               label,

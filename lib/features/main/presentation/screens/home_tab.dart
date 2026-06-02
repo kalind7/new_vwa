@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../app/app_routes.dart';
+import '../../../../shared/utils/map_navigation.dart';
 import '../../../../config/app_assets.dart';
 import '../../../../config/app_colors.dart';
 import '../../../../config/app_radius.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
+import '../../../../shared/widgets/app_confirmation_dialog.dart';
+import '../../../../shared/widgets/app_svg_icon.dart';
 import '../../data/wash_station_repository.dart';
 import '../providers/home_provider.dart';
 import '../widgets/station_card.dart';
@@ -88,9 +91,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                       child: _HomeHeader(
                         currentLocation: provider.currentLocation,
                         isResolvingLocation: provider.isResolvingLocation,
-                        onSearch: () => Navigator.of(
-                          context,
-                        ).pushNamed(AppRoutes.stationSearchMap),
+                        onSearch: () => navigateToStationSearchMap(context),
                       ),
                     ),
                   ),
@@ -157,31 +158,19 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
     HomeProvider provider,
   ) async {
     provider.clearSettingsPrompt();
-    await showDialog<void>(
+    final shouldOpenSettings = await showAppConfirmationDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Location permission needed'),
-          content: const Text(
-            'Please allow location access so nearby washing stations can use '
-            'your current location.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Not now'),
-            ),
-            TextButton(
-              onPressed: () {
-                provider.openAppSettings();
-                Navigator.of(context).pop();
-              },
-              child: const Text('Open settings'),
-            ),
-          ],
-        );
-      },
+      title: 'Location permission needed',
+      message:
+          'Please allow location access so nearby washing stations can use '
+          'your current location.',
+      confirmLabel: 'Open settings',
+      cancelLabel: 'Not now',
     );
+
+    if (shouldOpenSettings) {
+      await provider.openAppSettings();
+    }
   }
 }
 
@@ -220,7 +209,10 @@ class _StationSectionHeader extends StatelessWidget {
           onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Filters open in a later phase.')),
           ),
-          icon: const Icon(Icons.tune_rounded, color: AppColors.gray900),
+          icon: const AppSvgIcon(
+            AppSvgIconName.filter,
+            color: AppColors.gray900,
+          ),
         ),
       ],
     );
@@ -311,7 +303,10 @@ class _HomeHeader extends StatelessWidget {
             ),
             IconButton(
               onPressed: onSearch,
-              icon: const Icon(Icons.search_rounded, color: AppColors.white),
+              icon: const AppSvgIcon(
+                AppSvgIconName.search,
+                color: AppColors.white,
+              ),
             ),
             IconButton(
               onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
@@ -319,8 +314,8 @@ class _HomeHeader extends StatelessWidget {
                   content: Text('Notifications open in a later phase.'),
                 ),
               ),
-              icon: const Icon(
-                Icons.notifications_none_rounded,
+              icon: const AppSvgIcon(
+                AppSvgIconName.notification,
                 color: AppColors.white,
               ),
             ),
@@ -344,8 +339,8 @@ class _HomeHeader extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.location_on_outlined,
+                  const AppSvgIcon(
+                    AppSvgIconName.location,
                     color: AppColors.white,
                     size: 16,
                   ),

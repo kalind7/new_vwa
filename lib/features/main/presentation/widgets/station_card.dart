@@ -5,6 +5,7 @@ import '../../../../config/app_colors.dart';
 import '../../../../config/app_radius.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
+import '../../../../shared/widgets/app_svg_icon.dart';
 import '../../data/main_shell_mock_data.dart';
 
 class StationCard extends StatelessWidget {
@@ -45,8 +46,8 @@ class StationCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Row(
               children: [
-                const Icon(
-                  Icons.location_on_outlined,
+                const AppSvgIcon(
+                  AppSvgIconName.location,
                   size: 18,
                   color: AppColors.gray900,
                 ),
@@ -72,8 +73,8 @@ class StationCard extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.star_rounded,
+                    const AppSvgIcon(
+                      AppSvgIconName.star,
                       color: Color(0xFFFEC84B),
                       size: 20,
                     ),

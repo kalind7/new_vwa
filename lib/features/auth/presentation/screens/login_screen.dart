@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../app/app_routes.dart';
 import '../../../../config/app_colors.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_button.dart';
+import '../../../../shared/widgets/app_confirmation_dialog.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/auth_tab_switcher.dart';
 import '../utils/auth_form_validators.dart';
@@ -53,90 +55,115 @@ class _LoginScreenState extends State<LoginScreen> {
     ).pushNamedAndRemoveUntil(AppRoutes.mainShell, (route) => false);
   }
 
+  Future<void> _confirmExit() async {
+    final shouldExit = await showAppConfirmationDialog(
+      context: context,
+      title: 'Exit app?',
+      message: 'Do you want to exit the app?',
+      confirmLabel: 'Yes',
+      cancelLabel: 'No',
+    );
+
+    if (shouldExit && context.mounted) {
+      SystemNavigator.pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return AuthFlowLayout(
-      title: 'Sign in to your Account',
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AuthTabSwitcher(
-              selectedIndex: 0,
-              onChanged: (index) {
-                if (index == 1) {
-                  Navigator.of(context).pushReplacementNamed(AppRoutes.signUp);
-                }
-              },
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-            AuthFormSection(
-              children: [
-                AppTextField(
-                  controller: _emailController,
-                  label: 'Email',
-                  hintText: 'Enter your email',
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  validator: AuthFormValidators.email,
-                ),
-                AppTextField(
-                  controller: _passwordController,
-                  label: 'Password',
-                  hintText: 'Enter password',
-                  obscureText: _obscurePassword,
-                  textInputAction: TextInputAction.done,
-                  validator: AuthFormValidators.password,
-                  onFieldSubmitted: (_) => _submit(),
-                  suffixIcon: IconButton(
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          _confirmExit();
+        }
+      },
+      child: AuthFlowLayout(
+        title: 'Sign in to your Account',
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AuthTabSwitcher(
+                selectedIndex: 0,
+                onChanged: (index) {
+                  if (index == 1) {
+                    Navigator.of(
+                      context,
+                    ).pushReplacementNamed(AppRoutes.signUp);
+                  }
+                },
+              ),
+              const SizedBox(height: AppSpacing.xxl),
+              AuthFormSection(
+                children: [
+                  AppTextField(
+                    controller: _emailController,
+                    label: 'Email',
+                    hintText: 'Enter your email',
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    validator: AuthFormValidators.email,
+                  ),
+                  AppTextField(
+                    controller: _passwordController,
+                    label: 'Password',
+                    hintText: 'Enter password',
+                    obscureText: _obscurePassword,
+                    textInputAction: TextInputAction.done,
+                    validator: AuthFormValidators.password,
+                    onFieldSubmitted: (_) => _submit(),
+                    suffixIcon: IconButton(
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                Checkbox(
-                  value: _rememberMe,
-                  onChanged: (value) =>
-                      setState(() => _rememberMe = value ?? false),
-                  visualDensity: VisualDensity.compact,
-                ),
-                Text(
-                  'Remember me',
-                  style: AppTextStyles.textXsMedium.copyWith(
-                    color: AppColors.secondary400,
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Checkbox(
+                    value: _rememberMe,
+                    onChanged: (value) =>
+                        setState(() => _rememberMe = value ?? false),
+                    visualDensity: VisualDensity.compact,
                   ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () =>
-                      Navigator.of(context).pushNamed(AppRoutes.forgotPassword),
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    'Forgot Password ?',
+                  Text(
+                    'Remember me',
                     style: AppTextStyles.textXsMedium.copyWith(
-                      color: AppColors.indigo600,
+                      color: AppColors.secondary400,
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-            AppButton(label: 'Login', onPressed: _submit),
-          ],
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => Navigator.of(
+                      context,
+                    ).pushNamed(AppRoutes.forgotPassword),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      'Forgot Password ?',
+                      style: AppTextStyles.textXsMedium.copyWith(
+                        color: AppColors.indigo600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xxl),
+              AppButton(label: 'Login', onPressed: _submit),
+            ],
+          ),
         ),
       ),
     );

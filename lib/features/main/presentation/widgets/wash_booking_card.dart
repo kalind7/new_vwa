@@ -12,124 +12,115 @@ class WashBookingCard extends StatelessWidget {
     super.key,
     required this.booking,
     required this.onCancel,
+    this.onCheckOut,
+    this.onTap,
   });
 
   final WashBookingMock booking;
   final VoidCallback onCancel;
+  final VoidCallback? onCheckOut;
+  final VoidCallback? onTap;
+
+  bool get _isBooked => booking.canCancel && booking.status != 'Completed';
 
   @override
   Widget build(BuildContext context) {
     final isComplete = booking.status == 'Completed';
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(color: AppColors.gray200),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F101828),
-            blurRadius: 14,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: AppColors.gray100,
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                  ),
-                  child: Icon(
-                    Icons.water_drop_outlined,
-                    color: isComplete
-                        ? AppColors.success100
-                        : AppColors.indigo600,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        booking.station,
-                        style: AppTextStyles.textMdSemiBold.copyWith(
-                          color: AppColors.gray900,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        booking.service,
-                        style: AppTextStyles.textSmRegular.copyWith(
-                          color: AppColors.gray600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                _StatusPill(label: booking.status, isComplete: isComplete),
-              ],
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.gray50,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.gray200),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x140D121C),
+              blurRadius: 8,
+              offset: Offset(0, 4),
             ),
-            const SizedBox(height: AppSpacing.lg),
-            _BookingInfoRow(
-              icon: Icons.calendar_today_outlined,
-              text: booking.date,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            _BookingInfoRow(
-              icon: Icons.access_time_rounded,
-              text: booking.time,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            _BookingInfoRow(
-              icon: Icons.two_wheeler_rounded,
-              text: booking.vehicle,
-            ),
-            if (booking.canCancel) ...[
-              const SizedBox(height: AppSpacing.lg),
-              AppButton(
-                label: 'Cancel booking',
-                variant: AppButtonVariant.secondary,
-                onPressed: onCancel,
-              ),
-            ] else ...[
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                'Bike wash has been completed',
-                style: AppTextStyles.textSmMedium.copyWith(
-                  color: AppColors.success100,
-                ),
-              ),
-            ],
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Station: ${booking.station}',
+                      style: AppTextStyles.textMdMedium.copyWith(
+                        color: AppColors.gray900,
+                      ),
+                    ),
+                  ),
+                  _StatusBadge(status: booking.status),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Location: ${booking.location}',
+                style: AppTextStyles.textSmRegular.copyWith(
+                  color: AppColors.gray600,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Vehicle number: ${booking.vehicle}',
+                style: AppTextStyles.textSmRegular.copyWith(
+                  color: AppColors.gray600,
+                ),
+              ),
+              if (_isBooked) ...[
+                const SizedBox(height: AppSpacing.lg),
+                AppButton(
+                  label: 'Check out',
+                  onPressed: onCheckOut,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppButton(
+                  label: 'Cancel booking',
+                  variant: AppButtonVariant.secondary,
+                  onPressed: onCancel,
+                ),
+              ] else if (isComplete) ...[
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  'Bike wash has been completed',
+                  style: AppTextStyles.textSmMedium.copyWith(
+                    color: AppColors.success600,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.label, required this.isComplete});
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.status});
 
-  final String label;
-  final bool isComplete;
+  final String status;
 
   @override
   Widget build(BuildContext context) {
+    final isCompleted = status == 'Completed';
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: isComplete ? AppColors.success50 : AppColors.gray100,
-        borderRadius: BorderRadius.circular(AppRadius.pill),
+        color: isCompleted ? AppColors.success100 : AppColors.orange50,
+        border: Border.all(
+          color: isCompleted ? AppColors.success200 : AppColors.orange100,
+        ),
+        borderRadius: BorderRadius.circular(6.8),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -137,33 +128,12 @@ class _StatusPill extends StatelessWidget {
           vertical: AppSpacing.xs,
         ),
         child: Text(
-          label,
+          status,
           style: AppTextStyles.textXsMedium.copyWith(
-            color: isComplete ? AppColors.gray700 : AppColors.indigo600,
+            color: isCompleted ? AppColors.success600 : AppColors.orange600,
           ),
         ),
       ),
-    );
-  }
-}
-
-class _BookingInfoRow extends StatelessWidget {
-  const _BookingInfoRow({required this.icon, required this.text});
-
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, color: AppColors.gray500, size: 18),
-        const SizedBox(width: AppSpacing.sm),
-        Text(
-          text,
-          style: AppTextStyles.textSmMedium.copyWith(color: AppColors.gray700),
-        ),
-      ],
     );
   }
 }

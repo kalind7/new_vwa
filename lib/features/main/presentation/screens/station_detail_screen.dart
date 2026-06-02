@@ -1,111 +1,135 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/app_routes.dart';
 import '../../../../config/app_assets.dart';
+import '../../../../config/app_breakpoints.dart';
 import '../../../../config/app_colors.dart';
 import '../../../../config/app_radius.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_button.dart';
+import '../../../../shared/widgets/app_flow_modal.dart';
+import '../../../../shared/widgets/app_svg_icon.dart';
+import '../../data/booking_flow_mock_data.dart';
 import '../../data/main_shell_mock_data.dart';
+import '../widgets/select_vehicle_bottom_sheet.dart';
 
 class StationDetailScreen extends StatelessWidget {
   const StationDetailScreen({super.key, required this.station});
 
   final WashStationMock station;
 
+  Future<void> _handleBookSlot(BuildContext context) async {
+    final vehicle = await showSelectVehicleBottomSheet(context: context);
+    if (vehicle == null || !context.mounted) {
+      return;
+    }
+
+    final shouldBook = await showAppFlowModal(
+      context: context,
+      messageLines: const ['Are you sure you want ', 'book a slot?'],
+    );
+
+    if (!shouldBook || !context.mounted) {
+      return;
+    }
+
+    await Navigator.of(context).pushNamed(
+      AppRoutes.bookingSuccess,
+      arguments: bookingDraftForStation(station: station, vehicle: vehicle),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 280,
-            pinned: true,
-            leading: IconButton(
-              onPressed: () => Navigator.of(context).maybePop(),
-              icon: const Icon(Icons.arrow_back_rounded),
-              style: IconButton.styleFrom(
-                backgroundColor: AppColors.white,
-                foregroundColor: AppColors.gray900,
-              ),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Image.asset(
-                AppAssets.stationBikeWash,
-                fit: BoxFit.cover,
-              ),
-            ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: AppBreakpoints.maxMobileContentWidth,
           ),
-          SliverPadding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            sliver: SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          child: Column(
+            children: [
+              Expanded(
+                child: CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: _StationHero(station: station),
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg,
+                        AppSpacing.xxl,
+                        AppSpacing.lg,
+                        AppSpacing.xxxl,
+                      ),
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate([
+                          _StationSummaryCard(station: station),
+                          const SizedBox(height: AppSpacing.lg),
+                          _InfoSectionCard(
+                            title: 'Services Offered',
+                            items: stationServices,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          _InfoSectionCard(
+                            title: 'Operating hour',
+                            items: stationServices,
+                          ),
+                        ]),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _StationActionBar(
+                onBookSlot: () => _handleBookSlot(context),
+                onGetDirection: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Opening directions.')),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StationHero extends StatelessWidget {
+  const _StationHero({required this.station});
+
+  final WashStationMock station;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 280,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(AppAssets.stationBikeWash, fit: BoxFit.cover),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.xxl,
+                AppSpacing.lg,
+                AppSpacing.lg,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    station.name,
-                    style: AppTextStyles.titleLarge.copyWith(
-                      color: AppColors.gray900,
-                    ),
+                  _FloatingIconButton(
+                    icon: AppSvgIconName.arrowLeft,
+                    onPressed: () => Navigator.of(context).maybePop(),
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on_outlined,
-                        size: 18,
-                        color: AppColors.gray700,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Text(
-                        station.location,
-                        style: AppTextStyles.textSmRegular.copyWith(
-                          color: AppColors.gray700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    children: [
-                      _DetailChip(
-                        icon: Icons.star_rounded,
-                        label: station.rating,
-                        color: const Color(0xFFFEC84B),
-                      ),
-                      _DetailChip(
-                        icon: Icons.route_outlined,
-                        label: station.distance,
-                        color: AppColors.gray700,
-                      ),
-                      _DetailChip(
-                        icon: Icons.payments_outlined,
-                        label: station.price,
-                        color: AppColors.gray700,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xxxl),
-                  Text(
-                    'Services Offered',
-                    style: AppTextStyles.textXlSemiBold.copyWith(
-                      color: AppColors.gray900,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  const _ServiceTile(title: 'Exterior Wash', price: 'Nrs 100'),
-                  const SizedBox(height: AppSpacing.md),
-                  const _ServiceTile(title: 'Full Bike Wash', price: 'Nrs 150'),
-                  const SizedBox(height: AppSpacing.xxxl),
-                  AppButton(
-                    label: 'Book a slot',
-                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Booking flow starts in the next phase.'),
-                      ),
-                    ),
+                  _FloatingIconButton(
+                    icon: AppSvgIconName.bookmark,
+                    onPressed: () {},
                   ),
                 ],
               ),
@@ -117,66 +141,312 @@ class StationDetailScreen extends StatelessWidget {
   }
 }
 
-class _DetailChip extends StatelessWidget {
-  const _DetailChip({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
+class _FloatingIconButton extends StatelessWidget {
+  const _FloatingIconButton({required this.icon, required this.onPressed});
 
-  final IconData icon;
-  final String label;
-  final Color color;
+  final AppSvgIconName icon;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Chip(
-      backgroundColor: AppColors.gray50,
-      side: const BorderSide(color: AppColors.gray200),
-      avatar: Icon(icon, color: color, size: 18),
-      label: Text(label),
-      labelStyle: AppTextStyles.textXsMedium.copyWith(color: AppColors.gray900),
+    return Material(
+      color: AppColors.gray800,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onPressed,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Center(
+            child: AppSvgIcon(icon, color: AppColors.white, size: 20),
+          ),
+        ),
+      ),
     );
   }
 }
 
-class _ServiceTile extends StatelessWidget {
-  const _ServiceTile({required this.title, required this.price});
+class _StationSummaryCard extends StatelessWidget {
+  const _StationSummaryCard({required this.station});
 
-  final String title;
-  final String price;
+  final WashStationMock station;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
+        color: AppColors.gray50,
         border: Border.all(color: AppColors.gray200),
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x140D121C),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(
-              Icons.local_car_wash_outlined,
-              color: AppColors.brand500,
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Text(
-                title,
-                style: AppTextStyles.textMdSemiBold.copyWith(
-                  color: AppColors.gray900,
-                ),
+            Text(
+              station.name,
+              style: AppTextStyles.displayXsSemiBold.copyWith(
+                color: AppColors.gray900,
               ),
             ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                const AppSvgIcon(
+                  AppSvgIconName.location,
+                  size: 16,
+                  color: AppColors.gray600,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(
+                    '${station.location} • ${station.distance}',
+                    style: AppTextStyles.textSmRegular.copyWith(
+                      color: AppColors.gray600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                const AppSvgIcon(
+                  AppSvgIconName.star,
+                  size: 16,
+                  color: Color(0xFFFEC84B),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  station.rating,
+                  style: AppTextStyles.textSmRegular.copyWith(
+                    color: AppColors.gray900,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pushNamed(
+                    AppProfileRoutes.reviews,
+                  ),
+                  child: Text(
+                    '(${station.reviewCount} reviews)',
+                    style: AppTextStyles.textSmRegular.copyWith(
+                      color: AppColors.blue600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              children: [
+                Expanded(
+                  child: _MetricTile(
+                    backgroundColor: AppColors.blue50,
+                    value: station.price,
+                    label: 'Price',
+                    valueColor: AppColors.blue700,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: _MetricTile(
+                    backgroundColor: AppColors.green50,
+                    value: '${station.availableSlotsCount}',
+                    label: 'Available Slots',
+                    valueColor: AppColors.green600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MetricTile extends StatelessWidget {
+  const _MetricTile({
+    required this.backgroundColor,
+    required this.value,
+    required this.label,
+    required this.valueColor,
+  });
+
+  final Color backgroundColor;
+  final String value;
+  final String label;
+  final Color valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(
-              price,
-              style: AppTextStyles.textSmMedium.copyWith(
-                color: AppColors.gray700,
+              value,
+              style: AppTextStyles.displayXsSemiBold.copyWith(
+                color: valueColor,
+                fontSize: 20,
+                height: 1.2,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              label,
+              style: AppTextStyles.textSmRegular.copyWith(
+                color: AppColors.gray600,
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoSectionCard extends StatelessWidget {
+  const _InfoSectionCard({required this.title, required this.items});
+
+  final String title;
+  final List<String> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.gray50,
+        border: Border.all(color: AppColors.gray200),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x140D121C),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: AppTextStyles.textXlSemiBold.copyWith(
+                color: AppColors.gray900,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            for (final item in items) ...[
+              _ServiceRow(label: item),
+              if (item != items.last) const SizedBox(height: AppSpacing.md),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ServiceRow extends StatelessWidget {
+  const _ServiceRow({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppColors.green100,
+            borderRadius: BorderRadius.circular(6.8),
+          ),
+          child: const SizedBox(
+            width: 36,
+            height: 36,
+            child: Center(
+              child: AppSvgIcon(
+                AppSvgIconName.wash,
+                color: AppColors.green700,
+                size: 18,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Text(
+            label,
+            style: AppTextStyles.textMdRegular.copyWith(
+              color: AppColors.gray700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StationActionBar extends StatelessWidget {
+  const _StationActionBar({
+    required this.onBookSlot,
+    required this.onGetDirection,
+  });
+
+  final VoidCallback onBookSlot;
+  final VoidCallback onGetDirection;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: AppColors.white,
+        border: Border(top: BorderSide(color: AppColors.gray200, width: 0.5)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  label: 'Book a slot',
+                  variant: AppButtonVariant.secondary,
+                  onPressed: onBookSlot,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: AppButton(
+                  label: 'Get Direction',
+                  onPressed: onGetDirection,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

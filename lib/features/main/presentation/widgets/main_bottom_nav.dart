@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../config/app_colors.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
+import '../../../../shared/widgets/app_svg_icon.dart';
 
 class MainBottomNav extends StatelessWidget {
   const MainBottomNav({
@@ -15,21 +16,9 @@ class MainBottomNav extends StatelessWidget {
   final ValueChanged<int> onChanged;
 
   static const _items = [
-    _MainNavItem(
-      label: 'Home',
-      activeIcon: Icons.home_rounded,
-      inactiveIcon: Icons.home_outlined,
-    ),
-    _MainNavItem(
-      label: 'My wash',
-      activeIcon: Icons.water_drop_rounded,
-      inactiveIcon: Icons.water_drop_outlined,
-    ),
-    _MainNavItem(
-      label: 'Profile',
-      activeIcon: Icons.account_circle_rounded,
-      inactiveIcon: Icons.account_circle_outlined,
-    ),
+    _MainNavItem(label: 'Home', icon: AppSvgIconName.home),
+    _MainNavItem(label: 'My wash', icon: AppSvgIconName.wash),
+    _MainNavItem(label: 'Profile', icon: AppSvgIconName.profile),
   ];
 
   @override
@@ -93,7 +82,7 @@ class _MainBottomNavButton extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(isSelected ? item.activeIcon : item.inactiveIcon, size: 24),
+            AppSvgIcon(item.icon, color: color),
             const SizedBox(height: AppSpacing.xs),
             Text(
               item.label,
@@ -117,13 +106,8 @@ class _MainBottomNavButton extends StatelessWidget {
 }
 
 class _MainNavItem {
-  const _MainNavItem({
-    required this.label,
-    required this.activeIcon,
-    required this.inactiveIcon,
-  });
+  const _MainNavItem({required this.label, required this.icon});
 
   final String label;
-  final IconData activeIcon;
-  final IconData inactiveIcon;
+  final AppSvgIconName icon;
 }
