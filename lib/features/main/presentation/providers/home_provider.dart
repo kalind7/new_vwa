@@ -19,6 +19,7 @@ class HomeProvider extends ChangeNotifier {
   bool _shouldShowSettingsPrompt = false;
   bool _isLoadingStations = true;
   bool _isDisposed = false;
+  String? _stationsErrorMessage;
   HomeStationTab _selectedStationTab = HomeStationTab.lessDistance;
   List<WashStationMock> _stations = const [];
   double? _latitude;
@@ -28,6 +29,7 @@ class HomeProvider extends ChangeNotifier {
   bool get isResolvingLocation => _isResolvingLocation;
   bool get shouldShowSettingsPrompt => _shouldShowSettingsPrompt;
   bool get isLoadingStations => _isLoadingStations;
+  String? get stationsErrorMessage => _stationsErrorMessage;
   HomeStationTab get selectedStationTab => _selectedStationTab;
   List<WashStationMock> get visibleStations => _stations;
   double? get latitude => _latitude;
@@ -81,19 +83,36 @@ class HomeProvider extends ChangeNotifier {
 
   Future<void> loadStations() async {
     _isLoadingStations = true;
+    _stationsErrorMessage = null;
     _notifyListeners();
 
-    try {
-      _stations = await _stationRepository.fetchStations(
-        source: _sourceForTab(_selectedStationTab),
-        latitude: _latitude,
-        longitude: _longitude,
-        locationLabel: _currentLocation,
-      );
-    } finally {
-      _isLoadingStations = false;
-      _notifyListeners();
+    final result = await _stationRepository.fetchStations(
+      source: _sourceForTab(_selectedStationTab),
+      latitude: _latitude,
+      longitude: _longitude,
+      locationLabel: _currentLocation,
+    );
+
+    result.fold(
+      (failure) {
+        _stations = const [];
+        _stationsErrorMessage = failure.message;
+      },
+      (stations) {
+        _stations = stations;
+      },
+    );
+
+    _isLoadingStations = false;
+    _notifyListeners();
+  }
+
+  void clearStationsErrorMessage() {
+    if (_stationsErrorMessage == null) {
+      return;
     }
+    _stationsErrorMessage = null;
+    _notifyListeners();
   }
 
   Future<void> resolveCurrentLocation({bool retryAfterDeny = false}) async {

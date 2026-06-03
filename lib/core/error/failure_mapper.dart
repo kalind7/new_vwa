@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
 
+import 'api_response_message.dart';
 import 'failure.dart';
 
 Failure mapDioException(DioException error) {
   final statusCode = error.response?.statusCode;
   final responseData = error.response?.data;
+  final apiMessage = formatApiErrorForUser(responseData);
 
   if (error.type == DioExceptionType.connectionError ||
       error.type == DioExceptionType.connectionTimeout) {
@@ -17,24 +19,37 @@ Failure mapDioException(DioException error) {
   }
 
   if (statusCode == 401) {
-    return const UnauthorizedFailure();
+    return UnauthorizedFailure(
+      apiMessage ?? const UnauthorizedFailure().message,
+    );
+  }
+
+  if (statusCode == 403) {
+    return UnknownFailure(
+      apiMessage ?? 'You do not have permission to perform this action.',
+    );
+  }
+
+  if (statusCode == 404) {
+    return UnknownFailure(
+      apiMessage ?? 'The requested resource was not found.',
+    );
   }
 
   if (statusCode == 422) {
     return ValidationFailure(
-      _messageFromResponse(responseData) ??
-          'Please check your input and try again.',
+      apiMessage ?? 'Please check your input and try again.',
+      statusCode: 422,
     );
   }
 
   if (statusCode != null && statusCode >= 500) {
     return ServerFailure(
-      'Something went wrong. Please try again later.',
+      apiMessage ?? 'Something went wrong. Please try again later.',
       statusCode: statusCode,
     );
   }
 
-  final apiMessage = _messageFromResponse(responseData);
   if (apiMessage != null && apiMessage.isNotEmpty) {
     return UnknownFailure(apiMessage);
   }
@@ -44,36 +59,48 @@ Failure mapDioException(DioException error) {
   );
 }
 
-String? _messageFromResponse(dynamic data) {
-  if (data is! Map) {
-    return null;
+/// Maps a non-2xx HTTP response when Dio [validateStatus] accepts the body.
+Failure mapHttpErrorResponse({
+  required int statusCode,
+  dynamic responseData,
+}) {
+  final apiMessage = formatApiErrorForUser(responseData);
+
+  if (statusCode == 401) {
+    return UnauthorizedFailure(
+      apiMessage ?? const UnauthorizedFailure().message,
+    );
   }
 
-  final map = Map<String, dynamic>.from(data);
-  final message = map['message'];
-  if (message is String && message.isNotEmpty) {
-    return message;
+  if (statusCode == 403) {
+    return UnknownFailure(
+      apiMessage ?? 'You do not have permission to perform this action.',
+    );
   }
 
-  final error = map['error'];
-  if (error is String && error.isNotEmpty) {
-    return error;
+  if (statusCode == 404) {
+    return UnknownFailure(
+      apiMessage ?? 'The requested resource was not found.',
+    );
   }
 
-  final errors = map['errors'];
-  if (errors is Map) {
-    for (final value in errors.values) {
-      if (value is List && value.isNotEmpty) {
-        final first = value.first;
-        if (first is String && first.isNotEmpty) {
-          return first;
-        }
-      }
-      if (value is String && value.isNotEmpty) {
-        return value;
-      }
-    }
+  if (statusCode == 422) {
+    return ValidationFailure(
+      apiMessage ?? 'Please check your input and try again.',
+      statusCode: 422,
+    );
   }
 
-  return null;
+  if (statusCode >= 500) {
+    return ServerFailure(
+      apiMessage ?? 'Something went wrong. Please try again later.',
+      statusCode: statusCode,
+    );
+  }
+
+  if (apiMessage != null && apiMessage.isNotEmpty) {
+    return UnknownFailure(apiMessage);
+  }
+
+  return UnknownFailure('Request failed with status $statusCode.');
 }

@@ -85,16 +85,21 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
     }
 
     setState(() => _isLoadingDetail = true);
-    final updated = await context
+    final result = await context
         .read<WashStationRepository>()
         .fetchStationDetail(_station.id);
     if (!mounted) {
       return;
     }
 
-    if (updated != null) {
-      _station = updated;
-    }
+    result.fold(
+      (failure) => AppToast.showError(context, failure.message),
+      (updated) {
+        if (updated != null) {
+          _station = updated;
+        }
+      },
+    );
     setState(() => _isLoadingDetail = false);
     await _refreshSavedState();
   }

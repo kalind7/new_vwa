@@ -11,12 +11,14 @@ class StationSearchProvider extends ChangeNotifier {
   final WashStationRepository _stationRepository;
 
   List<WashStationMock> _stations = const [];
+  String? _loadErrorMessage;
   String _query = '';
   bool _showSearchResults = false;
   bool _isDisposed = false;
   WashStationMock? _selectedStation;
 
   List<WashStationMock> get stations => _stations;
+  String? get loadErrorMessage => _loadErrorMessage;
   String get query => _query;
   bool get showSearchResults => _showSearchResults;
   WashStationMock? get selectedStation => _selectedStation;
@@ -41,10 +43,28 @@ class StationSearchProvider extends ChangeNotifier {
   }
 
   Future<void> loadStations() async {
-    _stations = await _stationRepository.fetchStations(
+    final result = await _stationRepository.fetchStations(
       source: StationListSource.all,
       locationLabel: null,
     );
+    result.fold(
+      (failure) {
+        _stations = const [];
+        _loadErrorMessage = failure.message;
+      },
+      (stations) {
+        _stations = stations;
+        _loadErrorMessage = null;
+      },
+    );
+    _notifyListeners();
+  }
+
+  void clearLoadErrorMessage() {
+    if (_loadErrorMessage == null) {
+      return;
+    }
+    _loadErrorMessage = null;
     _notifyListeners();
   }
 

@@ -1,5 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:fpdart/fpdart.dart';
 
+import '../../../core/error/failure.dart';
+import '../../../core/error/failure_mapper.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_paths.dart';
 import 'main_shell_mock_data.dart';
@@ -16,7 +19,7 @@ class ApiWashStationRepository implements WashStationRepository {
   );
 
   @override
-  Future<List<WashStationMock>> fetchStations({
+  Future<Either<Failure, List<WashStationMock>>> fetchStations({
     required StationListSource source,
     double? latitude,
     double? longitude,
@@ -35,28 +38,30 @@ class ApiWashStationRepository implements WashStationRepository {
           locationLabel: locationLabel,
         ),
       };
-    } catch (_) {
-      return const [];
+    } on DioException catch (error) {
+      return left(mapDioException(error));
     }
   }
 
-  Future<List<WashStationMock>> _fetchAll() async {
-    final data = await _getJson(ApiPaths.serviceStations);
-    if (data == null) {
-      return const [];
-    }
-    return ServiceStationMapper.fromListResponse(data);
+  Future<Either<Failure, List<WashStationMock>>> _fetchAll() async {
+    final result = await _getJson(ApiPaths.serviceStations);
+    return result.map((data) {
+      if (data == null) {
+        return const <WashStationMock>[];
+      }
+      return ServiceStationMapper.fromListResponse(data);
+    });
   }
 
-  Future<List<WashStationMock>> _fetchNearest({
+  Future<Either<Failure, List<WashStationMock>>> _fetchNearest({
     double? latitude,
     double? longitude,
   }) async {
     if (latitude == null || longitude == null) {
-      return const [];
+      return right(const []);
     }
 
-    final data = await _getJson(
+    final result = await _getJson(
       ApiPaths.nearestStations,
       queryParameters: {
         'latitude': latitude,
@@ -64,19 +69,21 @@ class ApiWashStationRepository implements WashStationRepository {
         'radius': 10,
       },
     );
-    if (data == null) {
-      return const [];
-    }
-    return ServiceStationMapper.fromNearestResponse(data);
+    return result.map((data) {
+      if (data == null) {
+        return const <WashStationMock>[];
+      }
+      return ServiceStationMapper.fromNearestResponse(data);
+    });
   }
 
-  Future<List<WashStationMock>> _fetchSuggestNearest({
+  Future<Either<Failure, List<WashStationMock>>> _fetchSuggestNearest({
     double? latitude,
     double? longitude,
     String? locationLabel,
   }) async {
     if (latitude == null || longitude == null) {
-      return const [];
+      return right(const []);
     }
 
     await _syncUserLocation(
@@ -85,11 +92,13 @@ class ApiWashStationRepository implements WashStationRepository {
       address: locationLabel,
     );
 
-    final data = await _getJson(ApiPaths.suggestStationNearest);
-    if (data == null) {
-      return const [];
-    }
-    return ServiceStationMapper.fromSuggestResponse(data);
+    final result = await _getJson(ApiPaths.suggestStationNearest);
+    return result.map((data) {
+      if (data == null) {
+        return const <WashStationMock>[];
+      }
+      return ServiceStationMapper.fromSuggestResponse(data);
+    });
   }
 
   Future<void> _syncUserLocation({
@@ -113,35 +122,54 @@ class ApiWashStationRepository implements WashStationRepository {
   }
 
   @override
-  Future<WashStationMock?> fetchStationDetail(String stationId) async {
+  Future<Either<Failure, WashStationMock?>> fetchStationDetail(
+    String stationId,
+  ) async {
     if (stationId.isEmpty) {
-      return null;
+      return right(null);
     }
 
     try {
       final response = await _apiClient.dio.get<Map<String, dynamic>>(
         ApiPaths.serviceStationDetails(stationId),
-        options: _softErrorOptions,
       );
-      final data = response.data;
-      if (data == null || response.statusCode != 200) {
-        return null;
+      final statusCode = response.statusCode;
+      if (statusCode != null && statusCode != 200) {
+        return left(
+          mapHttpErrorResponse(
+            statusCode: statusCode,
+            responseData: response.data,
+          ),
+        );
       }
-      return ServiceStationMapper.fromDetailResponse(data);
-    } catch (_) {
-      return null;
+
+      final data = response.data;
+      if (data == null) {
+        return right(null);
+      }
+      return right(ServiceStationMapper.fromDetailResponse(data));
+    } on DioException catch (error) {
+      return left(mapDioException(error));
     }
   }
 
-  Future<Map<String, dynamic>?> _getJson(
+  Future<Either<Failure, Map<String, dynamic>?>> _getJson(
     String path, {
     Map<String, dynamic>? queryParameters,
   }) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       path,
       queryParameters: queryParameters,
-      options: _softErrorOptions,
     );
-    return response.data;
+    final statusCode = response.statusCode;
+    if (statusCode != null && statusCode != 200) {
+      return left(
+        mapHttpErrorResponse(
+          statusCode: statusCode,
+          responseData: response.data,
+        ),
+      );
+    }
+    return right(response.data);
   }
 }

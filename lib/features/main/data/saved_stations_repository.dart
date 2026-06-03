@@ -33,10 +33,12 @@ class SavedStationsRepository {
 
     final stations = <WashStationMock>[];
     for (final id in ids) {
-      final detail = await _stationRepository.fetchStationDetail(id);
-      if (detail != null) {
-        stations.add(detail);
-      }
+      final detailResult = await _stationRepository.fetchStationDetail(id);
+      detailResult.fold((_) {}, (detail) {
+        if (detail != null) {
+          stations.add(detail);
+        }
+      });
     }
 
     return right(stations);

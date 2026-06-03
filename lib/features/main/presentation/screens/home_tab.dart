@@ -172,6 +172,17 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
             });
           }
 
+          final stationsError = provider.stationsErrorMessage;
+          if (stationsError != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) {
+                return;
+              }
+              AppToast.showError(context, stationsError);
+              provider.clearStationsErrorMessage();
+            });
+          }
+
           return Stack(
             fit: StackFit.expand,
             children: [
