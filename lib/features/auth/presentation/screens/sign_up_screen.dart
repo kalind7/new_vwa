@@ -83,7 +83,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     result.fold(
       (failure) {
         setState(() => _isSubmitting = false);
-        AppToast.showError(context, failure.message);
+        AppToast.showFailure(context, failure);
       },
       (_) {
         setState(() => _isSubmitting = false);

@@ -9,6 +9,7 @@ import '../../../../config/app_radius.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_svg_icon.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../data/main_shell_mock_data.dart';
 import '../../data/wash_station_repository.dart';
 import '../providers/station_search_provider.dart';
@@ -69,6 +70,17 @@ class _StationSearchMapScreenState extends State<StationSearchMapScreen> {
       value: provider,
       child: Consumer<StationSearchProvider>(
         builder: (context, provider, _) {
+          final loadError = provider.loadErrorMessage;
+          if (loadError != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!context.mounted) {
+                return;
+              }
+              AppToast.showError(context, loadError);
+              provider.clearLoadErrorMessage();
+            });
+          }
+
           final stations = provider.stations.isNotEmpty
               ? provider.stations
               : nearbyStations;
@@ -77,7 +89,7 @@ class _StationSearchMapScreenState extends State<StationSearchMapScreen> {
             backgroundColor: AppColors.white,
             body: Stack(
               children: [
-                Positioned.fill(
+                Positioned(
                   child: FlutterMap(
                     mapController: _mapController,
                     options: MapOptions(
@@ -114,6 +126,7 @@ class _StationSearchMapScreenState extends State<StationSearchMapScreen> {
                     ],
                   ),
                 ),
+
                 SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.lg),
@@ -138,6 +151,7 @@ class _StationSearchMapScreenState extends State<StationSearchMapScreen> {
                     ),
                   ),
                 ),
+                
                 if (provider.selectedStation != null)
                   Align(
                     alignment: Alignment.bottomCenter,

@@ -16,7 +16,7 @@ final class ValidationFailure extends Failure {
 }
 
 final class UnauthorizedFailure extends Failure {
-  const UnauthorizedFailure([super.message = 'Invalid email or password.']);
+  const UnauthorizedFailure([super.message = 'Unauthorized.']);
 }
 
 final class ServerFailure extends Failure {

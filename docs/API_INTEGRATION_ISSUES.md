@@ -44,6 +44,24 @@ Checked: 2026-06-03
 | Admin | `admin/check-role`, `admin/bookings`, `admin/bookings/{id}/status`, `admin/queue` |
 | OTP / reset password | Deferred by product (SMTP) |
 
+## API error responses (use in app toasts)
+
+Laravel-style JSON on failed requests (401, 403, 404, 422, 5xx). The app reads these via `messageFromApiResponse` / `mapDioException` — do not replace with generic login copy.
+
+| Status | Typical `message` | App failure type |
+|--------|-------------------|------------------|
+| 401 | `Unauthenticated.` (no token) or `These credentials do not match our records.` (login) | `UnauthorizedFailure` |
+| 403 | Permission denied text from API | `UnknownFailure` |
+| 404 | e.g. `Service station not found.` | `UnknownFailure` |
+| 422 | `message` may be generic (`Validation error`); **prefer** `errors: { field: ["…"] }` joined for toast | `ValidationFailure` (API field rules only) |
+
+When `errors` has multiple fields, the app shows one compact toast: `msg1 · msg2` (not the generic headline alone).
+| 500+ | Server message when present | `ServerFailure` |
+
+Client-side form checks (empty name, missing vehicle plate) stay as local `ValidationFailure` strings in repositories — not mixed with HTTP 422 handling.
+
+Success responses use `success: true` and `data` (200/201); errors are not shown as toasts on success.
+
 ## Data model notes
 
 - API models live in `lib/features/main/data/models/service_station_api_models.dart` (from live JSON).

@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:vwa/core/error/failure.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vwa/features/main/data/main_shell_mock_data.dart';
 import 'package:vwa/features/main/data/saved_station_ids_storage.dart';
@@ -11,18 +13,20 @@ class _FakeStationRepository implements WashStationRepository {
   final Map<String, WashStationMock> _details;
 
   @override
-  Future<WashStationMock?> fetchStationDetail(String stationId) async {
-    return _details[stationId];
+  Future<Either<Failure, WashStationMock?>> fetchStationDetail(
+    String stationId,
+  ) async {
+    return right(_details[stationId]);
   }
 
   @override
-  Future<List<WashStationMock>> fetchStations({
+  Future<Either<Failure, List<WashStationMock>>> fetchStations({
     required StationListSource source,
     double? latitude,
     double? longitude,
     String? locationLabel,
   }) async {
-    return _details.values.toList();
+    return right(_details.values.toList());
   }
 }
 
