@@ -77,7 +77,7 @@ class _StationSearchMapScreenState extends State<StationSearchMapScreen> {
             backgroundColor: AppColors.white,
             body: Stack(
               children: [
-                Positioned.fill(
+                Positioned(
                   child: FlutterMap(
                     mapController: _mapController,
                     options: MapOptions(
@@ -114,6 +114,7 @@ class _StationSearchMapScreenState extends State<StationSearchMapScreen> {
                     ],
                   ),
                 ),
+
                 SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.lg),
@@ -138,6 +139,7 @@ class _StationSearchMapScreenState extends State<StationSearchMapScreen> {
                     ),
                   ),
                 ),
+                
                 if (provider.selectedStation != null)
                   Align(
                     alignment: Alignment.bottomCenter,
