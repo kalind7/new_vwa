@@ -18,7 +18,7 @@ Future<T?> showAppHandoffBottomSheet<T>({
 }) {
   return showModalBottomSheet<T>(
     context: context,
-    isScrollControlled: true,
+    // isScrollControlled: true,
     isDismissible: isDismissible,
     enableDrag: enableDrag,
     backgroundColor: Colors.transparent,

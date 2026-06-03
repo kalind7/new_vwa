@@ -23,7 +23,8 @@ Future<bool> openGoogleMapsForStation({
 
   final query = label == null || label.trim().isEmpty
       ? '$latitude,$longitude'
-      : '$latitude,$longitude (${Uri.encodeComponent(label.trim())})';
+      // : '$latitude,$longitude (${Uri.encodeComponent(label.trim())})';
+      : '$latitude,$longitude';
 
   final googleMapsUri = Uri.parse(
     'https://www.google.com/maps/search/?api=1&query=$query',
