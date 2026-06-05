@@ -13,16 +13,11 @@ import '../../../../shared/widgets/profile_avatar.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../profile/presentation/providers/user_profile_provider.dart';
 import '../../data/main_shell_mock_data.dart';
-import '../providers/main_shell_provider.dart';
 
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
 
   void _onMenuTap(BuildContext context, ProfileMenuItemMock item) {
-    if (item.route == AppProfileRoutes.washHistoryTab) {
-      context.read<MainShellProvider>().setTab(1);
-      return;
-    }
     Navigator.of(context).pushNamed(item.route);
   }
 

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../app/app_routes.dart';
 import '../../../../config/app_colors.dart';
 import '../../../../config/app_radius.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
+import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_handoff_bottom_sheet.dart';
 import '../../../../shared/widgets/shimmers/app_shimmer.dart';
-import '../../../profile/data/models/user_profile.dart';
 import '../../../profile/domain/repositories/user_repository.dart';
-import '../../../profile/presentation/providers/user_profile_provider.dart';
 import '../../data/booking_flow_mock_data.dart';
 
 Future<VehicleMock?> showSelectVehicleBottomSheet({
@@ -36,7 +36,6 @@ class _SelectVehicleSheetContent extends StatefulWidget {
 class _SelectVehicleSheetContentState
     extends State<_SelectVehicleSheetContent> {
   List<VehicleMock> _vehicles = const [];
-  VehicleMock? _selectedVehicle;
   var _isLoading = true;
 
   @override
@@ -53,45 +52,14 @@ class _SelectVehicleSheetContentState
       return;
     }
 
-    result.fold((_) => _applyFallbackVehicles(), (loaded) {
-      if (loaded.isEmpty) {
-        _applyFallbackVehicles();
-        return;
-      }
-
-      _vehicles = loaded;
-      if (widget.initialVehicle != null) {
-        _selectedVehicle = loaded.firstWhere(
-          (vehicle) => vehicle.id == widget.initialVehicle!.id,
-          orElse: () => widget.initialVehicle!,
-        );
-      } else {
-        _selectedVehicle = loaded.first;
-      }
-    });
+    result.fold((_) => _vehicles = const [], (loaded) => _vehicles = loaded);
 
     setState(() => _isLoading = false);
   }
 
-  void _applyFallbackVehicles() {
-    final profileVehicles =
-        context.read<UserProfileProvider>().profile?.vehicles ??
-        const <UserVehicle>[];
-
-    if (profileVehicles.isNotEmpty) {
-      _vehicles = profileVehicles
-          .map(
-            (vehicle) =>
-                VehicleMock(id: '${vehicle.id}', plate: vehicle.vehicleNumber),
-          )
-          .toList();
-    } else {
-      _vehicles = vehicles;
-    }
-
-    _selectedVehicle =
-        widget.initialVehicle ??
-        (_vehicles.isNotEmpty ? _vehicles.first : null);
+  void _openAddVehicle() {
+    Navigator.of(context).pop();
+    Navigator.of(context).pushNamed(AppRoutes.addVehicle);
   }
 
   @override
@@ -115,10 +83,26 @@ class _SelectVehicleSheetContentState
 
     if (_vehicles.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Text(
-          'No vehicles found. Add a vehicle from your profile.',
-          style: AppTextStyles.textSmRegular.copyWith(color: AppColors.gray600),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Icon(Icons.directions_bike_outlined, size: 48, color: AppColors.gray400),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'No vehicles added yet.\nAdd a vehicle number to book a wash slot.',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.textMdRegular.copyWith(
+                color: AppColors.gray600,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xxl),
+            AppButton(
+              label: 'Add vehicle number',
+              onPressed: _openAddVehicle,
+            ),
+          ],
         ),
       );
     }
@@ -130,7 +114,7 @@ class _SelectVehicleSheetContentState
         for (final vehicle in _vehicles) ...[
           _VehicleOptionTile(
             vehicle: vehicle,
-            isSelected: _selectedVehicle?.id == vehicle.id,
+            isSelected: widget.initialVehicle?.id == vehicle.id,
             onTap: () => Navigator.of(context).pop(vehicle),
           ),
           const SizedBox(height: AppSpacing.md),

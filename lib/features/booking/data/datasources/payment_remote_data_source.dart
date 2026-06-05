@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 
+import '../models/promo_validation_result.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/failure_mapper.dart';
 import '../../../../core/network/api_client.dart';
@@ -11,14 +12,14 @@ class PaymentRemoteDataSource {
 
   final ApiClient _apiClient;
 
-  Future<Either<Failure, String>> validatePromoCode({
+  Future<Either<Failure, PromoValidationResult>> validatePromoCode({
     required String code,
     required double amount,
   }) async {
     try {
       final response = await _apiClient.dio.post<Map<String, dynamic>>(
         ApiPaths.validateBookingPromo,
-        data: {'code': code, 'amount': amount},
+        data: {'code': code, 'total_amount': amount},
         options: Options(
           contentType: Headers.jsonContentType,
           headers: const {'Accept': 'application/json'},
@@ -30,8 +31,22 @@ class PaymentRemoteDataSource {
         return left(const UnknownFailure('Invalid promo response.'));
       }
 
-      final message = '${data['message'] ?? 'Promo code applied.'}';
-      return right(message);
+      final payload = data['data'];
+      final discount = payload is Map<String, dynamic>
+          ? (payload['discount_amount'] as num?)?.toDouble() ?? 0
+          : 0.0;
+      final finalAmount = payload is Map<String, dynamic>
+          ? (payload['final_amount'] as num?)?.toDouble() ?? amount
+          : amount;
+
+      return right(
+        PromoValidationResult(
+          message: '${data['message'] ?? 'Promo code applied.'}',
+          discountAmount: discount,
+          finalAmount: finalAmount,
+          code: code,
+        ),
+      );
     } on DioException catch (error) {
       return left(mapDioException(error));
     }

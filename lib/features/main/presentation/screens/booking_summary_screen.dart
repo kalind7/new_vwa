@@ -15,8 +15,6 @@ import '../../../../shared/widgets/app_svg_icon.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../booking/data/datasources/payment_remote_data_source.dart';
-import '../../../booking/domain/repositories/booking_repository.dart';
-import '../../../booking/presentation/providers/wash_bookings_provider.dart';
 import '../../data/booking_flow_mock_data.dart';
 
 class BookingSummaryScreen extends StatefulWidget {
@@ -32,7 +30,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
   final _formKey = GlobalKey<FormState>();
   var _promoExpanded = false;
   var _isApplyingPromo = false;
-  var _isCreatingBooking = false;
+  var _promoApplied = false;
   final _promoController = TextEditingController();
   late BookingDraft _draft;
 
@@ -43,6 +41,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
     final promo = widget.draft.promoCode;
     if (promo != null && promo.isNotEmpty) {
       _promoController.text = promo;
+      _promoApplied = true;
     }
   }
 
@@ -53,7 +52,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
   }
 
   double _checkoutAmount() {
-    final label = checkoutTotalLabel(_draft);
+    final label = _draft.service.price.replaceFirst('Nrs ', 'Rs ');
     final digits = label.replaceAll(RegExp(r'[^0-9.]'), '');
     return double.tryParse(digits) ?? 0;
   }
@@ -74,7 +73,14 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
     }
 
     if (AppConfig.useMockData) {
-      setState(() => _draft = _draft.copyWith(promoCode: code));
+      setState(() {
+        _draft = _draft.copyWith(
+          promoCode: code,
+          promoDiscountAmount: 20,
+          discountedTotal: 'Rs ${_checkoutAmount() - 20}',
+        );
+        _promoApplied = true;
+      });
       AppToast.showSuccess(context, 'Promo code applied.');
       return;
     }
@@ -89,48 +95,30 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
     setState(() => _isApplyingPromo = false);
 
     result.fold((failure) => AppToast.showError(context, failure.message), (
-      message,
+      promo,
     ) {
-      setState(() => _draft = _draft.copyWith(promoCode: code));
-      AppToast.showSuccess(context, message);
+      setState(() {
+        _draft = _draft.copyWith(
+          promoCode: promo.code,
+          promoDiscountAmount: promo.discountAmount,
+          discountedTotal: 'Rs ${promo.finalAmount.toStringAsFixed(0)}',
+        );
+        _promoApplied = true;
+      });
+      AppToast.showSuccess(context, promo.message);
     });
   }
 
-  Future<void> _proceedToPayment() async {
+  void _proceedToPayment() {
     FocusScope.of(context).unfocus();
-
-    if (AppConfig.useMockData) {
-      Navigator.of(context).pushNamed(AppRoutes.paymentMethod, arguments: _draft);
-      return;
-    }
-
-    setState(() => _isCreatingBooking = true);
-    final result = await context.read<BookingRepository>().createBooking(_draft);
-    if (!mounted) {
-      return;
-    }
-    setState(() => _isCreatingBooking = false);
-
-    await result.fold(
-      (failure) async {
-        AppToast.showError(context, failure.message);
-      },
-      (booking) async {
-        context.read<WashBookingsProvider>().loadBookings();
-        final draftWithId = _draft.copyWith(bookingId: booking.id);
-        setState(() => _draft = draftWithId);
-        AppToast.showSuccess(context, 'Booking created successfully.');
-        await Navigator.of(context).pushNamed(
-          AppRoutes.paymentMethod,
-          arguments: draftWithId,
-        );
-      },
-    );
+    Navigator.of(context).pushNamed(AppRoutes.paymentMethod, arguments: _draft);
   }
 
   @override
   Widget build(BuildContext context) {
     final total = checkoutTotalLabel(_draft);
+    final subtotal = _draft.service.price.replaceFirst('Nrs ', 'Rs ');
+    final discount = _draft.promoDiscountAmount;
     final duration = checkoutDurationLabel(_draft.service.duration);
     final vehicleNumber = _draft.vehicle?.plate ?? '—';
 
@@ -153,11 +141,16 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                       stationName: _draft.station.name,
                       vehicleNumber: vehicleNumber,
                       duration: duration,
+                      subtotal: subtotal,
+                      discountAmount: discount,
+                      promoCode: _draft.promoCode,
                       total: total,
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _PromoCodeCard(
                       expanded: _promoExpanded,
+                      applied: _promoApplied,
+                      appliedCode: _draft.promoCode,
                       controller: _promoController,
                       onToggle: _togglePromo,
                       onApply: _applyPromo,
@@ -165,7 +158,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                   ],
                 ),
               ),
-              if (_isApplyingPromo || _isCreatingBooking) const AppLoadingOverlay(),
+              if (_isApplyingPromo) const AppLoadingOverlay(),
             ],
           ),
         ),
@@ -205,13 +198,19 @@ class _WashSummaryCard extends StatelessWidget {
     required this.stationName,
     required this.vehicleNumber,
     required this.duration,
+    required this.subtotal,
     required this.total,
+    this.discountAmount,
+    this.promoCode,
   });
 
   final String stationName;
   final String vehicleNumber;
   final String duration;
+  final String subtotal;
   final String total;
+  final double? discountAmount;
+  final String? promoCode;
 
   @override
   Widget build(BuildContext context) {
@@ -245,7 +244,17 @@ class _WashSummaryCard extends StatelessWidget {
             _SummaryRow(label: 'Vehicle number', value: vehicleNumber),
             const SizedBox(height: AppSpacing.md),
             _SummaryRow(label: 'Duration', value: duration),
+            if (discountAmount != null && discountAmount! > 0) ...[
+              const SizedBox(height: AppSpacing.md),
+              _SummaryRow(
+                label: 'Promo${promoCode != null ? ' ($promoCode)' : ''}',
+                value: '- Rs ${discountAmount!.toStringAsFixed(0)}',
+                valueColor: AppColors.green600,
+              ),
+            ],
             const Divider(height: AppSpacing.xxxl, color: AppColors.gray200),
+            _SummaryRow(label: 'Subtotal', value: subtotal),
+            const SizedBox(height: AppSpacing.sm),
             Row(
               children: [
                 Text(
@@ -273,12 +282,16 @@ class _WashSummaryCard extends StatelessWidget {
 class _PromoCodeCard extends StatelessWidget {
   const _PromoCodeCard({
     required this.expanded,
+    required this.applied,
+    this.appliedCode,
     required this.controller,
     required this.onToggle,
     required this.onApply,
   });
 
   final bool expanded;
+  final bool applied;
+  final String? appliedCode;
   final TextEditingController controller;
   final VoidCallback onToggle;
   final VoidCallback onApply;
@@ -318,12 +331,16 @@ class _PromoCodeCard extends StatelessWidget {
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Text(
-                      'Promotional Code',
+                      applied && appliedCode != null
+                          ? 'Promo applied: $appliedCode'
+                          : 'Promotional Code',
                       style: AppTextStyles.textMdSemiBold.copyWith(
-                        color: AppColors.gray900,
+                        color: applied ? AppColors.green600 : AppColors.gray900,
                       ),
                     ),
                   ),
+                  if (applied)
+                    const Icon(Icons.check_circle, color: AppColors.green600, size: 20),
                   Icon(
                     expanded ? Icons.keyboard_arrow_up : Icons.chevron_right,
                     color: AppColors.gray500,
@@ -350,10 +367,15 @@ class _PromoCodeCard extends StatelessWidget {
 }
 
 class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({required this.label, required this.value});
+  const _SummaryRow({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
 
   final String label;
   final String value;
+  final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
@@ -367,7 +389,7 @@ class _SummaryRow extends StatelessWidget {
         Text(
           value,
           style: AppTextStyles.textMdSemiBold.copyWith(
-            color: AppColors.gray900,
+            color: valueColor ?? AppColors.gray900,
           ),
         ),
       ],

@@ -107,6 +107,7 @@ class WashBookingMock {
     this.stationId,
     this.vehicleId,
     this.paymentMethod,
+    this.rawStatus = '',
   });
 
   final String? id;
@@ -122,6 +123,17 @@ class WashBookingMock {
   final String price;
   final bool canCancel;
   final String? paymentMethod;
+  final String rawStatus;
+
+  bool get isActiveBooking {
+    final value = rawStatus.toLowerCase();
+    return !value.contains('complete') && !value.contains('cancel');
+  }
+
+  bool get isWashing {
+    final value = rawStatus.toLowerCase();
+    return value.contains('wash') && !value.contains('complete');
+  }
 }
 
 extension WashBookingMockProgress on WashBookingMock {
@@ -264,7 +276,7 @@ const profileMenuSections = [
       ProfileMenuItemMock(
         icon: AppSvgIconName.wash,
         title: 'Wash History',
-        route: AppProfileRoutes.washHistoryTab,
+        route: AppProfileRoutes.washHistory,
       ),
       ProfileMenuItemMock(
         icon: AppSvgIconName.star,
@@ -306,7 +318,5 @@ class AppProfileRoutes {
   static const String aboutUs = '/about-us';
   static const String terms = '/terms';
   static const String privacyPolicy = '/privacy-policy';
-
-  /// Switches main shell to My wash tab (not a named route).
-  static const String washHistoryTab = '__wash_history_tab__';
+  static const String washHistory = '/wash-history';
 }

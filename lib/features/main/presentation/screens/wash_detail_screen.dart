@@ -137,13 +137,14 @@ class _WashDetailScreenState extends State<WashDetailScreen> {
                             ),
                             child: _WashDetailBody(
                               booking: _booking,
-                              showProgress: !_isCompleted,
+                              showProgress: !_isCompleted && !_isCancelled,
                             ),
                           ),
                         ),
-                        if (_isActive || _isCompleted)
+                        if (_showActions)
                           _WashDetailActions(
-                            isActive: _isActive,
+                            isWashing: _isWashing,
+                            canCancel: _canCancel,
                             isCompleted: _isCompleted,
                             onCheckOut: () {
                               Navigator.of(context).pushNamed(
@@ -172,7 +173,10 @@ class _WashDetailScreenState extends State<WashDetailScreen> {
   }
 
   bool get _isCompleted => _booking.status == 'Completed';
-  bool get _isActive => _booking.canCancel && !_isCompleted;
+  bool get _isWashing => _booking.isWashing;
+  bool get _canCancel => _booking.canCancel && !_isCompleted;
+  bool get _showActions =>
+      !_isCancelled && (_isCompleted || _canCancel || _isWashing);
 }
 
 class _WashDetailBody extends StatelessWidget {
@@ -191,9 +195,9 @@ class _WashDetailBody extends StatelessWidget {
           location: booking.location,
           date: booking.date,
           vehicleNumber: booking.vehicle,
-          paidVia: showProgress ? 'eSewa' : null,
+          paidVia: booking.paymentMethod,
           total: booking.price,
-          status: showProgress ? null : booking.status,
+          status: booking.status,
         ),
         if (showProgress) ...[
           const SizedBox(height: 14),
@@ -206,14 +210,16 @@ class _WashDetailBody extends StatelessWidget {
 
 class _WashDetailActions extends StatelessWidget {
   const _WashDetailActions({
-    required this.isActive,
+    required this.isWashing,
+    required this.canCancel,
     required this.isCompleted,
     required this.onCheckOut,
     required this.onCancel,
     required this.onWriteReview,
   });
 
-  final bool isActive;
+  final bool isWashing;
+  final bool canCancel;
   final bool isCompleted;
   final VoidCallback onCheckOut;
   final VoidCallback onCancel;
@@ -235,14 +241,16 @@ class _WashDetailActions extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (isActive) ...[
+              if (isWashing || canCancel) ...[
                 AppButton(
                   label: 'Check out',
                   variant: AppButtonVariant.secondary,
                   onPressed: onCheckOut,
                 ),
-                const SizedBox(height: AppSpacing.md),
-                AppButton(label: 'Cancel booking', onPressed: onCancel),
+                if (canCancel && !isWashing) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  AppButton(label: 'Cancel booking', onPressed: onCancel),
+                ],
               ] else if (isCompleted)
                 AppButton(
                   label: 'Write a review',

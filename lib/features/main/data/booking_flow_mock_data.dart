@@ -88,6 +88,9 @@ class BookingDraft {
     this.promoCode,
     this.bookingId,
     this.isSuccess = true,
+    this.isExistingBookingCheckout = false,
+    this.promoDiscountAmount,
+    this.discountedTotal,
   });
 
   final WashStationMock station;
@@ -100,6 +103,11 @@ class BookingDraft {
   final String? bookingId;
   final bool isSuccess;
 
+  /// When true, checkout is for an existing booking (My Wash flow) — never create again.
+  final bool isExistingBookingCheckout;
+  final double? promoDiscountAmount;
+  final String? discountedTotal;
+
   BookingDraft copyWith({
     WashStationMock? station,
     WashServiceMock? service,
@@ -110,6 +118,9 @@ class BookingDraft {
     String? promoCode,
     String? bookingId,
     bool? isSuccess,
+    bool? isExistingBookingCheckout,
+    double? promoDiscountAmount,
+    String? discountedTotal,
   }) {
     return BookingDraft(
       station: station ?? this.station,
@@ -121,6 +132,10 @@ class BookingDraft {
       promoCode: promoCode ?? this.promoCode,
       bookingId: bookingId ?? this.bookingId,
       isSuccess: isSuccess ?? this.isSuccess,
+      isExistingBookingCheckout:
+          isExistingBookingCheckout ?? this.isExistingBookingCheckout,
+      promoDiscountAmount: promoDiscountAmount ?? this.promoDiscountAmount,
+      discountedTotal: discountedTotal ?? this.discountedTotal,
     );
   }
 }
@@ -137,6 +152,9 @@ String checkoutDurationLabel(String duration) {
 }
 
 String checkoutTotalLabel(BookingDraft draft) {
+  if (draft.discountedTotal != null && draft.discountedTotal!.isNotEmpty) {
+    return draft.discountedTotal!;
+  }
   if (draft.checkoutTotal != null) {
     return draft.checkoutTotal!;
   }
@@ -183,6 +201,7 @@ BookingDraft bookingDraftFromWashBooking(WashBookingMock booking) {
     vehicle: vehicle,
     checkoutTotal: booking.price,
     bookingId: booking.id,
+    isExistingBookingCheckout: true,
   );
 }
 

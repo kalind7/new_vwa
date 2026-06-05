@@ -14,6 +14,7 @@ import '../../../../shared/widgets/app_svg_icon.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/shimmers/station_detail_shimmer.dart';
 import '../providers/saved_stations_provider.dart';
+import '../../../booking/presentation/providers/wash_bookings_provider.dart';
 import '../../data/booking_flow_mock_data.dart';
 import '../../data/main_shell_mock_data.dart';
 import '../../data/wash_station_repository.dart';
@@ -101,6 +102,29 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
   Future<void> _handleBookSlot() async {
     final vehicle = await showSelectVehicleBottomSheet(context: context);
     if (vehicle == null || !mounted) {
+      return;
+    }
+
+    await context.read<WashBookingsProvider>().loadBookings();
+    if (!mounted) {
+      return;
+    }
+
+    final hasActiveBooking = context
+        .read<WashBookingsProvider>()
+        .bookings
+        .any(
+          (booking) =>
+              booking.isActiveBooking &&
+              booking.stationId == _station.id &&
+              booking.vehicleId == vehicle.id,
+        );
+
+    if (hasActiveBooking) {
+      AppToast.showError(
+        context,
+        'This vehicle already has an active booking at this station.',
+      );
       return;
     }
 

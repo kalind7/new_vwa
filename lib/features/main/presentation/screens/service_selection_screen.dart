@@ -32,7 +32,7 @@ class ServiceSelectionScreen extends StatelessWidget {
               label: 'Continue',
               onPressed: () => Navigator.of(
                 context,
-              ).pushNamed(AppRoutes.slotSelection, arguments: provider.draft),
+              ).pushNamed(AppRoutes.bookingSummary, arguments: provider.draft),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

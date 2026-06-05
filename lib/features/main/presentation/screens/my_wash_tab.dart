@@ -11,17 +11,12 @@ import '../../../booking/presentation/providers/wash_bookings_provider.dart';
 import '../../data/main_shell_mock_data.dart';
 import '../widgets/wash_booking_card.dart';
 
-enum _WashHistoryFilter { active, completed }
-
-class MyWashTab extends StatefulWidget {
+class MyWashTab extends StatelessWidget {
   const MyWashTab({super.key});
 
-  @override
-  State<MyWashTab> createState() => _MyWashTabState();
-}
-
-class _MyWashTabState extends State<MyWashTab> {
-  _WashHistoryFilter _filter = _WashHistoryFilter.active;
+  static List<WashBookingMock> _activeBookings(List<WashBookingMock> bookings) {
+    return bookings.where((booking) => booking.isActiveBooking).toList();
+  }
 
   static Map<String, List<WashBookingMock>> _groupedBookings(
     List<WashBookingMock> bookings,
@@ -31,17 +26,6 @@ class _MyWashTabState extends State<MyWashTab> {
       grouped.putIfAbsent(booking.date, () => []).add(booking);
     }
     return grouped;
-  }
-
-  List<WashBookingMock> _filtered(List<WashBookingMock> bookings) {
-    return bookings.where((booking) {
-      final status = booking.status.toLowerCase();
-      final isCompleted =
-          status.contains('completed') || status.contains('cancelled');
-      return _filter == _WashHistoryFilter.completed
-          ? isCompleted
-          : !isCompleted;
-    }).toList();
   }
 
   void _openWashDetail(BuildContext context, WashBookingMock booking) {
@@ -55,46 +39,7 @@ class _MyWashTabState extends State<MyWashTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const DevHandoffTabHeader(title: 'Wash history'),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              0,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: SegmentedButton<_WashHistoryFilter>(
-              segments: const [
-                ButtonSegment(
-                  value: _WashHistoryFilter.active,
-                  label: Text('Booked'),
-                ),
-                ButtonSegment(
-                  value: _WashHistoryFilter.completed,
-                  label: Text('Completed'),
-                ),
-              ],
-              selected: {_filter},
-              onSelectionChanged: (value) {
-                setState(() => _filter = value.first);
-              },
-              style: ButtonStyle(
-                visualDensity: VisualDensity.compact,
-                backgroundColor: WidgetStateProperty.resolveWith((states) {
-                  if (states.contains(WidgetState.selected)) {
-                    return AppColors.brand500;
-                  }
-                  return AppColors.gray100;
-                }),
-                foregroundColor: WidgetStateProperty.resolveWith((states) {
-                  if (states.contains(WidgetState.selected)) {
-                    return AppColors.white;
-                  }
-                  return AppColors.gray700;
-                }),
-              ),
-            ),
-          ),
+          const DevHandoffTabHeader(title: 'My wash'),
           Expanded(
             child: Consumer<WashBookingsProvider>(
               builder: (context, provider, _) {
@@ -110,19 +55,16 @@ class _MyWashTabState extends State<MyWashTab> {
                   );
                 }
 
-                final filtered = _filtered(provider.bookings);
-                final grouped = _groupedBookings(filtered);
+                final active = _activeBookings(provider.bookings);
+                final grouped = _groupedBookings(active);
 
                 if (grouped.isEmpty) {
                   return RefreshIndicator(
                     onRefresh: provider.loadBookings,
                     child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      children: [
-                        _EmptyWashHistory(
-                          isCompleted:
-                              _filter == _WashHistoryFilter.completed,
-                        ),
+                      children: const [
+                        _EmptyActiveWash(),
                       ],
                     ),
                   );
@@ -133,7 +75,7 @@ class _MyWashTabState extends State<MyWashTab> {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(
                       AppSpacing.lg,
-                      AppSpacing.md,
+                      AppSpacing.xxl,
                       AppSpacing.lg,
                       AppSpacing.xxl,
                     ),
@@ -149,8 +91,7 @@ class _MyWashTabState extends State<MyWashTab> {
                         for (final booking in entry.value) ...[
                           WashBookingCard(
                             booking: booking,
-                            onViewDetails: () =>
-                                _openWashDetail(context, booking),
+                            onTap: () => _openWashDetail(context, booking),
                           ),
                           const SizedBox(height: AppSpacing.lg),
                         ],
@@ -167,10 +108,8 @@ class _MyWashTabState extends State<MyWashTab> {
   }
 }
 
-class _EmptyWashHistory extends StatelessWidget {
-  const _EmptyWashHistory({required this.isCompleted});
-
-  final bool isCompleted;
+class _EmptyActiveWash extends StatelessWidget {
+  const _EmptyActiveWash();
 
   @override
   Widget build(BuildContext context) {
@@ -180,16 +119,10 @@ class _EmptyWashHistory extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              isCompleted ? Icons.check_circle_outline : Icons.local_car_wash,
-              size: 48,
-              color: AppColors.gray400,
-            ),
+            Icon(Icons.local_car_wash_outlined, size: 48, color: AppColors.gray400),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              isCompleted
-                  ? 'No completed washes yet.'
-                  : 'No active bookings.\nBook a slot from Home to get started.',
+              'No active bookings.\nBook a slot from Home to get started.',
               textAlign: TextAlign.center,
               style: AppTextStyles.textMdRegular.copyWith(
                 color: AppColors.gray500,
