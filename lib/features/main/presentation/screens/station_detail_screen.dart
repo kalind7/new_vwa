@@ -9,19 +9,14 @@ import '../../../../config/app_radius.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_flow_modal.dart';
 import '../../../../shared/utils/map_navigation.dart';
-import '../../../../shared/widgets/app_loading_overlay.dart';
 import '../../../../shared/widgets/app_svg_icon.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/shimmers/station_detail_shimmer.dart';
 import '../providers/saved_stations_provider.dart';
-import '../../../booking/domain/repositories/booking_repository.dart';
-import '../../../booking/presentation/providers/wash_bookings_provider.dart';
 import '../../data/booking_flow_mock_data.dart';
 import '../../data/main_shell_mock_data.dart';
 import '../../data/wash_station_repository.dart';
-import '../widgets/booking_summary_bottom_sheet.dart';
 import '../widgets/select_vehicle_bottom_sheet.dart';
 
 class StationDetailScreen extends StatefulWidget {
@@ -36,7 +31,6 @@ class StationDetailScreen extends StatefulWidget {
 class _StationDetailScreenState extends State<StationDetailScreen> {
   late WashStationMock _station;
   var _isLoadingDetail = false;
-  var _isCreatingBooking = false;
   var _isSaved = false;
   var _isTogglingSave = false;
 
@@ -110,44 +104,9 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
       return;
     }
 
-    final shouldBook = await showAppFlowModal(
-      context: context,
-      message: 'Are you sure you want to book a slot?',
-    );
-
-    if (!shouldBook || !mounted) {
-      return;
-    }
-
-    final draft = bookingDraftForStation(station: _station, vehicle: vehicle);
-    final confirmed = await showBookingSummaryBottomSheet(
-      context: context,
-      draft: draft,
-    );
-
-    if (confirmed != true || !mounted) {
-      return;
-    }
-
-    setState(() => _isCreatingBooking = true);
-    final result = await context.read<BookingRepository>().createBooking(draft);
-    if (!mounted) {
-      return;
-    }
-    setState(() => _isCreatingBooking = false);
-
-    await result.fold(
-      (failure) async {
-        AppToast.showError(context, failure.message);
-      },
-      (booking) async {
-        AppToast.showSuccess(context, 'Booking created successfully.');
-        context.read<WashBookingsProvider>().loadBookings();
-        await Navigator.of(context).pushNamed(
-          AppRoutes.bookingSuccess,
-          arguments: draft.copyWith(bookingId: booking.id),
-        );
-      },
+    await Navigator.of(context).pushNamed(
+      AppRoutes.serviceSelection,
+      arguments: StationBookingArgs(station: _station, vehicle: vehicle),
     );
   }
 
@@ -235,7 +194,6 @@ class _StationDetailScreenState extends State<StationDetailScreen> {
                     ),
                   ],
                 ),
-              if (_isCreatingBooking) const AppLoadingOverlay(),
             ],
           ),
         ),

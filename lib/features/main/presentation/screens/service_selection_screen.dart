@@ -8,6 +8,7 @@ import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_svg_icon.dart';
+import '../../../booking/domain/booking_flow_helpers.dart';
 import '../../data/booking_flow_mock_data.dart';
 import '../providers/booking_flow_provider.dart';
 import '../widgets/booking_flow_scaffold.dart';
@@ -24,6 +25,7 @@ class ServiceSelectionScreen extends StatelessWidget {
           BookingFlowProvider(station: args.station, vehicle: args.vehicle),
       child: Consumer<BookingFlowProvider>(
         builder: (context, provider, _) {
+          final services = servicesFromStation(args.station);
           return BookingFlowScaffold(
             title: 'Select Service',
             bottomBar: AppButton(
@@ -35,7 +37,7 @@ class ServiceSelectionScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (final service in washServices) ...[
+                for (final service in services) ...[
                   _ServiceOption(
                     service: service,
                     isSelected: provider.selectedService.id == service.id,

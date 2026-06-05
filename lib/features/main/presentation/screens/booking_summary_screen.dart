@@ -15,6 +15,8 @@ import '../../../../shared/widgets/app_svg_icon.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../booking/data/datasources/payment_remote_data_source.dart';
+import '../../../booking/domain/repositories/booking_repository.dart';
+import '../../../booking/presentation/providers/wash_bookings_provider.dart';
 import '../../data/booking_flow_mock_data.dart';
 
 class BookingSummaryScreen extends StatefulWidget {
@@ -30,6 +32,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
   final _formKey = GlobalKey<FormState>();
   var _promoExpanded = false;
   var _isApplyingPromo = false;
+  var _isCreatingBooking = false;
   final _promoController = TextEditingController();
   late BookingDraft _draft;
 
@@ -93,9 +96,36 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
     });
   }
 
-  void _proceedToPayment() {
+  Future<void> _proceedToPayment() async {
     FocusScope.of(context).unfocus();
-    Navigator.of(context).pushNamed(AppRoutes.paymentMethod, arguments: _draft);
+
+    if (AppConfig.useMockData) {
+      Navigator.of(context).pushNamed(AppRoutes.paymentMethod, arguments: _draft);
+      return;
+    }
+
+    setState(() => _isCreatingBooking = true);
+    final result = await context.read<BookingRepository>().createBooking(_draft);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _isCreatingBooking = false);
+
+    await result.fold(
+      (failure) async {
+        AppToast.showError(context, failure.message);
+      },
+      (booking) async {
+        context.read<WashBookingsProvider>().loadBookings();
+        final draftWithId = _draft.copyWith(bookingId: booking.id);
+        setState(() => _draft = draftWithId);
+        AppToast.showSuccess(context, 'Booking created successfully.');
+        await Navigator.of(context).pushNamed(
+          AppRoutes.paymentMethod,
+          arguments: draftWithId,
+        );
+      },
+    );
   }
 
   @override
@@ -135,7 +165,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
                   ],
                 ),
               ),
-              if (_isApplyingPromo) const AppLoadingOverlay(),
+              if (_isApplyingPromo || _isCreatingBooking) const AppLoadingOverlay(),
             ],
           ),
         ),

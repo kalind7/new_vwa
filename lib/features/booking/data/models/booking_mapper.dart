@@ -69,6 +69,7 @@ class BookingMapper {
       vehicle: vehicleNumber.isEmpty ? '—' : vehicleNumber,
       price: price,
       canCancel: status != 'Completed' && status != 'Cancelled',
+      paymentMethod: json['payment_method']?.toString(),
     );
   }
 

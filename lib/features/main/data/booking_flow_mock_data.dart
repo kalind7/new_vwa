@@ -256,8 +256,8 @@ const paymentMethods = [
     subtitle: 'Pay with eSewa wallet',
   ),
   PaymentMethodMock(
-    id: 'cash',
+    id: 'cod',
     title: 'Cash on Delivery',
-    subtitle: 'Pay when your wash is delivered',
+    subtitle: 'Pay when your wash is complete',
   ),
 ];

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -33,12 +35,23 @@ class _WashDetailScreenState extends State<WashDetailScreen> {
   var _isCancelled = false;
   var _isLoading = false;
   var _isCancelling = false;
+  Timer? _statusPollTimer;
 
   @override
   void initState() {
     super.initState();
     _booking = widget.booking;
     _loadBookingDetail();
+    _statusPollTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _loadBookingDetail(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _statusPollTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadBookingDetail() async {

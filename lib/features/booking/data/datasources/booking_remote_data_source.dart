@@ -7,6 +7,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_paths.dart';
 import '../../../main/data/booking_flow_mock_data.dart';
 import '../../../main/data/main_shell_mock_data.dart';
+import '../../domain/booking_flow_helpers.dart';
 import '../models/booking_mapper.dart';
 
 class BookingRemoteDataSource {
@@ -26,9 +27,10 @@ class BookingRemoteDataSource {
         );
       }
 
-      final productId = draft.station.products.isNotEmpty
-          ? draft.station.products.first.id
-          : 1;
+      final productId = selectedProductId(draft) ??
+          (draft.station.products.isNotEmpty
+              ? draft.station.products.first.id
+              : 1);
 
       final response = await _apiClient.dio.post<Map<String, dynamic>>(
         ApiPaths.bookings,
@@ -36,11 +38,11 @@ class BookingRemoteDataSource {
           'service_station_id': stationId,
           'vehicle_id': vehicleId,
           'booking_date': _bookingDate(draft),
-          'booking_time': draft.slot.timeLabel,
+          'booking_time': normalizeBookingTime(draft.slot.timeLabel),
           'products': [
             {'id': productId, 'quantity': 1},
           ],
-          'payment_method': draft.paymentMethod?.id ?? 'cod',
+          'payment_method': mapPaymentMethodForApi(draft.paymentMethod?.id),
           if (draft.promoCode != null && draft.promoCode!.isNotEmpty)
             'promo_code': draft.promoCode,
         },

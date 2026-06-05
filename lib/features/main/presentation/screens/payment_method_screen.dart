@@ -57,6 +57,16 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
       return;
     }
 
+    if (method.id == 'cod') {
+      if (!context.mounted) {
+        return;
+      }
+      Navigator.of(
+        context,
+      ).pushNamed(AppRoutes.paymentResult, arguments: updatedDraft);
+      return;
+    }
+
     setState(() => _isProcessing = true);
     final result = await context
         .read<PaymentRemoteDataSource>()
@@ -216,14 +226,14 @@ class _PaymentOption extends StatelessWidget {
   String get _label => switch (method.id) {
     'khalti' => 'Khalti by IME',
     'esewa' => 'eSewa Mobile Wallet',
-    'cash' => 'Cash on Delivery',
+    'cod' => 'Cash on Delivery',
     _ => method.title,
   };
 
   Color get _iconColor => switch (method.id) {
     'khalti' => const Color(0xFF5C2D91),
     'esewa' => AppColors.green600,
-    'cash' => AppColors.blue600,
+    'cod' => AppColors.blue600,
     _ => AppColors.gray700,
   };
 
@@ -250,7 +260,7 @@ class _PaymentOption extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   child: AppSvgIcon(
-                    method.id == 'cash'
+                    method.id == 'cod'
                         ? AppSvgIconName.wallet
                         : AppSvgIconName.card,
                     color: _iconColor,

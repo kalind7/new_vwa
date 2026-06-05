@@ -106,6 +106,7 @@ class WashBookingMock {
     required this.canCancel,
     this.stationId,
     this.vehicleId,
+    this.paymentMethod,
   });
 
   final String? id;
@@ -120,6 +121,7 @@ class WashBookingMock {
   final String vehicle;
   final String price;
   final bool canCancel;
+  final String? paymentMethod;
 }
 
 extension WashBookingMockProgress on WashBookingMock {

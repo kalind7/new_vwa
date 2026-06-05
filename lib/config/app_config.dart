@@ -3,7 +3,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class AppConfig {
   const AppConfig._();
 
-  static String get apiBaseUrl => dotenv.env['API_BASE_URL'] ?? '';
+  static String get apiBaseUrl {
+    const fromDefine = String.fromEnvironment('API_BASE_URL');
+    if (fromDefine.trim().isNotEmpty) {
+      return fromDefine;
+    }
+    return dotenv.env['API_BASE_URL'] ?? '';
+  }
 
   static bool get useMockData {
     return dotenv.env['USE_MOCK_DATA']?.toLowerCase() != 'false';

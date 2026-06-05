@@ -26,6 +26,11 @@ class ApiPaths {
   static const String suggestStationNearest = 'suggest-nearest';
   static String stationRatings(String stationId) =>
       'service-stations/$stationId/ratings';
+  static String stationQueueStats(String stationId) =>
+      'service-stations/$stationId/queue-stats';
+
+  // Favorites
+  static const String favorites = 'favorites';
 
   // Locations
   static const String locations = 'locations';
@@ -54,6 +59,10 @@ class ApiPaths {
   static String adminBookingStatus(String id) => 'admin/bookings/$id/status';
   static const String adminQueue = 'admin/queue';
 
-  // Notifications — confirm with backend if path differs
-  static const String fcmToken = 'fcm-token';
+  // Notifications
+  static const String notifications = 'notifications';
+  static String notificationRead(String id) => 'notifications/$id/read';
+  static const String notificationsReadAll = 'notifications/read-all';
+  static String notificationDelete(String id) => 'notifications/$id';
+  static const String authUpdateFcmToken = 'auth/update-fcm-token';
 }

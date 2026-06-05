@@ -1,9 +1,9 @@
 # API integration issues (live checks)
 
-Base URL in app: `http://bike.yarsanptech.com/api/v1/`  
-Postman collection: `Service Station Booking API` (local base `http://localhost:8000/api` — app uses `/v1/` prefix on production).
+Base URL in app (local dev): `http://localhost:8000/api/v1/` — see `assets/env/.env`.  
+Production: `http://bike.yarsanptech.com/api/v1/` in `assets/env/.env.production`.
 
-Checked: 2026-06-03
+Checked: 2026-06-05
 
 ## Verified working (HTTP 200, no auth unless noted)
 
