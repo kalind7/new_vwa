@@ -1,7 +1,3 @@
-import 'package:flutter/foundation.dart';
-
-import 'agent_debug_log.dart';
-
 const _fieldSeparator = ' · ';
 
 /// Generic API envelopes that should not override specific [errors] entries.
@@ -19,27 +15,7 @@ const _genericMessages = {
 /// User-facing text for toasts and [Failure.message] from API error JSON.
 String? formatApiErrorForUser(dynamic data) {
   final parsed = parseApiErrorResponse(data);
-  final formatted = parsed.toUserMessage();
-
-  // #region agent log
-  agentDebugLog(
-    hypothesisId: 'H1',
-    location: 'api_response_message.dart:formatApiErrorForUser',
-    message: 'parsed api error',
-    data: {
-      'hasErrorsMap': parsed.fieldErrors.isNotEmpty,
-      'headline': parsed.headline,
-      'fieldCount': parsed.fieldErrors.length,
-      'formatted': formatted,
-      'usedFieldErrors': parsed.usedFieldErrorsOverHeadline,
-    },
-  );
-  if (kDebugMode && formatted != null) {
-    debugPrint('[VWA API error] $formatted');
-  }
-  // #endregion
-
-  return formatted;
+  return parsed.toUserMessage();
 }
 
 /// Backward-compatible alias used by older call sites.

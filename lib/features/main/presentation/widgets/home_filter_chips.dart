@@ -27,20 +27,34 @@ class HomeFilterChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        0,
+        AppSpacing.xl,
+        0,
+      ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          for (var index = 0; index < _chips.length; index++) ...[
-            if (index > 0) const SizedBox(width: AppSpacing.sm),
-            _HandoffFilterChip(
-              label: _chips[index].$2,
-              isSelected: selectedTab == _chips[index].$1,
-              onTap: () => onTabChanged(_chips[index].$1),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (var index = 0; index < _chips.length; index++) ...[
+                    if (index > 0) const SizedBox(width: AppSpacing.sm),
+                    _HandoffFilterChip(
+                      label: _chips[index].$2,
+                      isSelected: selectedTab == _chips[index].$1,
+                      onTap: () => onTabChanged(_chips[index].$1),
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ],
-          const SizedBox(width: AppSpacing.sm),
+          ),
+          const SizedBox(width: AppSpacing.md),
           Material(
             color: Colors.transparent,
             child: InkWell(
@@ -52,7 +66,7 @@ class HomeFilterChips extends StatelessWidget {
                 child: Center(
                   child: AppSvgIcon(
                     AppSvgIconName.filter,
-                    color: AppColors.gray900,
+                    color: AppColors.black,
                   ),
                 ),
               ),

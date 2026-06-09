@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../booking/domain/booking_flow_helpers.dart';
 import '../../data/booking_flow_mock_data.dart';
 import '../../data/main_shell_mock_data.dart';
 
@@ -12,8 +13,10 @@ class BookingFlowProvider extends ChangeNotifier {
     PaymentMethodMock? initialPaymentMethod,
   }) : _station = station,
        _vehicle = vehicle ?? vehicles[2],
-       _selectedService = initialService ?? washServices.first,
-       _selectedSlot = initialSlot ?? washSlots.first,
+       _selectedService =
+           initialService ?? servicesFromStation(station).firstOrNull ?? washServices.first,
+       _selectedSlot =
+           initialSlot ?? slotsFromStation(station).firstOrNull ?? washSlots.first,
        _selectedPaymentMethod = initialPaymentMethod ?? paymentMethods.first;
 
   final WashStationMock _station;

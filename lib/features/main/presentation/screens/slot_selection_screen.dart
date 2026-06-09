@@ -8,6 +8,7 @@ import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_svg_icon.dart';
+import '../../../booking/domain/booking_flow_helpers.dart';
 import '../../data/booking_flow_mock_data.dart';
 import '../providers/booking_flow_provider.dart';
 import '../widgets/booking_flow_scaffold.dart';
@@ -28,6 +29,7 @@ class SlotSelectionScreen extends StatelessWidget {
       ),
       child: Consumer<BookingFlowProvider>(
         builder: (context, provider, _) {
+          final slots = slotsFromStation(draft.station);
           return BookingFlowScaffold(
             title: 'Select Slot',
             bottomBar: AppButton(
@@ -44,7 +46,7 @@ class SlotSelectionScreen extends StatelessWidget {
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: washSlots.length,
+                  itemCount: slots.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: AppSpacing.md,
@@ -52,7 +54,7 @@ class SlotSelectionScreen extends StatelessWidget {
                     childAspectRatio: 1.34,
                   ),
                   itemBuilder: (context, index) {
-                    final slot = washSlots[index];
+                    final slot = slots[index];
                     return _SlotCard(
                       slot: slot,
                       isSelected: provider.selectedSlot.id == slot.id,

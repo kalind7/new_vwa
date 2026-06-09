@@ -14,6 +14,10 @@ import '../widgets/wash_booking_card.dart';
 class MyWashTab extends StatelessWidget {
   const MyWashTab({super.key});
 
+  static List<WashBookingMock> _activeBookings(List<WashBookingMock> bookings) {
+    return bookings.where((booking) => booking.isActiveBooking).toList();
+  }
+
   static Map<String, List<WashBookingMock>> _groupedBookings(
     List<WashBookingMock> bookings,
   ) {
@@ -35,7 +39,7 @@ class MyWashTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const DevHandoffTabHeader(title: 'Wash history'),
+          const DevHandoffTabHeader(title: 'My wash'),
           Expanded(
             child: Consumer<WashBookingsProvider>(
               builder: (context, provider, _) {
@@ -51,10 +55,19 @@ class MyWashTab extends StatelessWidget {
                   );
                 }
 
-                final grouped = _groupedBookings(provider.bookings);
+                final active = _activeBookings(provider.bookings);
+                final grouped = _groupedBookings(active);
 
                 if (grouped.isEmpty) {
-                  return const _EmptyWashHistory();
+                  return RefreshIndicator(
+                    onRefresh: provider.loadBookings,
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: const [
+                        _EmptyActiveWash(),
+                      ],
+                    ),
+                  );
                 }
 
                 return RefreshIndicator(
@@ -78,8 +91,7 @@ class MyWashTab extends StatelessWidget {
                         for (final booking in entry.value) ...[
                           WashBookingCard(
                             booking: booking,
-                            onViewDetails: () =>
-                                _openWashDetail(context, booking),
+                            onTap: () => _openWashDetail(context, booking),
                           ),
                           const SizedBox(height: AppSpacing.lg),
                         ],
@@ -96,18 +108,27 @@ class MyWashTab extends StatelessWidget {
   }
 }
 
-class _EmptyWashHistory extends StatelessWidget {
-  const _EmptyWashHistory();
+class _EmptyActiveWash extends StatelessWidget {
+  const _EmptyActiveWash();
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xxl),
-        child: Text(
-          'No wash bookings yet.\nBook a slot from a station to see your history here.',
-          textAlign: TextAlign.center,
-          style: AppTextStyles.textMdRegular.copyWith(color: AppColors.gray500),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.local_car_wash_outlined, size: 48, color: AppColors.gray400),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'No active bookings.\nBook a slot from Home to get started.',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.textMdRegular.copyWith(
+                color: AppColors.gray500,
+              ),
+            ),
+          ],
         ),
       ),
     );

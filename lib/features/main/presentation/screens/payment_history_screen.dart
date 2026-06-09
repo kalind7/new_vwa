@@ -1,37 +1,79 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../config/app_colors.dart';
 import '../../../../config/app_radius.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
+import '../../../../shared/widgets/app_loading_overlay.dart';
 import '../../../../shared/widgets/app_screen_header.dart';
+import '../../../booking/presentation/providers/wash_bookings_provider.dart';
 
-class PaymentHistoryScreen extends StatelessWidget {
+class PaymentHistoryScreen extends StatefulWidget {
   const PaymentHistoryScreen({super.key});
+
+  @override
+  State<PaymentHistoryScreen> createState() => _PaymentHistoryScreenState();
+}
+
+class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<WashBookingsProvider>().loadBookings();
+    });
+  }
+
+  String _paymentLabel(String? method) {
+    return switch (method?.toLowerCase()) {
+      'online' => 'Online payment',
+      'cod' => 'Cash on delivery',
+      _ => method ?? 'Payment',
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
       appBar: buildAppScreenHeader(context, title: 'History'),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.xxl),
-        children: [
-          Text(
-            'Today',
-            style: AppTextStyles.textMdSemiBold.copyWith(
-              color: AppColors.gray800,
+      body: Consumer<WashBookingsProvider>(
+        builder: (context, provider, _) {
+          if (provider.isLoading && provider.bookings.isEmpty) {
+            return const AppLoadingOverlay();
+          }
+
+          if (provider.bookings.isEmpty) {
+            return Center(
+              child: Text(
+                'No payment history yet.',
+                style: AppTextStyles.textMdRegular.copyWith(
+                  color: AppColors.gray500,
+                ),
+              ),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: provider.loadBookings,
+            child: ListView.separated(
+              padding: const EdgeInsets.all(AppSpacing.xxl),
+              itemCount: provider.bookings.length,
+              separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
+              itemBuilder: (context, index) {
+                final booking = provider.bookings[index];
+                return _HistoryItem(
+                  station: booking.station,
+                  method: _paymentLabel(booking.paymentMethod),
+                  time: booking.time,
+                  amount: booking.price,
+                  status: booking.status,
+                );
+              },
             ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          const _HistoryItem(
-            station: 'Clean Wave Station',
-            method: 'Via Esewa',
-            time: '08:00 AM',
-            amount: 'NPR 200',
-            status: 'Completed',
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -78,35 +120,21 @@ class _HistoryItem extends StatelessWidget {
                   Text(
                     station,
                     style: AppTextStyles.textMdSemiBold.copyWith(
-                      color: AppColors.gray800,
+                      color: AppColors.gray900,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     method,
                     style: AppTextStyles.textSmRegular.copyWith(
-                      color: AppColors.gray500,
+                      color: AppColors.gray600,
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      Text(
-                        'Wash',
-                        style: AppTextStyles.textXsMedium.copyWith(
-                          color: AppColors.gray500,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Container(width: 1, height: 12, color: AppColors.gray300),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        time,
-                        style: AppTextStyles.textXsMedium.copyWith(
-                          color: AppColors.gray500,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    time,
+                    style: AppTextStyles.textSmRegular.copyWith(
+                      color: AppColors.gray500,
+                    ),
                   ),
                 ],
               ),
@@ -114,29 +142,17 @@ class _HistoryItem extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.success100,
-                    borderRadius: BorderRadius.circular(6.8),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.xs,
-                    ),
-                    child: Text(
-                      status,
-                      style: AppTextStyles.textXsMedium.copyWith(
-                        color: AppColors.success700,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
                 Text(
                   amount,
                   style: AppTextStyles.textMdSemiBold.copyWith(
-                    color: AppColors.black,
+                    color: AppColors.gray900,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  status,
+                  style: AppTextStyles.textSmMedium.copyWith(
+                    color: AppColors.brand500,
                   ),
                 ),
               ],

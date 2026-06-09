@@ -40,14 +40,16 @@ class BookingMapper {
   }
 
   static WashBookingMock _fromBookingJson(Map<String, dynamic> json) {
-    final status = _normalizeStatus('${json['status'] ?? 'Booked'}');
+    final rawStatus = '${json['status'] ?? 'pending'}';
+    final status = _normalizeStatus(rawStatus);
     final stationName =
         '${json['service_station']?['name'] ?? json['station_name'] ?? json['station'] ?? 'Station'}';
     final location =
         '${json['service_station']?['address'] ?? json['location'] ?? json['address'] ?? ''}';
     final vehicleNumber =
         '${json['vehicle']?['vehicle_number'] ?? json['vehicle_number'] ?? ''}';
-    final priceValue = json['total'] ?? json['amount'] ?? json['price'];
+    final priceValue =
+        json['final_amount'] ?? json['total'] ?? json['amount'] ?? json['price'];
     final price = priceValue == null
         ? '—'
         : 'Rs ${_trimDecimal('$priceValue')}';
@@ -68,8 +70,21 @@ class BookingMapper {
       service: service,
       vehicle: vehicleNumber.isEmpty ? '—' : vehicleNumber,
       price: price,
-      canCancel: status != 'Completed' && status != 'Cancelled',
+      canCancel: _canCancel(rawStatus),
+      paymentMethod: json['payment_method']?.toString(),
+      rawStatus: rawStatus,
     );
+  }
+
+  static bool _canCancel(String raw) {
+    final value = raw.toLowerCase();
+    if (value.contains('complete') || value.contains('cancel')) {
+      return false;
+    }
+    if (value.contains('in_wash') || value == 'in_wash') {
+      return false;
+    }
+    return true;
   }
 
   static String _normalizeStatus(String raw) {
@@ -80,10 +95,12 @@ class BookingMapper {
     if (value.contains('cancel')) {
       return 'Cancelled';
     }
-    if (value.contains('wash')) {
+    if (value.contains('in_wash') || value.contains('washing')) {
       return 'Washing';
     }
-    if (value.contains('book')) {
+    if (value.contains('in_queue') ||
+        value.contains('confirmed') ||
+        value.contains('pending')) {
       return 'Booked';
     }
     return raw.isEmpty ? 'Booked' : raw;

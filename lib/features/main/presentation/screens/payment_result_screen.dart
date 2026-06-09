@@ -63,14 +63,6 @@ class PaymentResultScreen extends StatelessWidget {
                             (route) => false,
                           ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    AppButton(
-                      label: 'Leave a review',
-                      variant: AppButtonVariant.secondary,
-                      onPressed: () => Navigator.of(
-                        context,
-                      ).pushNamed(AppRoutes.leaveReview),
-                    ),
                   ],
                 ),
               ),

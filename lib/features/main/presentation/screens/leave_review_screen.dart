@@ -9,6 +9,7 @@ import '../../../../config/app_radius.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
 import '../../../../shared/widgets/app_button.dart';
+import '../../../../shared/widgets/app_flow_close_header.dart';
 import '../../../../shared/widgets/app_loading_overlay.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../booking/data/datasources/rating_remote_data_source.dart';
@@ -33,6 +34,13 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
   void dispose() {
     _commentController.dispose();
     super.dispose();
+  }
+
+  void _goHome() {
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      AppRoutes.mainShell,
+      (route) => false,
+    );
   }
 
   bool _validate() {
@@ -97,11 +105,12 @@ class _LeaveReviewScreenState extends State<LeaveReviewScreen> {
             children: [
               Column(
                 children: [
+                  AppFlowCloseHeader(onClose: _goHome),
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(
                         AppSpacing.xxl,
-                        AppSpacing.xxxl * 2,
+                        AppSpacing.lg,
                         AppSpacing.xxl,
                         AppSpacing.xxl,
                       ),

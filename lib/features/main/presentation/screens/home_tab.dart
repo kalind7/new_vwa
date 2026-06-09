@@ -214,10 +214,8 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                               isResolvingLocation: provider.isResolvingLocation,
                               onSearch: () =>
                                   navigateToStationSearchMap(context),
-                              onNotifications: () => AppToast.showNeutral(
-                                context,
-                                'Notifications will appear here soon.',
-                              ),
+                              onNotifications: () => Navigator.of(context)
+                                  .pushNamed(AppRoutes.notifications),
                             ),
                           ),
                           HomeFilterChips(

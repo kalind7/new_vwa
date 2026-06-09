@@ -8,6 +8,7 @@ import '../../../../config/app_colors.dart';
 import '../../../../config/app_radius.dart';
 import '../../../../config/app_spacing.dart';
 import '../../../../config/app_text_styles.dart';
+import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_svg_icon.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../data/main_shell_mock_data.dart';
@@ -365,14 +366,16 @@ class _SelectedStationPreviewSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.gray50,
-        border: Border(top: BorderSide(color: AppColors.gray200)),
-        boxShadow: [
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppRadius.xl),
+        ),
+        boxShadow: const [
           BoxShadow(
-            color: Color(0x1A101828),
-            blurRadius: 8,
-            offset: Offset(0, -2),
+            color: Color(0x26101828),
+            blurRadius: 24,
+            offset: Offset(0, -8),
           ),
         ],
       ),
@@ -381,7 +384,7 @@ class _SelectedStationPreviewSheet extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.lg,
-            AppSpacing.xxl,
+            AppSpacing.md,
             AppSpacing.lg,
             AppSpacing.lg,
           ),
@@ -389,45 +392,58 @@ class _SelectedStationPreviewSheet extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: IconButton(
-                  onPressed: onClose,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
-                  ),
-                  icon: const AppSvgIcon(
-                    AppSvgIconName.close,
-                    color: AppColors.gray700,
-                    size: 20,
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.gray300,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                 ),
               ),
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: onTap,
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: Row(
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.brand500.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.all(AppSpacing.md),
+                      child: AppSvgIcon(
+                        AppSvgIconName.wash,
+                        color: AppColors.brand500,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                station.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTextStyles.textMdSemiBold.copyWith(
-                                  color: AppColors.gray900,
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.xs),
-                              Text(
+                        Text(
+                          station.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.textLgSemiBold.copyWith(
+                            color: AppColors.gray900,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Row(
+                          children: [
+                            const AppSvgIcon(
+                              AppSvgIconName.location,
+                              color: AppColors.gray500,
+                              size: 14,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: Text(
                                 station.location,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -435,39 +451,60 @@ class _SelectedStationPreviewSheet extends StatelessWidget {
                                   color: AppColors.gray600,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        const AppSvgIcon(
-                          AppSvgIconName.chevronRight,
-                          color: AppColors.gray500,
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                ),
+                  IconButton(
+                    onPressed: onClose,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                    icon: const AppSvgIcon(
+                      AppSvgIconName.close,
+                      color: AppColors.gray500,
+                      size: 20,
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: AppSpacing.lg),
               Wrap(
-                spacing: AppSpacing.md,
+                spacing: AppSpacing.sm,
                 runSpacing: AppSpacing.sm,
                 children: [
                   _MapMetaChip(
                     icon: AppSvgIconName.star,
                     label: station.rating,
                     color: const Color(0xFFFEC84B),
+                    backgroundColor: const Color(0xFFFFF8E6),
                   ),
                   _MapMetaChip(
                     icon: AppSvgIconName.route,
                     label: station.distance,
-                    color: AppColors.gray700,
+                    color: AppColors.indigo600,
+                    backgroundColor: AppColors.blue50,
                   ),
                   _MapMetaChip(
                     icon: AppSvgIconName.clock,
                     label: station.slots,
                     color: AppColors.brand500,
+                    backgroundColor: AppColors.brand500.withValues(alpha: 0.1),
+                  ),
+                  _MapMetaChip(
+                    icon: AppSvgIconName.wallet,
+                    label: station.price,
+                    color: AppColors.green600,
+                    backgroundColor: AppColors.green50,
                   ),
                 ],
               ),
+              const SizedBox(height: AppSpacing.lg),
+              AppButton(label: 'View station', onPressed: onTap),
             ],
           ),
         ),
@@ -481,18 +518,23 @@ class _MapMetaChip extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.color,
+    this.backgroundColor,
   });
 
   final AppSvgIconName icon;
   final String label;
   final Color color;
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.gray50,
+        color: backgroundColor ?? AppColors.gray50,
         borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(
+          color: color.withValues(alpha: 0.2),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(

@@ -11,7 +11,10 @@ import '../../../../shared/widgets/app_loading_overlay.dart';
 import '../../../../shared/widgets/app_svg_icon.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../booking/data/datasources/payment_remote_data_source.dart';
+import '../../../booking/domain/repositories/booking_repository.dart';
+import '../../../booking/presentation/providers/wash_bookings_provider.dart';
 import '../../data/booking_flow_mock_data.dart';
+import '../../data/main_shell_mock_data.dart';
 import '../providers/booking_flow_provider.dart';
 import '../widgets/booking_flow_scaffold.dart';
 
@@ -33,31 +36,62 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
     PaymentMethodMock method,
   ) async {
     provider.selectPaymentMethod(method);
-    final updatedDraft = provider.draft.copyWith(
-      paymentMethod: method,
-      isSuccess: true,
-    );
+    var draft = widget.draft.copyWith(paymentMethod: method, isSuccess: true);
 
     if (AppConfig.useMockData) {
       if (!context.mounted) {
         return;
       }
-      Navigator.of(
-        context,
-      ).pushNamed(AppRoutes.paymentResult, arguments: updatedDraft);
-      return;
-    }
-
-    final bookingId = updatedDraft.bookingId;
-    if (bookingId == null || bookingId.isEmpty) {
-      AppToast.showError(
-        context,
-        'Booking reference missing. Complete booking first.',
-      );
+      Navigator.of(context).pushNamed(AppRoutes.paymentResult, arguments: draft);
       return;
     }
 
     setState(() => _isProcessing = true);
+
+    if (!draft.isExistingBookingCheckout) {
+      final createResult = await context
+          .read<BookingRepository>()
+          .createBooking(draft);
+      if (!mounted) {
+        return;
+      }
+
+      final created = await createResult.fold<WashBookingMock?>(
+        (failure) {
+          AppToast.showError(context, failure.message);
+          return null;
+        },
+        (booking) {
+          context.read<WashBookingsProvider>().loadBookings();
+          return booking;
+        },
+      );
+
+      if (created == null) {
+        setState(() => _isProcessing = false);
+        return;
+      }
+
+      draft = draft.copyWith(bookingId: created.id);
+      AppToast.showSuccess(context, 'Booking created successfully.');
+    }
+
+    final bookingId = draft.bookingId;
+    if (bookingId == null || bookingId.isEmpty) {
+      setState(() => _isProcessing = false);
+      AppToast.showError(context, 'Booking reference missing.');
+      return;
+    }
+
+    if (method.id == 'cod') {
+      setState(() => _isProcessing = false);
+      if (!context.mounted) {
+        return;
+      }
+      Navigator.of(context).pushNamed(AppRoutes.paymentResult, arguments: draft);
+      return;
+    }
+
     final result = await context
         .read<PaymentRemoteDataSource>()
         .initiatePayment(bookingId: bookingId, paymentMethod: method.id);
@@ -67,9 +101,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
     setState(() => _isProcessing = false);
 
     result.fold((failure) => AppToast.showError(context, failure.message), (_) {
-      Navigator.of(
-        context,
-      ).pushNamed(AppRoutes.paymentResult, arguments: updatedDraft);
+      Navigator.of(context).pushNamed(AppRoutes.paymentResult, arguments: draft);
     });
   }
 
@@ -93,7 +125,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _PriceSummaryCard(draft: provider.draft),
+                    _PriceSummaryCard(draft: widget.draft),
                     const SizedBox(height: AppSpacing.xxl),
                     Text(
                       'Choose billing methods',
@@ -216,14 +248,14 @@ class _PaymentOption extends StatelessWidget {
   String get _label => switch (method.id) {
     'khalti' => 'Khalti by IME',
     'esewa' => 'eSewa Mobile Wallet',
-    'cash' => 'Cash on Delivery',
+    'cod' => 'Cash on Delivery',
     _ => method.title,
   };
 
   Color get _iconColor => switch (method.id) {
     'khalti' => const Color(0xFF5C2D91),
     'esewa' => AppColors.green600,
-    'cash' => AppColors.blue600,
+    'cod' => AppColors.blue600,
     _ => AppColors.gray700,
   };
 
@@ -250,7 +282,7 @@ class _PaymentOption extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   child: AppSvgIcon(
-                    method.id == 'cash'
+                    method.id == 'cod'
                         ? AppSvgIconName.wallet
                         : AppSvgIconName.card,
                     color: _iconColor,

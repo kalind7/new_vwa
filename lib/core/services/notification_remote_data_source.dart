@@ -17,10 +17,10 @@ class NotificationRemoteDataSource {
   }) async {
     try {
       await _apiClient.dio.post<Map<String, dynamic>>(
-        ApiPaths.fcmToken,
+        ApiPaths.authUpdateFcmToken,
         data: {'fcm_token': token, 'device_type': deviceType},
         options: Options(
-          contentType: Headers.formUrlEncodedContentType,
+          contentType: Headers.jsonContentType,
           headers: const {'Accept': 'application/json'},
         ),
       );

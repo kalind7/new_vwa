@@ -26,6 +26,8 @@ import '../features/main/presentation/screens/slot_selection_screen.dart';
 import '../features/main/presentation/screens/station_detail_screen.dart';
 import '../features/main/presentation/screens/station_search_map_screen.dart';
 import '../features/main/presentation/screens/wash_detail_screen.dart';
+import '../features/main/presentation/screens/wash_history_screen.dart';
+import '../features/notifications/presentation/notifications_screen.dart';
 import '../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../features/onboarding/presentation/screens/splash_screen.dart';
 
@@ -54,6 +56,7 @@ class AppRoutes {
   static const String leaveReview = '/leave-review';
   static const String feedbackThanks = '/feedback-thanks';
   static const String washDetail = '/wash-detail';
+  static const String notifications = '/notifications';
   static const String foundation = '/foundation';
 
   static BookingDraft _defaultDraft() {
@@ -153,10 +156,12 @@ class AppRoutes {
             : washBookings.first;
         return WashDetailScreen(booking: booking);
       },
+      notifications => (_) => const NotificationsScreen(),
       AppProfileRoutes.profileSetting => (_) => const ProfileSettingScreen(),
       AppProfileRoutes.myVehicle => (_) => const MyVehicleScreen(),
       AppProfileRoutes.saved => (_) => const SavedStationsScreen(),
       AppProfileRoutes.paymentHistory => (_) => const PaymentHistoryScreen(),
+      AppProfileRoutes.washHistory => (_) => const WashHistoryScreen(),
       AppProfileRoutes.reviews => (_) => const ReviewsScreen(),
       AppProfileRoutes.aboutUs => (_) => const AboutUsScreen(),
       AppProfileRoutes.terms => (_) => const TermsScreen(),

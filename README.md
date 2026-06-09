@@ -44,6 +44,25 @@ List available devices:
 flutter devices
 ```
 
+### API environment
+
+Default [`assets/env/.env`](assets/env/.env) points at the local bike-wash backend:
+
+```
+API_BASE_URL=http://localhost:8000/api/v1/
+```
+
+Profiles:
+
+| Target | Env file or override |
+|--------|----------------------|
+| iOS Simulator / same machine | `assets/env/.env` (localhost) |
+| Android emulator | `assets/env/.env.android_emulator` via `--dart-define=ENV_FILE=assets/env/.env.android_emulator` |
+| Physical device (same Wi‑Fi) | `--dart-define=API_BASE_URL=http://<HOST_LAN_IP>:8000/api/v1/` |
+| Production | `assets/env/.env.production` |
+
+Start local backend: see bike-wash [`docs/LOCAL_SETUP.md`](/home/kalind7/workspace/bike-wash/docs/LOCAL_SETUP.md).
+
 Run on the connected Android phone:
 
 ```bash
